@@ -1,45 +1,26 @@
-'use client'
+"use client";
 
-// components/ImageUploader.tsx
-import { useState } from 'react';
+import { useSession, signIn, signOut } from "next-auth/react";
 
-export default function ImageUploader() {
-  const [file, setFile] = useState<File | null>(null);
-  const [url, setUrl] = useState('');
+export default function Home() {
+  const { data: session, status } = useSession();
 
-  const uploadImage = async () => {
-    if (!file) return;
+  if (status === "loading") return <p>Loading...</p>;
 
-    const reader = new FileReader();
-
-    reader.readAsDataURL(file);
-
-    reader.onloadend = async () => {
-      const base64 = reader.result;
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
-      });
-
-      const data = await res.json();
-      setUrl(data.url);
-    };
-  };
+  if (session) {
+    return (
+      <>
+        <h1>Welcome, {session?.user?.name}</h1>
+        <img src={session?.user?.image || undefined} alt="Profile" width={50} />
+        <button onClick={() => signOut()}>Sign out</button>
+      </>
+    );
+  }
 
   return (
-    <div>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          const selectedFile = e.target.files?.[0] || null;
-          setFile(selectedFile);
-        }}
-      />
-      <button onClick={uploadImage}>Upload</button>
-      {url && <img src={url} alt="Uploaded" width={200} />}
-    </div>
+    <>
+      <h1>You are not signed in</h1>
+      <button onClick={() => signIn("google")}>Sign in with Google</button>
+    </>
   );
 }
