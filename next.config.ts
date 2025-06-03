@@ -1,6 +1,6 @@
+// next.config.js
 module.exports = {
   images: {
-    loader: 'custom',
-    domains: ['res.cloudinary.com'],
+    domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com', 'some-other-domain.com'],
   },
 };
