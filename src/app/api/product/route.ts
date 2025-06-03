@@ -18,71 +18,81 @@ export async function GET() {
 
 
 export async function POST(req: Request) {
-    await connectDB();
-    const body = await req.json();
-    const { name, description, type = "none", imageBase64 } = body;
-  
-    let imageUrl = "";
-    if (imageBase64?.startsWith("data:image")) {
-      try {
-        const uploaded = await cloudinary.uploader.upload(imageBase64, {
-          folder: "products",
-        });
-        imageUrl = uploaded.secure_url;
-      } catch (err) {
-        console.error("Cloudinary upload error:", err);
-        return new Response("Failed to upload image", { status: 500 });
-      }
-    }
-  
-    const product = await Product.create({
-      name,
-      description,
-      type,
-      image: imageUrl,
-    });
-  
-    return Response.json(product);
+  await connectDB();
+  const body = await req.json();
+  const { name, description, type = "none", imageBase64, price } = body;
+
+  if (price == null || isNaN(price)) {
+    return new Response("Price is required and must be a number", { status: 400 });
   }
-  
 
-
-  export async function PUT(req: Request, context: { params: { id: string } }) {
-    const { params } = context;  // Extract params here
-    await connectDB();
-  
-    const body = await req.json();
-    const { name, description, type, image, imageBase64 } = body;
-  
-    const update: any = { name, description, type };
-  
-    if (imageBase64 && imageBase64.startsWith("data:image")) {
-      try {
-        const uploadRes = await cloudinary.uploader.upload(imageBase64, {
-          folder: "products",
-        });
-        update.image = uploadRes.secure_url;
-      } catch (err) {
-        console.error("Cloudinary upload error:", err);
-        return new Response("Image upload failed", { status: 500 });
-      }
-    }
-  
-    if (image && !update.image) {
-      update.image = image;
-    }
-  
+  let imageUrl = "";
+  if (imageBase64?.startsWith("data:image")) {
     try {
-      const updated = await Product.findByIdAndUpdate(params.id, update, { new: true });
-      if (!updated) {
-        return new Response("Product not found", { status: 404 });
-      }
-      return new Response(JSON.stringify(updated), { status: 200, headers: { "Content-Type": "application/json" } });
-    } catch (error) {
-      console.error("Update product error:", error);
-      return new Response("Failed to update product", { status: 500 });
+      const uploaded = await cloudinary.uploader.upload(imageBase64, {
+        folder: "products",
+      });
+      imageUrl = uploaded.secure_url;
+    } catch (err) {
+      console.error("Cloudinary upload error:", err);
+      return new Response("Failed to upload image", { status: 500 });
     }
   }
+
+  const product = await Product.create({
+    name,
+    description,
+    type,
+    image: imageUrl,
+    price,
+  });
+
+  return Response.json(product);
+}
+  
+
+
+export async function PUT(req: Request, context: { params: { id: string } }) {
+  const { params } = context;
+  await connectDB();
+
+  const body = await req.json();
+  const { name, description, type, image, imageBase64, price } = body;
+
+  const update: any = { name, description, type };
+
+  if (price != null && !isNaN(price)) {
+    update.price = price;
+  }
+
+  if (imageBase64 && imageBase64.startsWith("data:image")) {
+    try {
+      const uploadRes = await cloudinary.uploader.upload(imageBase64, {
+        folder: "products",
+      });
+      update.image = uploadRes.secure_url;
+    } catch (err) {
+      console.error("Cloudinary upload error:", err);
+      return new Response("Image upload failed", { status: 500 });
+    }
+  }
+
+  if (image && !update.image) {
+    update.image = image;
+  }
+
+  try {
+    const updated = await Product.findByIdAndUpdate(params.id, update, { new: true });
+    if (!updated) {
+      return new Response("Product not found", { status: 404 });
+    }
+    return new Response(JSON.stringify(updated), { status: 200, headers: { "Content-Type": "application/json" } });
+  } catch (error) {
+    console.error("Update product error:", error);
+    return new Response("Failed to update product", { status: 500 });
+  }
+}
+
   
 
 export async function DELETE(req: NextRequest) {

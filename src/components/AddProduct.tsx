@@ -1,126 +1,144 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { Dialog } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dispatch, SetStateAction, ChangeEvent } from "react";
+import Image from "next/image";
 
 interface Product {
   _id?: string;
   name: string;
   description: string;
-  type: "popular" | "latest" | "none";
-  image: string;
+  image?: string;
+  imageBase64?: string;
+  type?: string;
+  price?: number;
 }
 
-export default function AdminPanel() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<Product>({ name: "", description: "", type: "none", image: "" });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+interface AddProductProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  product: Product;
+  setProduct: Dispatch<SetStateAction<Product>>;
+}
 
-  const fetchProducts = async () => {
-    const res = await axios.get("/api/product");
-    setProducts(res.data);
-  };
+export default function AddProducts({
+  isOpen,
+  onClose,
+  onSubmit,
+  product,
+  setProduct,
+}: AddProductProps) {
+  if (!isOpen) return null;
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setImageFile(file);
-  };
-
-  const uploadImage = async (): Promise<string> => {
-    if (!imageFile) return "";
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onloadend = () => {
-        const base64 = (reader.result as string).split(",")[1];
-        resolve(`data:image/png;base64,${base64}`);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(imageFile);
-    });
-  };
-
-  const handleSubmit = async () => {
-    const imageBase64 = await uploadImage();
-    const payload = { ...form, imageBase64 };
-
-    if (editingId) {
-      await axios.put(`/api/product/${editingId}`, payload);
+    // If price, cast to number
+    if (name === "price") {
+      setProduct((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
     } else {
-      await axios.post("/api/product", payload);
+      setProduct((prev) => ({ ...prev, [name]: value }));
     }
-
-    setModalOpen(false);
-    setForm({ name: "", description: "", type: "none", image: "" });
-    setImageFile(null);
-    setEditingId(null);
-    fetchProducts();
   };
 
-  const handleEdit = (product: Product) => {
-    setForm({ ...product });
-    setEditingId(product._id || null);
-    setModalOpen(true);
-  };
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleDelete = async (id: string) => {
-    await axios.delete(`/api/product/${id}`);
-    fetchProducts();
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProduct((prev) => ({ ...prev, imageBase64: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Admin Panel</h1>
-        <Button onClick={() => setModalOpen(true)}>Add Product</Button>
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+        <h2 className="text-xl font-bold">
+          {product?._id ? "Edit Product" : "Add Product"}
+        </h2>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {products.map(product => (
-          <div key={product._id} className="border p-4 rounded shadow">
-            <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded mb-2" />
-            <h2 className="text-lg font-semibold">{product.name}</h2>
-            <p>{product.description}</p>
-            <p className="italic text-sm">{product.type}</p>
-            <div className="mt-2 space-x-2">
-              <Button onClick={() => handleEdit(product)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDelete(product._id!)}>Delete</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+        <input
+          name="name"
+          value={product.name || ""}
+          onChange={handleChange}
+          placeholder="Name"
+          className="border p-2 w-full"
+          required
+        />
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">{editingId ? "Edit" : "Add"} Product</h2>
-            <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="w-full mb-2 border p-2 rounded" />
-            <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full mb-2 border p-2 rounded" />
-            <select name="type" value={form.type} onChange={handleChange} className="w-full mb-2 border p-2 rounded">
-              <option value="none">None</option>
-              <option value="popular">Popular</option>
-              <option value="latest">Latest</option>
-            </select>
-            <input type="file" onChange={handleImage} accept="image/*" className="w-full mb-4" />
-            <div className="flex justify-end space-x-2">
-              <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmit}>{editingId ? "Update" : "Add"}</Button>
-            </div>
-          </div>
+        <textarea
+          name="description"
+          value={product.description || ""}
+          onChange={handleChange}
+          placeholder="Description"
+          className="border p-2 w-full"
+        />
+
+        <input
+          name="price"
+          type="number"
+          value={product.price || ""}
+          onChange={handleChange}
+          placeholder="Price"
+          className="border p-2 w-full"
+          required
+        />
+
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="w-full"
+        />
+
+        {product.imageBase64 ? (
+          <Image
+            alt="Preview"
+            width={200}
+            height={200}
+            src={product.imageBase64}
+            className="mt-2 max-h-48 object-contain"
+          />
+        ) : product.image ? (
+          <Image
+            src={product.image}
+            alt={product.name || "Product Image"}
+            width={200}
+            height={200}
+            className="mt-2 object-contain"
+          />
+        ) : null}
+
+        <select
+          name="type"
+          value={product.type || "none"}
+          onChange={handleChange}
+          className="border p-2 w-full"
+        >
+          <option value="none">None</option>
+          <option value="popular">Popular</option>
+          <option value="latest">Latest</option>
+        </select>
+
+        <div className="flex justify-between">
+          <button
+            onClick={onClose}
+            className="bg-gray-400 text-white px-4 py-2 rounded"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSubmit}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            type="button"
+          >
+            Submit
+          </button>
         </div>
-      </Dialog>
+      </div>
     </div>
   );
 }
