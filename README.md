@@ -21,6 +21,8 @@ models/
 ├── order.model.ts
 ├── category.model.ts
 
-# MongoDB connection (to be added)
-middleware.ts # Auth protection (to be added)
+ # MongoDB connection (to be added)
+==> This is not neccesary middleware.ts # Auth protection (to be added) 
 
+
+--

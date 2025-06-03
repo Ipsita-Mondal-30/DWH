@@ -9,8 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "cloudinary": "^2.6.1",
+<<<<<<< HEAD
     "lucide-react": "^0.511.0",
+=======
+    "mongoose": "^8.15.1",
+>>>>>>> f527b2746b3f9c6d31b94cca8e40e4645248674c
     "next": "15.3.3",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
