@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Carousel from "../components/Carousel";
+import Image from "next/image";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -20,9 +21,10 @@ export default function Home() {
             <h1 className="text-2xl font-semibold mb-4">
               Welcome, {session.user?.name}
             </h1>
-            <img
+            <Image
               src={session.user?.image || ""}
               alt="Profile"
+              height={50}
               width={50}
               className="rounded-full"
             />

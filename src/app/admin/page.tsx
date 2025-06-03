@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import AddProducts from "@/components/AddProduct"
 
+interface ProductPayload {
+  name: string;
+  description: string;
+  type: string;
+  price: number;
+  imageBase64?: string;
+  image?: string;
+}
+
 interface Product {
   _id?: string;
   name: string;
@@ -63,7 +72,9 @@ export default function AdminPanel() {
       const method = product._id ? "PUT" : "POST";
       const url = product._id ? `/api/product/${product._id}` : "/api/product";
 
-      const payload: any = {
+
+
+      const payload: ProductPayload = {
         name: product.name,
         description: product.description,
         type: product.type || "none",

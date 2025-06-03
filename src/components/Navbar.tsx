@@ -2,7 +2,6 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { FiUser, FiHeart, FiShoppingBag, FiSearch } from "react-icons/fi";
-import images from "@/public/dwh.png"; // Adjust the path as necessary
 
 export default function Navbar() {
   const { data: session } = useSession();
