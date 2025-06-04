@@ -2,100 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import AddProducts from "@/components/AddProduct"
 
-// Custom Modal Component
-function Modal({ isOpen, onClose, onSubmit, product, setProduct }) {
-  if (!isOpen) return null;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProduct((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProduct((prev) => ({ ...prev, imageBase64: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-        <h2 className="text-xl font-bold">{product?._id ? "Edit" : "Add"} Product</h2>
-
-        <input
-          name="name"
-          value={product.name || ""}
-          onChange={handleChange}
-          placeholder="Name"
-          className="border p-2 w-full"
-          required
-        />
-
-        <textarea
-          name="description"
-          value={product.description || ""}
-          onChange={handleChange}
-          placeholder="Description"
-          className="border p-2 w-full"
-        />
-
-        <input type="file" accept="image/*" onChange={handleImageChange} className="w-full" />
-
-        {product.imageBase64 ? (
-          <img
-            src={product.imageBase64}
-            alt="Preview"
-            className="mt-2 max-h-48 object-contain"
-          />
-        ) : product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name || "Product Image"}
-            width={200}
-            height={200}
-            className="mt-2 object-contain"
-          />
-        ) : null}
-
-        <select
-          name="type"
-          value={product.type || "none"}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        >
-          <option value="none">None</option>
-          <option value="popular">Popular</option>
-          <option value="latest">Latest</option>
-        </select>
-
-        <div className="flex justify-between">
-          <button
-            onClick={onClose}
-            className="bg-gray-400 text-white px-4 py-2 rounded"
-            type="button"
-          >
-            Cancel
-          </button>
-          <button onClick={onSubmit} className="bg-blue-600 text-white px-4 py-2 rounded" type="button">
-            Submit
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+interface ProductPayload {
+  name: string;
+  description: string;
+  type: string;
+  price: number;
+  imageBase64?: string;
+  image?: string;
 }
 
-// Admin Panel Component
+interface Product {
+  _id?: string;
+  name: string;
+  description: string;
+  image?: string;
+  imageBase64?: string;
+  type?: string;
+  price?: number;
+}
+
 export default function AdminPanel() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [product, setProduct] = useState({});
+  const [product, setProduct] = useState<Product>({ name: '', description: '' });
 
   const fetchProducts = async () => {
     try {
@@ -112,19 +43,19 @@ export default function AdminPanel() {
   }, []);
 
   const handleAdd = () => {
-    setProduct({});
+    setProduct({ name: '', description: '' });
     setModalOpen(true);
   };
 
-  const handleEdit = (p) => {
+  const handleEdit = (p: Product) => {
     setProduct(p);
     setModalOpen(true);
   };
 
-  const handleDelete = async (_id) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  const handleDelete = async (_id?: string) => {
+    if (!_id || !confirm("Are you sure you want to delete this product?")) return;
+
     try {
-      // Your backend DELETE expects query param ?id=xxx based on your code
       const res = await fetch(`/api/product?id=${_id}`, {
         method: "DELETE",
       });
@@ -141,14 +72,16 @@ export default function AdminPanel() {
       const method = product._id ? "PUT" : "POST";
       const url = product._id ? `/api/product/${product._id}` : "/api/product";
 
-      // Prepare payload with base64 image if new image selected
-      const payload = {
+
+
+      const payload: ProductPayload = {
         name: product.name,
         description: product.description,
         type: product.type || "none",
+        price: product.price || 0,
       };
 
-      if (product.imageBase64 && product.imageBase64.startsWith("data:image")) {
+      if (product.imageBase64?.startsWith("data:image")) {
         payload.imageBase64 = product.imageBase64;
       } else if (product.image) {
         payload.image = product.image;
@@ -160,9 +93,7 @@ export default function AdminPanel() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to save product");
-      }
+      if (!res.ok) throw new Error("Failed to save product");
 
       setModalOpen(false);
       fetchProducts();
@@ -196,18 +127,19 @@ export default function AdminPanel() {
             )}
             <h2 className="text-lg font-bold">{p.name}</h2>
             <p>{p.description}</p>
-            <p className="text-sm text-gray-500">{p.type}</p>
+            <p className="text-sm text-gray-500 capitalize">{p.type}</p>
+            <p className="text-sm font-semibold text-green-700">₹ {p.price?.toFixed(2)}</p>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between mt-2">
               <button
                 onClick={() => handleEdit(p)}
-                className="bg-yellow-500 text-white px-2 py-1 rounded"
+                className="bg-yellow-500 text-white px-3 py-1 rounded"
               >
                 Edit
               </button>
               <button
                 onClick={() => handleDelete(p._id)}
-                className="bg-red-600 text-white px-2 py-1 rounded"
+                className="bg-red-600 text-white px-3 py-1 rounded"
               >
                 Delete
               </button>
@@ -216,7 +148,7 @@ export default function AdminPanel() {
         ))}
       </div>
 
-      <Modal
+      <AddProducts
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}

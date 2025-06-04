@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
+import cloudinary from "@/lib/cloudinary";
 
+// Interface for update data
+interface ProductUpdateData {
+  name?: string;
+  description?: string;
+  type?: string;
+  price?: number;
+  image?: string;
+}
+
+// Interface for request body
+interface ProductRequestBody {
+  name?: string;
+  description?: string;
+  type?: string;
+  price?: number;
+  image?: string;
+  imageBase64?: string;
+}
+
+// GET: Fetch product by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectDB();
-
-  const { id } =await params;
+  const { id } = await params;
 
   if (!/^[0-9a-fA-F]{24}$/.test(id)) {
     return NextResponse.json({ message: "Invalid product ID" }, { status: 400 });
@@ -26,12 +46,12 @@ export async function GET(
   }
 }
 
+// PUT: Update product by ID
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await connectDB();
-
   const { id } = await params;
 
   if (!/^[0-9a-fA-F]{24}$/.test(id)) {
@@ -39,15 +59,26 @@ export async function PUT(
   }
 
   try {
-    const body = await req.json();
-    const { name, description, type, image, imageBase64 } = body;
+    const body: ProductRequestBody = await req.json();
+    const { name, description, type, image, imageBase64, price } = body;
 
-    const update: any = { name, description, type };
+    const update: ProductUpdateData = {};
 
+    // Only add fields that are provided
+    if (name !== undefined) update.name = name;
+    if (description !== undefined) update.description = description;
+    if (type !== undefined) update.type = type;
+
+    // Handle price validation and update
+    if (price !== undefined) {
+      if (isNaN(Number(price))) {
+        return NextResponse.json({ message: "Price must be a valid number" }, { status: 400 });
+      }
+      update.price = Number(price);
+    }
+
+    // Handle image upload
     if (imageBase64 && imageBase64.startsWith("data:image")) {
-      // Upload new image to Cloudinary (assuming you have cloudinary imported & configured)
-      const cloudinary = require("@/lib/cloudinary").default; // adjust import path
-
       try {
         const uploadRes = await cloudinary.uploader.upload(imageBase64, {
           folder: "products",
@@ -57,11 +88,14 @@ export async function PUT(
         console.error("Cloudinary upload error:", err);
         return NextResponse.json({ message: "Image upload failed" }, { status: 500 });
       }
-    } else if (image) {
-      update.image = image; // keep existing image url if no new imageBase64
+    } else if (image && !update.image) {
+      update.image = image;
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(id, update, { new: true });
+    const updatedProduct = await Product.findByIdAndUpdate(id, update, { 
+      new: true,
+      runValidators: true 
+    });
 
     if (!updatedProduct) {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
@@ -70,7 +104,7 @@ export async function PUT(
     return NextResponse.json(updatedProduct, { status: 200 });
   } catch (error) {
     console.error("Update product error:", error);
+
     return NextResponse.json({ message: "Failed to update product" }, { status: 500 });
   }
 }
-
