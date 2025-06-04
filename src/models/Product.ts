@@ -5,13 +5,13 @@ export enum ProductType {
   Latest = "latest",
   None = "none",
 }
-
 export interface IProduct {
+  _id?: string; // ✅ add this line
   name: string;
   description: string;
-  image: string; // image URL (Cloudinary)
+  image: string;
   type: ProductType;
-  price: number; // ✅ new field
+  price: number;
 }
 
 const ProductSchema = new Schema<IProduct>({

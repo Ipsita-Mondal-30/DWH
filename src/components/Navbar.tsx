@@ -3,30 +3,37 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { FiUser, FiHeart, FiShoppingBag, FiSearch } from "react-icons/fi";
+import { useCart } from '../app/context/CartContext';
+import Link from "next/link"; 
+import Image from "next/image";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef(null);
+
+
+  const { cart } = useCart(); // ✅ move this outside JSX
 
   // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !(dropdownRef.current as any).contains(event.target)
-      ) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
+useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
+      setShowDropdown(false);
+    }
+  }
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
   return (
     <div className="relative">
       <div className="bg-gradient-to-r from-white via-amber-50 to-white shadow-lg border-b border-amber-200">
         <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+          
           {/* Search Bar */}
           <div className="flex items-center w-1/3">
             <div className="relative w-full group max-w-sm">
@@ -45,11 +52,14 @@ export default function Navbar() {
           <div className="w-1/3 flex justify-center">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-              <img
-                src="/dwh.png"
-                alt="Haldiram's Logo"
-                className="relative h-12 object-contain filter drop-shadow-md hover:drop-shadow-lg transition-all duration-300 transform hover:scale-105"
-              />
+              <Image
+  src="/dwh.png"
+  alt="Haldiram's Logo"
+  className="relative h-12 object-contain filter drop-shadow-md hover:drop-shadow-lg transition-all duration-300 transform hover:scale-105"
+  width={48}  // 12 * 4 px since h-12 = 3rem, adjust width/height as needed
+  height={48}
+/>
+
             </div>
           </div>
 
@@ -69,11 +79,15 @@ export default function Navbar() {
                       <div className="flex items-center space-x-3 mb-4 p-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl">
                         <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-200 shadow-sm">
                           {session.user?.image ? (
-                            <img
-                              src={session.user.image}
-                              alt="Profile"
-                              className="w-full h-full object-cover"
-                            />
+                           <Image
+                           src={session.user.image}
+                           alt="Profile"
+                           className="object-cover"
+                           width={48}   // adjust size to fit container (w-full h-full of 12*4 = 48px)
+                           height={48}
+                           layout="responsive" // optional, or use "intrinsic" or omit based on your design
+                         />
+                         
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center">
                               <FiUser className="text-white text-lg" />
@@ -122,18 +136,23 @@ export default function Navbar() {
                   <FiHeart className="text-lg text-pink-600 group-hover:fill-current transition-all duration-300" />
                 </div>
 
-                <div className="p-2 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 border border-green-200 relative group">
-                  <FiShoppingBag className="text-lg text-green-600" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">3</span>
-                  </div>
-                </div>
+                <Link href="/cart" passHref>
+  <div className="p-2 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 border border-green-200 relative group">
+    <FiShoppingBag className="text-lg text-green-600" />
+    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+      <span className="text-white text-xs font-bold">
+        {cart.reduce((total, item) => total + item.quantity, 0)}
+      </span>
+    </div>
+  </div>
+</Link>
+
               </>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Shadow line under navbar */}
       <div className="h-1 bg-gradient-to-r from-transparent via-amber-200 to-transparent opacity-50"></div>
     </div>

@@ -17,7 +17,6 @@ export default function Home() {
     <>
       <Navbar />
       <Carousel />
-      <EnquiryForm />
 
       <section className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-semibold mb-6">Latest Product</h2>
@@ -28,7 +27,7 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-6">Popular Product</h2>
         <PopularProduct />
       </section>
-      
+      <EnquiryForm />
     </>
   );
 }

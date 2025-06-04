@@ -2,22 +2,18 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-interface Product {
-  _id?: string;
-  name: string;
-  description: string;
-  type: "popular" | "latest" | "none";
-  image: string;
-}
+import type { IProduct } from "../models/Product";
+import { useCart } from "../app/context/CartContext";
+import Image from "next/image";
 
 export default function PopularProduct() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await axios.get("/api/product");
-      const popular = res.data.filter((p: Product) => p.type === "popular");
+      const popular = res.data.filter((p: IProduct) => p.type === "popular");
       setProducts(popular);
     };
 
@@ -30,13 +26,22 @@ export default function PopularProduct() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {products.map((product) => (
-        <div key={product._id} className="border p-4 rounded shadow">
-          <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded mb-2" />
-          <h3 className="text-lg font-semibold">{product.name}</h3>
-          <p>{product.description}</p>
-        </div>
-      ))}
+  {products.map((product) => (
+  <div key={product._id} className="border p-4 rounded shadow">
+    <div className="relative w-full h-48 rounded mb-2 overflow-hidden">
+      <Image
+        src={product.image}
+        alt={product.name}
+        fill
+        className="object-cover"
+      />
+    </div>
+    <h3 className="text-lg font-semibold">{product.name}</h3>
+    <p>{product.description}</p>
+    <button onClick={() => product._id && addToCart(product._id, 1)}>Add to Cart</button>
+  </div>
+))}
+
     </div>
   );
 }
