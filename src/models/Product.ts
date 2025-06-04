@@ -6,13 +6,30 @@ export enum ProductType {
   None = "none",
 }
 
+// New interface for quantity-based pricing
+export interface IPricing {
+  quantity: number;
+  unit: 'gm' | 'kg' | 'piece' | 'dozen';
+  price: number;
+}
+
 export interface IProduct {
   name: string;
   description: string;
   image: string; // image URL (Cloudinary)
   type: ProductType;
-  price: number; // ✅ new field
+  pricing: IPricing[]; // Array of quantity-price combinations
 }
+
+const PricingSchema = new Schema<IPricing>({
+  quantity: { type: Number, required: true },
+  unit: { 
+    type: String, 
+    enum: ['gm', 'kg', 'piece', 'dozen'],
+    required: true 
+  },
+  price: { type: Number, required: true }
+});
 
 const ProductSchema = new Schema<IProduct>({
   name: { type: String, required: true },
@@ -23,7 +40,18 @@ const ProductSchema = new Schema<IProduct>({
     enum: Object.values(ProductType),
     default: ProductType.None,
   },
-  price: { type: Number, required: true }, // ✅ new field
+  pricing: { 
+    type: [PricingSchema], 
+    required: true,
+    validate: {
+      validator: function(v: IPricing[]) {
+        return v && v.length > 0;
+      },
+      message: 'At least one pricing option is required'
+    }
+  }
+}, {
+  timestamps: true
 });
 
 export const Product = models.Product || model<IProduct>("Product", ProductSchema);

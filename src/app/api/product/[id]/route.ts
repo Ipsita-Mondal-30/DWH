@@ -3,21 +3,25 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import cloudinary from "@/lib/cloudinary";
 
-// Interface for update data
+interface Pricing {
+  quantity: number;
+  unit: 'gm' | 'kg' | 'piece' | 'dozen';
+  price: number;
+}
+
 interface ProductUpdateData {
   name?: string;
   description?: string;
   type?: string;
-  price?: number;
+  pricing?: Pricing[];
   image?: string;
 }
 
-// Interface for request body
 interface ProductRequestBody {
   name?: string;
   description?: string;
   type?: string;
-  price?: number;
+  pricing?: Pricing[];
   image?: string;
   imageBase64?: string;
 }
@@ -60,7 +64,7 @@ export async function PUT(
 
   try {
     const body: ProductRequestBody = await req.json();
-    const { name, description, type, image, imageBase64, price } = body;
+    const { name, description, type, image, imageBase64, pricing } = body;
 
     const update: ProductUpdateData = {};
 
@@ -69,12 +73,30 @@ export async function PUT(
     if (description !== undefined) update.description = description;
     if (type !== undefined) update.type = type;
 
-    // Handle price validation and update
-    if (price !== undefined) {
-      if (isNaN(Number(price))) {
-        return NextResponse.json({ message: "Price must be a valid number" }, { status: 400 });
+    // Handle pricing validation and update
+    if (pricing !== undefined) {
+      if (!Array.isArray(pricing) || pricing.length === 0) {
+        return NextResponse.json({ message: "At least one pricing option is required" }, { status: 400 });
       }
-      update.price = Number(price);
+
+      // Validate each pricing option
+      for (const price of pricing) {
+        if (!price.quantity || price.quantity <= 0) {
+          return NextResponse.json({ message: "All pricing options must have a valid quantity greater than 0" }, { status: 400 });
+        }
+        if (!price.price || price.price <= 0) {
+          return NextResponse.json({ message: "All pricing options must have a valid price greater than 0" }, { status: 400 });
+        }
+        if (!['gm', 'kg', 'piece', 'dozen'].includes(price.unit)) {
+          return NextResponse.json({ message: "Invalid unit. Must be 'gm', 'kg', 'piece', or 'dozen'" }, { status: 400 });
+        }
+      }
+
+      update.pricing = pricing.map((p: Pricing) => ({
+        quantity: Number(p.quantity),
+        unit: p.unit,
+        price: Number(p.price)
+      }));
     }
 
     // Handle image upload
@@ -104,7 +126,6 @@ export async function PUT(
     return NextResponse.json(updatedProduct, { status: 200 });
   } catch (error) {
     console.error("Update product error:", error);
-
     return NextResponse.json({ message: "Failed to update product" }, { status: 500 });
   }
 }

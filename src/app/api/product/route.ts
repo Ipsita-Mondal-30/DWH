@@ -3,6 +3,12 @@ import { connectDB } from "@/lib/db";
 import cloudinary from "@/lib/cloudinary";
 import { Product } from "@/models/Product";
 
+interface Pricing {
+  quantity: number;
+  unit: 'gm' | 'kg' | 'piece' | 'dozen';
+  price: number;
+}
+
 // GET: Fetch all products
 export async function GET() {
   await connectDB();
@@ -22,15 +28,29 @@ export async function POST(req: NextRequest) {
   
   try {
     const body = await req.json();
-    const { name, description, type = "none", imageBase64, price } = body;
+    const { name, description, type = "none", imageBase64, pricing } = body;
 
     // Validate required fields
     if (!name || !description) {
       return NextResponse.json({ message: "Name and description are required" }, { status: 400 });
     }
 
-    if (price == null || isNaN(Number(price))) {
-      return NextResponse.json({ message: "Price is required and must be a number" }, { status: 400 });
+    // Validate pricing
+    if (!pricing || !Array.isArray(pricing) || pricing.length === 0) {
+      return NextResponse.json({ message: "At least one pricing option is required" }, { status: 400 });
+    }
+
+    // Validate each pricing option
+    for (const price of pricing) {
+      if (!price.quantity || price.quantity <= 0) {
+        return NextResponse.json({ message: "All pricing options must have a valid quantity greater than 0" }, { status: 400 });
+      }
+      if (!price.price || price.price <= 0) {
+        return NextResponse.json({ message: "All pricing options must have a valid price greater than 0" }, { status: 400 });
+      }
+      if (!['gm', 'kg', 'piece', 'dozen'].includes(price.unit)) {
+        return NextResponse.json({ message: "Invalid unit. Must be 'gm', 'kg', 'piece', or 'dozen'" }, { status: 400 });
+      }
     }
 
     let imageUrl = "";
@@ -51,7 +71,11 @@ export async function POST(req: NextRequest) {
       description,
       type,
       image: imageUrl,
-      price: Number(price),
+      pricing: pricing.map((p: Pricing) => ({
+        quantity: Number(p.quantity),
+        unit: p.unit,
+        price: Number(p.price)
+      }))
     });
 
     return NextResponse.json(product, { status: 201 });
@@ -66,7 +90,6 @@ export async function DELETE(req: NextRequest) {
   await connectDB();
 
   try {
-    // Get product ID from query params: /api/product?id=xxx
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -74,7 +97,6 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ message: "Missing product ID" }, { status: 400 });
     }
 
-    // Validate MongoDB ObjectId format
     if (!/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ message: "Invalid product ID format" }, { status: 400 });
     }
@@ -84,10 +106,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
 
-    // Optionally delete image from Cloudinary
+    // Delete image from Cloudinary
     if (product.image) {
       try {
-        // Extract public_id from Cloudinary URL
         const urlParts = product.image.split('/');
         const publicIdWithExtension = urlParts[urlParts.length - 1];
         const publicId = `products/${publicIdWithExtension.split('.')[0]}`;
@@ -95,7 +116,6 @@ export async function DELETE(req: NextRequest) {
         await cloudinary.uploader.destroy(publicId);
       } catch (imageDeleteError) {
         console.error("Failed to delete image from Cloudinary:", imageDeleteError);
-        // Don't fail the request if image deletion fails
       }
     }
 
