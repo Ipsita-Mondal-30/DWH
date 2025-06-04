@@ -4,8 +4,9 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Carousel from "../components/Carousel";
-import Image from "next/image";
 import EnquiryForm from "@/components/EnquiryForm";
+import LatestProduct from "@/components/LatestProduct";
+import PopularProduct from "@/components/PopularProduct";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -17,24 +18,17 @@ export default function Home() {
       <Navbar />
       <Carousel />
       <EnquiryForm />
-      <div className="p-6">
-        {session ? (
-          <>
-            <h1 className="text-2xl font-semibold mb-4">
-              Welcome, {session.user?.name}
-            </h1>
-            <Image
-              src={session.user?.image || ""}
-              alt="Profile"
-              height={50}
-              width={50}
-              className="rounded-full"
-            />
-          </>
-        ) : (
-          <p ></p>
-        )}
-      </div>
+
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-2xl font-semibold mb-6">Latest Product</h2>
+        <LatestProduct />
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-2xl font-semibold mb-6">Popular Product</h2>
+        <PopularProduct />
+      </section>
+      
     </>
   );
 }
