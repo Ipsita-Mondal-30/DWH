@@ -14,9 +14,10 @@ export interface IPricing {
 }
 
 export interface IProduct {
+  _id?: string; // ✅ add this line
   name: string;
   description: string;
-  image: string; // image URL (Cloudinary)
+  image: string;
   type: ProductType;
   pricing: IPricing[]; // Array of quantity-price combinations
 }
