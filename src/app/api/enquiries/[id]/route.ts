@@ -4,7 +4,7 @@ import Enquiry from '@/models/Enquiry';
 import mongoose from 'mongoose';
 
 // GET - Fetch single enquiry
-export async function GET(request, { params }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connectDB();
 
@@ -51,7 +51,7 @@ export async function GET(request, { params }) {
 }
 
 // PUT - Update enquiry status
-export async function PUT(request, { params }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connectDB();
 

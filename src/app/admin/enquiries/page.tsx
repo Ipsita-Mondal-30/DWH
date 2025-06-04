@@ -1,17 +1,69 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Calendar, User, Mail, Package, Filter, Search } from 'lucide-react';
+import { Eye, Edit, Calendar, User, Package, Filter } from 'lucide-react';
 
-export default function AdminEnquiriesPage() {
-  const [enquiries, setEnquiries] = useState([]);
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
+// Type definitions
+interface Enquiry {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  product: string;
+  quantity: string;
+  price: string;
+  message: string;
+  status: 'new' | 'in-progress' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}
 
-  const statusColors = {
+interface Stats {
+  total: number;
+  new: number;
+  'in-progress': number;
+  completed: number;
+  cancelled: number;
+  today: number;
+  thisWeek: number;
+}
+
+interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalEnquiries: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface EnquiriesResponse {
+  success: boolean;
+  data: Enquiry[];
+  pagination: Pagination;
+  filters: {
+    status: string;
+    sortBy: string;
+    sortOrder: string;
+  };
+}
+
+interface StatsResponse {
+  success: boolean;
+  data: Stats;
+}
+
+type StatusFilter = 'all' | 'new' | 'in-progress' | 'completed' | 'cancelled';
+type EnquiryStatus = 'new' | 'in-progress' | 'completed' | 'cancelled';
+
+export default function AdminEnquiriesPage(): React.JSX.Element {
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [stats, setStats] = useState<Partial<Stats>>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
+  const statusColors: Record<EnquiryStatus, string> = {
     new: 'bg-blue-100 text-blue-800',
     'in-progress': 'bg-yellow-100 text-yellow-800',
     completed: 'bg-green-100 text-green-800',
@@ -23,7 +75,7 @@ export default function AdminEnquiriesPage() {
     fetchStats();
   }, [currentPage, statusFilter]);
 
-  const fetchEnquiries = async () => {
+  const fetchEnquiries = async (): Promise<void> => {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -37,7 +89,7 @@ export default function AdminEnquiriesPage() {
       }
 
       const response = await fetch(`/api/enquiries?${params}`);
-      const data = await response.json();
+      const data: EnquiriesResponse = await response.json();
 
       if (data.success) {
         setEnquiries(data.data);
@@ -50,10 +102,10 @@ export default function AdminEnquiriesPage() {
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (): Promise<void> => {
     try {
       const response = await fetch('/api/enquiries/stats');
-      const data = await response.json();
+      const data: StatsResponse = await response.json();
 
       if (data.success) {
         setStats(data.data);
@@ -63,7 +115,7 @@ export default function AdminEnquiriesPage() {
     }
   };
 
-  const updateStatus = async (id, newStatus) => {
+  const updateStatus = async (id: string, newStatus: EnquiryStatus): Promise<void> => {
     try {
       const response = await fetch(`/api/enquiries/${id}`, {
         method: 'PUT',
@@ -82,7 +134,7 @@ export default function AdminEnquiriesPage() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
@@ -90,6 +142,19 @@ export default function AdminEnquiriesPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleStatusChange = (enquiryId: string, newStatus: string): void => {
+    updateStatus(enquiryId, newStatus as EnquiryStatus);
+  };
+
+  const handleFilterChange = (newFilter: string): void => {
+    setStatusFilter(newFilter as StatusFilter);
+    setCurrentPage(1);
+  };
+
+  const viewEnquiryDetails = (enquiry: Enquiry): void => {
+    alert(`Enquiry Details:\n\nName: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: +91 ${enquiry.phone}\nProduct: ${enquiry.product}\nQuantity: ${enquiry.quantity}\nBudget: ${enquiry.price}\n\nMessage:\n${enquiry.message}`);
   };
 
   if (loading) {
@@ -171,10 +236,7 @@ export default function AdminEnquiriesPage() {
               <span className="text-sm font-medium text-gray-700">Filter by status:</span>
               <select
                 value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => handleFilterChange(e.target.value)}
                 className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
@@ -252,7 +314,7 @@ export default function AdminEnquiriesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={enquiry.status}
-                        onChange={(e) => updateStatus(enquiry._id, e.target.value)}
+                        onChange={(e) => handleStatusChange(enquiry._id, e.target.value)}
                         className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-pink-500 ${statusColors[enquiry.status]}`}
                       >
                         <option value="new">New</option>
@@ -266,10 +328,7 @@ export default function AdminEnquiriesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => {
-                          // View enquiry details
-                          alert(`Enquiry Details:\n\nName: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: +91 ${enquiry.phone}\nProduct: ${enquiry.product}\nQuantity: ${enquiry.quantity}\nBudget: ${enquiry.price}\n\nMessage:\n${enquiry.message}`);
-                        }}
+                        onClick={() => viewEnquiryDetails(enquiry)}
                         className="text-pink-600 hover:text-pink-900 flex items-center gap-1"
                       >
                         <Eye className="w-4 h-4" />

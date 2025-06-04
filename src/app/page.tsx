@@ -9,7 +9,7 @@ import LatestProduct from "@/components/LatestProduct";
 import PopularProduct from "@/components/PopularProduct";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   if (status === "loading") return <p className="text-center mt-4">Loading...</p>;
 

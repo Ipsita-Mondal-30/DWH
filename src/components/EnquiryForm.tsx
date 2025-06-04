@@ -59,7 +59,7 @@ export function EnquiryForm() {
   const { 
     data: productsData, 
     isLoading: productsLoading, 
-    error: productsError,
+    // error: productsError,
     isError: hasProductsError 
   } = useProductNames();
 
@@ -328,7 +328,7 @@ export function EnquiryForm() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Enquiry</h2>
-              <p className="text-gray-600">Tell us about your sweet requirements and we'll get back to you!</p>
+              <p className="text-gray-600">Tell us about your sweet requirements and well get back to you!</p>
             </div>
 
             {/* Status Messages */}
@@ -579,7 +579,7 @@ export function EnquiryForm() {
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-4">
-              We'll get back to you within 24 hours with a customized quote!
+              We will get back to you within 24 hours with a customized quote!
             </p>
           </div>
         </div>

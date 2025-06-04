@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
   try {
     // Fixed rate limiting with proper headers handling
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.ip || '127.0.0.1';
+    const ip = forwarded?.split(',')[0]?.trim() || '127.0.0.1';
+    
     
     if (!checkRateLimit(ip)) {
       return NextResponse.json(

@@ -42,8 +42,10 @@ export async function GET() {
       cancelled: 0
     };
 
-    statusCounts.forEach(item => {
-      statusStats[item._id] = item.count;
+    statusCounts.forEach((item: { _id: string; count: number }) => {
+      if (item._id in statusStats) {
+        statusStats[item._id as keyof typeof statusStats] = item.count;
+      }
     });
 
     const stats = {
