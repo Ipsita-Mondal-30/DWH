@@ -5,6 +5,7 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import Carousel from "../components/Carousel";
 import Image from "next/image";
+import EnquiryForm from "@/components/EnquiryForm";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -15,6 +16,7 @@ export default function Home() {
     <>
       <Navbar />
       <Carousel />
+      <EnquiryForm />
       <div className="p-6">
         {session ? (
           <>
