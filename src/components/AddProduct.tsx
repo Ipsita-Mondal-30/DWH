@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Dialog } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface Product {
   _id?: string;
@@ -84,7 +82,12 @@ export default function AdminPanel() {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">Admin Panel</h1>
-        <Button onClick={() => setModalOpen(true)}>Add Product</Button>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Add Product
+        </button>
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -95,32 +98,74 @@ export default function AdminPanel() {
             <p>{product.description}</p>
             <p className="italic text-sm">{product.type}</p>
             <div className="mt-2 space-x-2">
-              <Button onClick={() => handleEdit(product)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDelete(product._id!)}>Delete</Button>
+              <button
+                onClick={() => handleEdit(product)}
+                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(product._id!)}
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
       </div>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
+      {modalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow w-full max-w-md relative">
             <h2 className="text-xl font-bold mb-4">{editingId ? "Edit" : "Add"} Product</h2>
-            <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="w-full mb-2 border p-2 rounded" />
-            <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full mb-2 border p-2 rounded" />
-            <select name="type" value={form.type} onChange={handleChange} className="w-full mb-2 border p-2 rounded">
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Name"
+              className="w-full mb-2 border p-2 rounded"
+            />
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Description"
+              className="w-full mb-2 border p-2 rounded"
+            />
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+              className="w-full mb-2 border p-2 rounded"
+            >
               <option value="none">None</option>
               <option value="popular">Popular</option>
               <option value="latest">Latest</option>
             </select>
-            <input type="file" onChange={handleImage} accept="image/*" className="w-full mb-4" />
+            <input
+              type="file"
+              onChange={handleImage}
+              accept="image/*"
+              className="w-full mb-4"
+            />
             <div className="flex justify-end space-x-2">
-              <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmit}>{editingId ? "Update" : "Add"}</Button>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                {editingId ? "Update" : "Add"}
+              </button>
             </div>
           </div>
         </div>
-      </Dialog>
+      )}
     </div>
   );
 }
