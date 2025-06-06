@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import Sawamani, { ISawamani } from '@/models/Sawamani';
+import Sawamani from '@/models/Sawamani';
 import { connectDB } from '@/lib/db';
 
 

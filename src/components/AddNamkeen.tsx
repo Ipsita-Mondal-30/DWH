@@ -176,7 +176,7 @@ export default function AddNamkeen({
 
           {namkeen.pricing.length === 0 && (
             <div className="text-gray-500 text-center py-4 border-2 border-dashed border-gray-300 rounded-lg">
-              No pricing options added. Click "Add Pricing" to get started.
+              No pricing options added. Click &quotAdd Pricing&quot to get started.
             </div>
           )}
 

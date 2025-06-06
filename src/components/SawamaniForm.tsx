@@ -37,10 +37,6 @@ interface TouchedFields {
   message?: boolean;
 }
 
-interface ServerError {
-  field: string;
-  message: string;
-}
 
 type SubmitStatus = 'success' | 'validation_error' | 'server_error' | 'network_error' | null;
 type FieldName = keyof SawamaniFormData;
@@ -673,7 +669,7 @@ export function SawamaniForm() {
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-4">
-              🍯 Fresh sweets prepared on order • 📞 We'll call to confirm your order • 🚚 Free delivery within city
+              🍯 Fresh sweets prepared on order • 📞 We will call to confirm your order • 🚚 Free delivery within city
             </p>
           </div>
         </div>

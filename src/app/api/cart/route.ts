@@ -5,6 +5,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Types } from 'mongoose';
 
+interface CartDbItem {
+  productId: Types.ObjectId;
+  quantity: number;
+  _id?: string;
+}
+
 interface Product {
   _id: string;
   name: string;
@@ -94,7 +100,7 @@ export async function POST(req: Request) {
         items: [{ productId: new Types.ObjectId(productId), quantity }] 
       });
     } else {
-      const existingItemIndex = cart.items.findIndex((item: any) =>
+      const existingItemIndex = cart.items.findIndex((item: CartDbItem) =>
         item.productId.equals(productId)
       );
 
@@ -143,7 +149,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Cart not found' }, { status: 404 });
     }
 
-    const itemIndex = cart.items.findIndex((item: any) =>
+    const itemIndex = cart.items.findIndex((item: CartDbItem) =>
       item.productId.equals(productId)
     );
 
@@ -191,7 +197,7 @@ export async function DELETE(req: Request) {
     const cart = await Cart.findOne({ userId });
     
     if (cart) {
-      const itemIndex = cart.items.findIndex((item: any) =>
+      const itemIndex = cart.items.findIndex((item: CartDbItem) =>
         item.productId.equals(productId)
       );
 
