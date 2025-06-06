@@ -422,14 +422,14 @@ export default function AdminPanel() {
         <div className="hidden md:flex gap-x-2">
           <button
             onClick={handleAddProduct}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
             Add Sweet
           </button>
           <button
             onClick={handleAddBox}
-            className="bg-blue-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Box className="w-5 h-5" />
             Add Box
@@ -443,7 +443,7 @@ export default function AdminPanel() {
           </button>
           <button 
             onClick={() => router.push('/admin/enquiries')}
-            className="bg-blue-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             Enquiries
           </button>
