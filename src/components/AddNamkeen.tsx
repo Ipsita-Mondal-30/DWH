@@ -10,7 +10,7 @@ interface Pricing {
   price: number;
 }
 
-interface Product {
+interface Namkeen {
   _id?: string;
   name: string;
   description: string;
@@ -20,26 +20,26 @@ interface Product {
   pricing: Pricing[];
 }
 
-interface AddProductProps {
+interface AddNamkeenProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  product: Product;
-  setProduct: Dispatch<SetStateAction<Product>>;
+  namkeen: Namkeen;
+  setNamkeen: Dispatch<SetStateAction<Namkeen>>;
 }
 
-export default function AddProducts({
+export default function AddNamkeen({
   isOpen,
   onClose,
   onSubmit,
-  product,
-  setProduct,
-}: AddProductProps) {
+  namkeen,
+  setNamkeen,
+}: AddNamkeenProps) {
   if (!isOpen) return null;
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setProduct((prev) => ({ ...prev, [name]: value }));
+    setNamkeen((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -48,27 +48,27 @@ export default function AddProducts({
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setProduct((prev) => ({ ...prev, imageBase64: reader.result as string }));
+      setNamkeen((prev) => ({ ...prev, imageBase64: reader.result as string }));
     };
     reader.readAsDataURL(file);
   };
 
   const addPricing = () => {
-    setProduct((prev) => ({
+    setNamkeen((prev) => ({
       ...prev,
       pricing: [...prev.pricing, { quantity: 0, unit: 'gm', price: 0 }]
     }));
   };
 
   const removePricing = (index: number) => {
-    setProduct((prev) => ({
+    setNamkeen((prev) => ({
       ...prev,
       pricing: prev.pricing.filter((_, i) => i !== index)
     }));
   };
 
   const updatePricing = (index: number, field: keyof Pricing, value: string | number) => {
-    setProduct((prev) => ({
+    setNamkeen((prev) => ({
       ...prev,
       pricing: prev.pricing.map((pricing, i) => 
         i === index 
@@ -83,10 +83,10 @@ export default function AddProducts({
 
   const isFormValid = () => {
     return (
-      product.name.trim() !== '' &&
-      product.description.trim() !== '' &&
-      product.pricing.length > 0 &&
-      product.pricing.every(p => p.quantity > 0 && p.price > 0)
+      namkeen.name.trim() !== '' &&
+      namkeen.description.trim() !== '' &&
+      namkeen.pricing.length > 0 &&
+      namkeen.pricing.every(p => p.quantity > 0 && p.price > 0)
     );
   };
 
@@ -94,35 +94,35 @@ export default function AddProducts({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-4">
         <h2 className="text-xl font-bold">
-          {product?._id ? "Edit sweet" : "Add Sweet"}
+          {namkeen?._id ? "Edit Namkeen" : "Add Namkeen"}
         </h2>
 
-        {/* Basic Product Info */}
+        {/* Basic Namkeen Info */}
         <div className="space-y-4">
           <input
             name="name"
-            value={product.name || ""}
+            value={namkeen.name || ""}
             onChange={handleChange}
-            placeholder="Product Name"
-            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Namkeen Name"
+            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             required
           />
 
           <textarea
             name="description"
-            value={product.description || ""}
+            value={namkeen.description || ""}
             onChange={handleChange}
-            placeholder="Product Description"
-            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Namkeen Description"
+            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             rows={3}
             required
           />
-          <label className="block text-sm font-medium text-gray-700 mb-2"> Product Type</label>
+
           <select
             name="type"
-            value={product.type || "none"}
+            value={namkeen.type || "none"}
             onChange={handleChange}
-            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="none">None</option>
             <option value="popular">Popular</option>
@@ -131,7 +131,7 @@ export default function AddProducts({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Image
+              Namkeen Image
             </label>
             <input
               type="file"
@@ -141,18 +141,18 @@ export default function AddProducts({
             />
           </div>
 
-          {product.imageBase64 ? (
+          {namkeen.imageBase64 ? (
             <Image
               alt="Preview"
               width={200}
               height={200}
-              src={product.imageBase64}
+              src={namkeen.imageBase64}
               className="mt-2 max-h-48 object-contain rounded-lg"
             />
-          ) : product.image ? (
+          ) : namkeen.image ? (
             <Image
-              src={product.image}
-              alt={product.name || "Product Image"}
+              src={namkeen.image}
+              alt={namkeen.name || "Namkeen Image"}
               width={200}
               height={200}
               className="mt-2 object-contain rounded-lg"
@@ -166,7 +166,7 @@ export default function AddProducts({
             <h3 className="text-lg font-semibold">Quantity & Pricing</h3>
             <button
               onClick={addPricing}
-              className="bg-blue-600 text-white px-3 py-1 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+              className="bg-orange-600 text-white px-3 py-1 rounded-lg flex items-center gap-2 hover:bg-orange-700 transition-colors"
               type="button"
             >
               <Plus className="w-4 h-4" />
@@ -174,17 +174,17 @@ export default function AddProducts({
             </button>
           </div>
 
-          {product.pricing.length === 0 && (
+          {namkeen.pricing.length === 0 && (
             <div className="text-gray-500 text-center py-4 border-2 border-dashed border-gray-300 rounded-lg">
-            No pricing options added. Click &quot;Add Pricing&quot; to get started.
-          </div>
+              No pricing options added. Click "Add Pricing" to get started.
+            </div>
           )}
 
-          {product.pricing.map((pricing, index) => (
+          {namkeen.pricing.map((pricing, index) => (
             <div key={index} className="border border-gray-200 p-4 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-700">Option {index + 1}</span>
-                {product.pricing.length > 1 && (
+                {namkeen.pricing.length > 1 && (
                   <button
                     onClick={() => removePricing(index)}
                     className="text-red-600 hover:text-red-800 p-1"
@@ -205,7 +205,7 @@ export default function AddProducts({
                     value={pricing.quantity || ""}
                     onChange={(e) => updatePricing(index, 'quantity', e.target.value)}
                     placeholder="Enter quantity"
-                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     min="0"
                     step="0.01"
                     required
@@ -219,7 +219,7 @@ export default function AddProducts({
                   <select
                     value={pricing.unit}
                     onChange={(e) => updatePricing(index, 'unit', e.target.value)}
-                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="gm">Grams (gm)</option>
                     <option value="kg">Kilograms (kg)</option>
@@ -237,7 +237,7 @@ export default function AddProducts({
                     value={pricing.price || ""}
                     onChange={(e) => updatePricing(index, 'price', e.target.value)}
                     placeholder="Enter price"
-                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     min="0"
                     step="0.01"
                     required
@@ -245,7 +245,7 @@ export default function AddProducts({
                 </div>
               </div>
 
-              <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+              <div className="text-sm text-gray-600 bg-orange-50 p-2 rounded">
                 {pricing.quantity > 0 && pricing.price > 0 ? (
                   <span>
                     <strong>Preview:</strong> {pricing.quantity} {pricing.unit} - ₹{pricing.price}
@@ -275,10 +275,10 @@ export default function AddProducts({
           <button
             onClick={onSubmit}
             disabled={!isFormValid()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             type="button"
           >
-            {product?._id ? "Update Product" : "Add Product"}
+            {namkeen?._id ? "Update Namkeen" : "Add Namkeen"}
           </button>
         </div>
 

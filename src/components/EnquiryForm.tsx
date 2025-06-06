@@ -64,12 +64,11 @@ export function EnquiryForm() {
   const { 
     data: productsData, 
     isLoading: productsLoading, 
-    error: productsError,
     isError: hasProductsError 
   } = useProductsWithDisplayNames();
 
   // Static fallback products in case API fails
-  const fallbackProducts: string[] = [
+  const fallbackProducts = useMemo(() => [
     'Custom Birthday Cakes',
     'Wedding Cakes',
     'Cupcakes',
@@ -79,8 +78,8 @@ export function EnquiryForm() {
     'Seasonal Specials',
     'Party Platters',
     'Other (Please specify in message)'
-  ];
-
+  ], []);
+  
   // Combine API products with fallback, removing duplicates
   const availableProducts = useMemo<string[]>(() => {
     let products: string[] = [];
@@ -105,8 +104,9 @@ export function EnquiryForm() {
     products.push('Other (Please specify in message)');
 
     return products;
-  }, [productsData]);
+  }, [productsData,fallbackProducts]);
 
+  
   // Validation rules (same as before)
   const validateField = (name: FieldName, value: string): string => {
     switch (name) {
@@ -352,7 +352,9 @@ export function EnquiryForm() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Enquiry</h2>
-              <p className="text-gray-600">Tell us about your sweet requirements and we'll get back to you!</p>
+              <p className="text-gray-600">
+  Tell us about your sweet requirements and we&#39;ll get back to you!
+</p>
             </div>
 
             {/* Status Messages */}
@@ -609,10 +611,9 @@ export function EnquiryForm() {
                 )}
               </button>
             </div>
-
             <p className="text-xs text-gray-500 text-center mt-4">
-              We'll get back to you within 24 hours with a customized quote!
-            </p>
+  We&#39;ll get back to you within 24 hours with a customized quote!
+</p>
           </div>
         </div>
       </div>
