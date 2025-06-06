@@ -1,6 +1,6 @@
 "use client";
 
-import {  useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import AddProducts from "@/components/AddProduct";
 import { Package, Edit, Trash2, Plus, IndianRupee } from "lucide-react";
@@ -40,7 +40,7 @@ export default function AdminPanel() {
     pricing: [{ quantity: 0, unit: 'gm', price: 0 }]
   });
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = async () => {
     try {
       const res = await fetch("/api/product");
       const data = await res.json();
@@ -48,9 +48,12 @@ export default function AdminPanel() {
     } catch (err) {
       console.error("Failed to fetch products", err);
     }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
-  
   const handleAdd = () => {
     setProduct({ 
       name: '', 
@@ -85,7 +88,6 @@ export default function AdminPanel() {
       alert("Delete failed");
     }
   };
-   
 
   const handleSubmit = async () => {
     try {
