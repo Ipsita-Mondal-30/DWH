@@ -60,7 +60,7 @@ interface UseProductsOptions {
   refetchOnWindowFocus?: boolean;
   onSuccess?: (data: Product[]) => void;
   onError?: (error: Error) => void;
-  select?: (data: Product[]) => any;
+  select?: (data: Product[]) => Product;
 }
 
 export const useProductsWithOptions = (options: UseProductsOptions = {}) => {

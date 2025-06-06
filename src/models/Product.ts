@@ -1,12 +1,13 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models } from 'mongoose';
 
 export enum ProductType {
   Popular = "popular",
   Latest = "latest",
   None = "none",
 }
+
 export interface IProduct {
-  _id?: string; // ✅ add this line
+  _id?: string;
   name: string;
   description: string;
   image: string;
@@ -23,7 +24,7 @@ const ProductSchema = new Schema<IProduct>({
     enum: Object.values(ProductType),
     default: ProductType.None,
   },
-  price: { type: Number, required: true }, // ✅ new field
+  price: { type: Number, required: true },
 });
 
-export const Product = models.Product || model<IProduct>("Product", ProductSchema);
+export const Product = models.Product || model<IProduct>('Product', ProductSchema);

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {  useState, useCallback } from "react";
 import Image from "next/image";
-import AddProducts from "@/components/AddProduct"
+import AddProducts from "@/components/AddProduct";
 
 interface ProductPayload {
   name: string;
@@ -28,7 +28,7 @@ export default function AdminPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [product, setProduct] = useState<Product>({ name: '', description: '' });
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch("/api/product");
       const data = await res.json();
@@ -36,12 +36,9 @@ export default function AdminPanel() {
     } catch (err) {
       console.error("Failed to fetch products", err);
     }
-  };
-
-  useEffect(() => {
-    fetchProducts();
   }, []);
 
+  
   const handleAdd = () => {
     setProduct({ name: '', description: '' });
     setModalOpen(true);
@@ -66,13 +63,12 @@ export default function AdminPanel() {
       alert("Delete failed");
     }
   };
+   
 
   const handleSubmit = async () => {
     try {
       const method = product._id ? "PUT" : "POST";
       const url = product._id ? `/api/product/${product._id}` : "/api/product";
-
-
 
       const payload: ProductPayload = {
         name: product.name,
@@ -118,12 +114,14 @@ export default function AdminPanel() {
           <div key={p._id} className="border rounded p-4 space-y-2">
             {p.image && (
               <Image
-                src={p.image}
-                alt={p.name || "Product Image"}
-                width={200}
-                height={200}
-                className="object-cover"
-              />
+              src={p.image}
+              alt={p.name || "Product Image"}
+              width={200}
+              height={200}
+              className="object-cover"
+              placeholder="blur"
+              blurDataURL="/placeholder.png" // optional fallback image
+            />
             )}
             <h2 className="text-lg font-bold">{p.name}</h2>
             <p>{p.description}</p>

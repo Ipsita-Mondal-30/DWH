@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Eye, Edit, Calendar, User, Package, Filter } from 'lucide-react';
 
 // Type definitions
@@ -70,12 +70,7 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
     cancelled: 'bg-red-100 text-red-800'
   };
 
-  useEffect(() => {
-    fetchEnquiries();
-    fetchStats();
-  }, [currentPage, statusFilter]);
-
-  const fetchEnquiries = async (): Promise<void> => {
+  const fetchEnquiries = useCallback(async (): Promise<void> => {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -100,9 +95,9 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, statusFilter]);
 
-  const fetchStats = async (): Promise<void> => {
+  const fetchStats = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch('/api/enquiries/stats');
       const data: StatsResponse = await response.json();
@@ -113,15 +108,18 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEnquiries();
+    fetchStats();
+  }, [fetchEnquiries, fetchStats]);
 
   const updateStatus = async (id: string, newStatus: EnquiryStatus): Promise<void> => {
     try {
       const response = await fetch(`/api/enquiries/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
 
@@ -259,24 +257,12 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -284,32 +270,22 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
                   <tr key={enquiry._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
-                            <User className="h-5 w-5 text-pink-600" />
-                          </div>
+                        <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
+                          <User className="h-5 w-5 text-pink-600" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {enquiry.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {enquiry.email}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{enquiry.name}</div>
+                          <div className="text-sm text-gray-500">{enquiry.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">{enquiry.product}</div>
-                      <div className="text-sm text-gray-500">
-                        Qty: {enquiry.quantity}
-                      </div>
+                      <div className="text-sm text-gray-500">Qty: {enquiry.quantity}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">+91 {enquiry.phone}</div>
-                      <div className="text-sm text-gray-500">
-                        Budget: {enquiry.price}
-                      </div>
+                      <div className="text-sm text-gray-500">Budget: {enquiry.price}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
@@ -345,19 +321,17 @@ export default function AdminEnquiriesPage(): React.JSX.Element {
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </div>
+                <div className="text-sm text-gray-700">Page {currentPage} of {totalPages}</div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

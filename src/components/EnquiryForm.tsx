@@ -34,7 +34,11 @@ interface TouchedFields {
   price?: boolean;
   message?: boolean;
 }
-
+// Define a type for server validation errors
+interface ServerError {
+  field: string;
+  message: string;
+}
 type SubmitStatus = 'success' | 'validation_error' | 'server_error' | 'network_error' | null;
 
 type FieldName = keyof FormData;
@@ -244,7 +248,7 @@ export function EnquiryForm() {
         // Handle server validation errors
         if (result.errors && Array.isArray(result.errors)) {
           const serverErrors: FormErrors = {};
-          result.errors.forEach((error: any) => {
+          result.errors.forEach((error: ServerError) => {
             if (error.field && error.field in formData) {
               serverErrors[error.field as FieldName] = error.message;
             }

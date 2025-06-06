@@ -97,14 +97,15 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
 
-  } catch (err: any) {
-    console.error('Error processing enquiry:', err);
-
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map((error: any) => ({
+  } catch (err: unknown) {
+    const error = err as { name?: string; errors?: Record<string, { path: string; message: string }> };
+  
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors || {}).map((error: { path: string; message: string }) => ({
         field: error.path,
         message: error.message
       }));
+      
 
       return NextResponse.json(
         {
@@ -139,12 +140,17 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     // Build query with proper typing
-    const query: Record<string, any> = {};
+    interface EnquiryQuery {
+      status?: string;
+    }
+    
+    const query: EnquiryQuery = {};
+    
     if (status && ['new', 'in-progress', 'completed', 'cancelled'].includes(status)) {
       query.status = status;
     }
 
-    // Build sort object with proper typing
+    // Build sort object with proper typig
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 

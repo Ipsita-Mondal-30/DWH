@@ -15,10 +15,11 @@ export async function GET() {
   const cart = await Cart.findOne({ userId }).populate('items.productId');
 
   interface Product {
-    id: string;
+    _id: string;
     name: string;
     price: number;
-    // Add other fields as needed
+    image?: string;
+    type?: string;
   }
 
   interface CartItem {
@@ -27,23 +28,34 @@ export async function GET() {
   }
 
   const items: CartItem[] = cart?.items.map((item: { productId: Product; quantity: number }) => ({
-    product: item.productId as Product,
+    product: {
+      _id: item.productId._id,
+      name: item.productId.name,
+      price: item.productId.price,
+      image: item.productId.image,
+      type: item.productId.type,
+    },
     quantity: item.quantity,
   })) || [];
 
   return NextResponse.json({ items });
 }
 
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
   await connectDB();
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { productId, quantity }: { productId: string; quantity: number } = await _req.json();
-  let cart = await Cart.findOne({ userId });
+  const { productId, quantity }: { productId: string; quantity: number } = await req.json();
   
+  if (!productId || quantity < 1) {
+    return NextResponse.json({ error: 'Invalid product ID or quantity' }, { status: 400 });
+  }
+
+  let cart = await Cart.findOne({ userId });
+
   if (!cart) {
     cart = await Cart.create({ userId, items: [{ productId, quantity }] });
   } else {
@@ -58,7 +70,48 @@ export async function POST(_req: Request) {
     await cart.save();
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, message: 'Item added to cart' });
+}
+
+export async function PUT(req: Request) {
+  await connectDB();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { productId, quantity }: { productId: string; quantity: number } = await req.json();
+  
+  if (!productId || quantity < 0) {
+    return NextResponse.json({ error: 'Invalid product ID or quantity' }, { status: 400 });
+  }
+
+  const cart = await Cart.findOne({ userId });
+  
+  if (!cart) {
+    return NextResponse.json({ error: 'Cart not found' }, { status: 404 });
+  }
+
+  const item = cart.items.find((item: { productId: Types.ObjectId; quantity: number }) =>
+    item.productId.equals(productId)
+  );
+
+  if (!item) {
+    return NextResponse.json({ error: 'Item not found in cart' }, { status: 404 });
+  }
+
+  if (quantity === 0) {
+    // Remove item if quantity is 0
+    cart.items = cart.items.filter((item: { productId: Types.ObjectId }) =>
+      !item.productId.equals(productId)
+    );
+  } else {
+    // Update quantity
+    item.quantity = quantity;
+  }
+
+  await cart.save();
+  return NextResponse.json({ success: true, message: 'Cart updated successfully' });
 }
 
 export async function DELETE(req: Request) {
@@ -70,6 +123,10 @@ export async function DELETE(req: Request) {
 
   const { productId }: { productId: string } = await req.json();
 
+  if (!productId) {
+    return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
+  }
+
   const cart = await Cart.findOne({ userId });
   if (cart) {
     cart.items = cart.items.filter((item: { productId: Types.ObjectId }) =>
@@ -78,5 +135,5 @@ export async function DELETE(req: Request) {
     await cart.save();
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, message: 'Item removed from cart' });
 }

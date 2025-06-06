@@ -8,20 +8,23 @@ const CartItemSchema = new mongoose.Schema({
   },
   quantity: { type: Number, required: true },
 });
-
 const CartSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   items: [CartItemSchema],
 });
-export interface Product {
-    _id: string;
-    name: string;
-    // Add other fields as needed
-  }
 
+export interface Product {
+    id: string;
+    name: string;
+    price: number;
+    originalPrice?: number; // Add this property
+    image?: string;
+    size?: string;
+  }
 export interface CartItem {
     product: Product;
     quantity: number;
   }
 
-export const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
+
+  export const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);

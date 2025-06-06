@@ -2,159 +2,429 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { FiUser, FiHeart, FiShoppingBag, FiSearch } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiSearch, FiChevronDown, FiX } from "react-icons/fi";
 import { useCart } from '../app/context/CartContext';
+import { useProducts } from '../hooks/useProducts';
 import Link from "next/link"; 
 import Image from "next/image";
+import CartDrawer from "./CartDrawer";
 
+// Helper function to create URL slug from product name
+const createSlug = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim();
+};
+// Define a type for Product
+type Product = {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  image?: string;
+};
 export default function Navbar() {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cart } = useCart();
+
+  const toggleCart = () => setIsCartOpen(!isCartOpen);
+
   const { data: session } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
 
-
-  const { cart } = useCart(); // ✅ move this outside JSX
+  // Get all products for search
+  const { data: products = [], isLoading: isLoadingProducts } = useProducts();
 
   // Close dropdown on outside click
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node)
-    ) {
-      setShowDropdown(false);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+      if (
+        moreDropdownRef.current &&
+        !moreDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowMoreDropdown(false);
+      }
     }
-  }
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle search with debouncing
+  useEffect(() => {
+    if (searchQuery && products.length > 0) {
+      const filtered = products.filter((product: Product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 8); // Limit to 8 results
+      setSearchResults(filtered);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, products]);
+
+  // Handle product click
+  const handleProductClick = (product: Product) => {
+    const slug = createSlug(product.name);
+    const searchParams = new URLSearchParams({
+      _pos: '1',
+      _psq: searchQuery.substring(0, 4),
+      _ss: 'e',
+      _v: '1.0'
+    });
+    
+    // Navigate to product page
+    window.location.href = `/products/${slug}?${searchParams.toString()}`;
+  };
+
+  // Close search modal
+  const closeSearchModal = () => {
+    setShowSearchModal(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   return (
     <div className="relative">
-      <div className="bg-gradient-to-r from-white via-amber-50 to-white shadow-lg border-b border-amber-200">
-        <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+      <div className="bg-white shadow-md border-b">
+        <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
           
-          {/* Search Bar */}
-          <div className="flex items-center w-1/3">
-            <div className="relative w-full group max-w-sm">
-              <input
-                type="text"
-                placeholder="Search delicious treats..."
-                className="w-full px-4 py-2.5 text-gray-700 bg-white/90 backdrop-blur-sm rounded-full border border-amber-200 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100 transition-all duration-300 placeholder-gray-500 shadow-sm text-sm"
-              />
-              <button className="absolute right-0 top-0 px-4 py-2.5 text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 rounded-r-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 border border-amber-500">
-                <FiSearch className="text-sm" />
-              </button>
-            </div>
-          </div>
-
-          {/* Logo */}
-          <div className="w-1/3 flex justify-center">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+          {/* Logo - Left Side */}
+          <div className="flex items-center">
+            <Link href="/">
               <Image
-  src="/dwh.png"
-  alt="Haldiram's Logo"
-  className="relative h-12 object-contain filter drop-shadow-md hover:drop-shadow-lg transition-all duration-300 transform hover:scale-105"
-  width={48}  // 12 * 4 px since h-12 = 3rem, adjust width/height as needed
-  height={48}
-/>
-
-            </div>
+                src="/delwh.png"
+                alt="Vaishnavi Logo"
+                className="h-16 object-contain cursor-pointer"
+                width={120}
+                height={64}
+              />
+            </Link>
           </div>
 
-          {/* Icons + Dropdown */}
-          <div className="w-1/3 flex justify-end space-x-3 relative items-center">
-            <div ref={dropdownRef} className="relative">
-              <div
-                className="p-2 rounded-full bg-gradient-to-br from-amber-100 to-yellow-100 hover:from-amber-200 hover:to-yellow-200 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 border border-amber-200"
-                onClick={() => setShowDropdown(!showDropdown)}
+          {/* Navigation Links - Center */}
+          <div className="flex items-center space-x-8">
+            <Link 
+              href="/" 
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+            >
+              Home
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link 
+              href="/collections/sweets" 
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+            >
+              Sweets
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link 
+              href="/collections/savouries" 
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+            >
+              Savouries
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link 
+              href="/pages/about-us" 
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+            >
+              About us
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+
+            {/* More Dropdown */}
+            <div ref={moreDropdownRef} className="relative">
+              <button
+                onClick={() => setShowMoreDropdown(!showMoreDropdown)}
+                className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                <FiUser className="text-lg text-amber-700" />
-              </div>
-              {showDropdown && (
-                <div className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-md border border-amber-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200">
-                  {session ? (
-                    <div className="p-4">
-                      <div className="flex items-center space-x-3 mb-4 p-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl">
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-200 shadow-sm">
-                          {session.user?.image ? (
-                           <Image
-                           src={session.user.image}
-                           alt="Profile"
-                           className="object-cover"
-                           width={48}   // adjust size to fit container (w-full h-full of 12*4 = 48px)
-                           height={48}
-                           layout="responsive" // optional, or use "intrinsic" or omit based on your design
-                         />
-                         
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center">
-                              <FiUser className="text-white text-lg" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 mb-1">Welcome back</p>
-                          <p className="font-medium text-gray-800 truncate text-sm">
-                            {session.user?.name || session.user?.email}
-                          </p>
-                          {session.user?.name && session.user?.email && (
-                            <p className="text-xs text-gray-500 truncate">
-                              {session.user.email}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => signOut()}
-                        className="w-full px-4 py-2.5 text-white bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-2">
-                      <button
-                        onClick={() => signIn("google")}
-                        className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 rounded-xl transition-all duration-300 font-medium space-x-3 group"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <span className="text-white text-sm font-bold">G</span>
-                        </div>
-                        <span>Sign in with Google</span>
-                      </button>
-                    </div>
-                  )}
+                <span>More</span>
+                <FiChevronDown className={`text-sm transition-transform ${showMoreDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showMoreDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="py-1">
+                    <a
+                      href="https://api.whatsapp.com/send/?phone=919888484988&text&type=phone_number&app_absent=0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Chat with Us
+                    </a>
+                    <a
+                      href="https://your-order-track.shiprocket.co/tracking"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Track Your Order
+                    </a>
+                    <Link
+                      href="/pages/contact-us"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Contact Us
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
 
+          {/* Right Side - Icons */}
+          <div className="flex justify-end items-center space-x-4">
+            
+            {/* Welcome Message when signed in */}
             {session && (
-              <>
-                <div className="p-2 rounded-full bg-gradient-to-br from-pink-100 to-red-100 hover:from-pink-200 hover:to-red-200 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 border border-pink-200 group">
-                  <FiHeart className="text-lg text-pink-600 group-hover:fill-current transition-all duration-300" />
-                </div>
-
-                <Link href="/cart" passHref>
-  <div className="p-2 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 border border-green-200 relative group">
-    <FiShoppingBag className="text-lg text-green-600" />
-    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-      <span className="text-white text-xs font-bold">
-        {cart.reduce((total, item) => total + item.quantity, 0)}
-      </span>
-    </div>
-  </div>
-</Link>
-
-              </>
+              <div className="text-sm text-gray-600">
+                🎉 Welcome, {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}!
+              </div>
             )}
+
+            {/* Icons Section */}
+            <div className="flex items-center space-x-3">
+              
+              {/* Search Icon */}
+              <div 
+                className="p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded"
+                onClick={() => setShowSearchModal(true)}
+              >
+                <FiSearch className="text-lg text-gray-700" />
+              </div>
+              
+              {/* User Icon with Dropdown */}
+              <div ref={dropdownRef} className="relative">
+                <div
+                  className="p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  <FiUser className="text-lg text-gray-700" />
+                </div>
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    {session ? (
+                      <div className="py-2">
+                        {/* Welcome Section */}
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center space-x-2">
+                            <FiUser className="text-lg text-gray-600" />
+                            <span className="text-sm font-medium text-gray-800">
+                              Welcome, {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Menu Items */}
+                        <div className="py-1">
+                          <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            My Account
+                          </Link>
+                          <Link href="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            My Wish List
+                          </Link>
+                          <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            My Orders
+                          </Link>
+                        </div>
+
+                        {/* Sign Out Section */}
+                        <div className="border-t border-gray-100 py-1">
+                          <button
+                            onClick={() => signOut()}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Sign Out
+                          </button>
+                          <div className="px-4 py-2 text-sm text-gray-700">
+                            Reward Points
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-2">
+                        <button
+                          onClick={() => signIn("google")}
+                          className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gray-50 rounded transition-colors font-medium space-x-3"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-red-500 flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">G</span>
+                          </div>
+                          <span>Sign in with Google</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Cart Icon - always visible */}
+              <div className="relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded" onClick={toggleCart}>
+                <FiShoppingBag className="text-lg text-gray-700" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center">
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Cart Drawer */}
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
           </div>
         </div>
       </div>
 
-      {/* Shadow line under navbar */}
-      <div className="h-1 bg-gradient-to-r from-transparent via-amber-200 to-transparent opacity-50"></div>
+      {/* Full Screen Search Modal */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-white bg-opacity-95 backdrop-blur-sm z-50 animate-in fade-in duration-300">
+          <div className="flex flex-col h-full">
+            
+            {/* Search Header */}
+            <div className="flex items-center justify-center py-8 border-b border-gray-200">
+              <div className="w-full max-w-2xl px-4">
+                <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+                  Search our site
+                </h2>
+                
+                {/* Search Input */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiSearch className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-12 pr-12 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Search for products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                    >
+                      <FiX className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Close Button */}
+              <button
+                onClick={closeSearchModal}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <FiX className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Search Results */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-4xl mx-auto px-4 py-8">
+                
+                {searchQuery && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">Products</h3>
+                      {searchResults.length > 0 && (
+                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                          View all →
+                        </button>
+                      )}
+                    </div>
+                    
+                    {isLoadingProducts ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {searchResults.map((product: Product) => (
+                          <div
+                            key={product._id}
+                            className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+                            onClick={() => handleProductClick(product)}
+                          >
+                            {/* Product Image */}
+                            <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100 relative">
+  {product.image ? (
+    <Image
+      src={product.image}
+      alt={product.name}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
+      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+      <span className="text-gray-400 text-sm">No Image</span>
+    </div>
+  )}
+</div>
+                            
+                            {/* Product Details */}
+                            <div className="p-4">
+                              <h4 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                                {product.name}
+                              </h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-500 line-through">
+                                  Rs. {(product.price * 1.2).toFixed(2)}
+                                </span>
+                                <span className="font-semibold text-red-600">
+                                  From Rs. {product.price}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">
+                        &quot; No products found for {searchQuery} &quot;
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!searchQuery && (
+                  <div className="text-center py-20">
+                    <FiSearch className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">
+                      Start typing to search for products...
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

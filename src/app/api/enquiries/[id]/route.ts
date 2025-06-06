@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import Enquiry from '@/models/Enquiry';
-import mongoose from 'mongoose';
 
-// GET - Fetch single enquiry
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id;
+
   try {
     await connectDB();
 
-    const { id } = params;
-
-    // Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid enquiry ID'
-        },
+        { success: false, message: 'Invalid enquiry ID' },
         { status: 400 }
       );
     }
@@ -25,58 +23,42 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     if (!enquiry) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Enquiry not found'
-        },
+        { success: false, message: 'Enquiry not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: enquiry
-    });
-
+    return NextResponse.json({ success: true, data: enquiry });
   } catch (error) {
-    console.error('Error fetching enquiry:', error);
+    console.error('Error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Error fetching enquiry'
-      },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }
 }
 
 // PUT - Update enquiry status
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+
   try {
     await connectDB();
+    const { status } = await req.json();
 
-    const { id } = params;
-    const body = await request.json();
-    const { status } = body;
-
-    // Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid enquiry ID'
-        },
+        { success: false, message: 'Invalid enquiry ID' },
         { status: 400 }
       );
     }
 
-    // Validate status
     if (!status || !['new', 'in-progress', 'completed', 'cancelled'].includes(status)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Status must be one of: new, in-progress, completed, cancelled'
-        },
+        { success: false, message: 'Invalid status value' },
         { status: 400 }
       );
     }
@@ -89,10 +71,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     if (!enquiry) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Enquiry not found'
-        },
+        { success: false, message: 'Enquiry not found' },
         { status: 404 }
       );
     }
@@ -106,10 +85,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     console.error('Error updating enquiry:', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Error updating enquiry'
-      },
+      { success: false, message: 'Error updating enquiry' },
       { status: 500 }
     );
   }

@@ -9,37 +9,43 @@ interface CartContextType {
   cart: CartItem[];
   addToCart: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-    const { data: session } = useSession();
-    const [cart, setCart] = useState<CartItem[]>([]);
-  
-    const fetchCart = useCallback(async () => {
-      if (session) {
-        const res = await axios.get('/api/cart');
-        setCart(res.data.items);
-      }
-    }, [session]);  // fetchCart changes only if session changes
-  
-    useEffect(() => {
-      fetchCart();
-    }, [fetchCart]);  // now fetchCart is a stable dependency
-  
+  const { data: session } = useSession();
+  const [cart, setCart] = useState<CartItem[]>([]);
+
+  const fetchCart = useCallback(async () => {
+    if (session) {
+      const res = await axios.get('/api/cart');
+      setCart(res.data.items);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
   const addToCart = async (productId: string, quantity: number) => {
     await axios.post('/api/cart', { productId, quantity });
-    fetchCart(); // Sync after update
+    fetchCart();
   };
 
   const removeFromCart = async (productId: string) => {
     await axios.delete('/api/cart', { data: { productId } });
-    fetchCart(); // Sync after removal
+    fetchCart();
+  };
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    await axios.put('/api/cart', { productId, quantity });
+    fetchCart();
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity }}>
       {children}
     </CartContext.Provider>
   );
