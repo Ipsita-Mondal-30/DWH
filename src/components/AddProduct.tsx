@@ -176,8 +176,8 @@ export default function AddProducts({
 
           {product.pricing.length === 0 && (
             <div className="text-gray-500 text-center py-4 border-2 border-dashed border-gray-300 rounded-lg">
-              No pricing options added. Click "Add Pricing" to get started.
-            </div>
+            No pricing options added. Click &quot;Add Pricing&quot; to get started.
+          </div>
           )}
 
           {product.pricing.map((pricing, index) => (
