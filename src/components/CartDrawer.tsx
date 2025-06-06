@@ -33,6 +33,13 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
   const suggestedProducts = products
     .filter(product => !cartProductIds.includes(product._id))
     .slice(0, 5);
+    const clearExpiredCartItems = useCallback(() => {
+      cart.forEach(item => {
+        if (item.product._id) {
+          removeFromCart(item.product._id);
+        }
+      });
+    }, [cart, removeFromCart]);
 
   // Initialize timer - persistent across page navigations
   useEffect(() => {
@@ -58,15 +65,9 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
     };
 
     initializeTimer();
-  }, [cart.length]);
+  }, [cart.length ,clearExpiredCartItems]);
 
-  const clearExpiredCartItems = useCallback(() => {
-    cart.forEach(item => {
-      if (item.product._id) {
-        removeFromCart(item.product._id);
-      }
-    });
-  }, [cart, removeFromCart]);
+  
 
   // Timer countdown effect
   useEffect(() => {
@@ -338,7 +339,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                         {suggestedProducts[currentSlide]?.name}
                       </h4>
                       <span className="text-sm font-semibold text-gray-900">
-                        ₹{(suggestedProducts[currentSlide] as any)?.price?.toFixed(2) || 'N/A'}
+                        ₹{suggestedProducts[currentSlide]?.price?.toFixed(2) ?? 'N/A'}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">
                         {suggestedProducts[currentSlide]?.type || 'Product'}

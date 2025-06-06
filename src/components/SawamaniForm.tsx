@@ -396,7 +396,7 @@ export function SawamaniForm() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
-              <p className="text-gray-600">Fill in your details and we'll prepare your fresh sweets!</p>
+              <p className="text-gray-600">Fill in your details and we will prepare your fresh sweets!</p>
             </div>
 
 
@@ -643,7 +643,7 @@ export function SawamaniForm() {
             {submitStatus === 'success' && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-green-700">Thank you! Your order has been placed successfully. We'll contact you soon to confirm.</span>
+                <span className="text-green-700">Thank you! Your order has been placed successfully. We will contact you soon to confirm.</span>
               </div>
             )}
 

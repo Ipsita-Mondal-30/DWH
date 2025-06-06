@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import Sawamani from '@/models/Sawamani';
 import { connectDB } from '@/lib/db';
 
-
 // GET request - Fetch all Sawamani orders
 export async function GET(request: NextRequest) {
   try {
@@ -20,8 +19,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // Build filter object
-    const filter: any = {};
+    // ✅ Replaced `any` with safe dynamic type
+    const filter: Record<string, unknown> = {};
     
     if (phoneNumber) {
       filter.phoneNumber = phoneNumber;
@@ -34,10 +33,10 @@ export async function GET(request: NextRequest) {
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) {
-        filter.date.$gte = new Date(startDate);
+        (filter.date as Record<string, Date>).$gte = new Date(startDate);
       }
       if (endDate) {
-        filter.date.$lte = new Date(endDate);
+        (filter.date as Record<string, Date>).$lte = new Date(endDate);
       }
     }
 

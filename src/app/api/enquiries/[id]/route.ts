@@ -3,11 +3,15 @@ import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import Enquiry from '@/models/Enquiry';
 
+interface Params {
+  id: string;
+}
+
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<Params> }
 ) {
-  const id = context.params.id;
+  const { id } = await params; // Await the params Promise
 
   try {
     await connectDB();
@@ -30,7 +34,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: enquiry });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('GET /api/enquiries/[id] error:', error);
     return NextResponse.json(
       { success: false, message: 'Server error' },
       { status: 500 }
@@ -38,15 +42,15 @@ export async function GET(
   }
 }
 
-// PUT - Update enquiry status
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<Params> }
 ) {
-  const id = params.id;
+  const { id } = await params; // Await the params Promise
 
   try {
     await connectDB();
+
     const { status } = await req.json();
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -56,7 +60,10 @@ export async function PUT(
       );
     }
 
-    if (!status || !['new', 'in-progress', 'completed', 'cancelled'].includes(status)) {
+    if (
+      !status ||
+      !['new', 'in-progress', 'completed', 'cancelled'].includes(status)
+    ) {
       return NextResponse.json(
         { success: false, message: 'Invalid status value' },
         { status: 400 }
@@ -79,13 +86,12 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Enquiry status updated successfully',
-      data: enquiry
+      data: enquiry,
     });
-
   } catch (error) {
-    console.error('Error updating enquiry:', error);
+    console.error('PUT /api/enquiries/[id] error:', error);
     return NextResponse.json(
-      { success: false, message: 'Error updating enquiry' },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }
