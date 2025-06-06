@@ -8,6 +8,7 @@ import EnquiryForm from "@/components/EnquiryForm";
 import LatestProduct from "@/components/LatestProduct";
 import PopularProduct from "@/components/PopularProduct";
 import SawamaniForm from "@/components/SawamaniForm";
+import InteractiveMap from '@/components/InteractiveMap';
 
 export default function Home() {
   const { status } = useSession();
@@ -31,6 +32,7 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-6">Popular Product</h2>
         <PopularProduct />
       </section>
+      <div> <InteractiveMap /> </div>
       <EnquiryForm />
       <SawamaniForm />
     </>
