@@ -429,21 +429,21 @@ export default function AdminPanel() {
           </button>
           <button
             onClick={handleAddBox}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Box className="w-5 h-5" />
             Add Box
           </button>
           <button
             onClick={handleAddNamkeen}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Cookie className="w-5 h-5" />
             Add Namkeen
           </button>
           <button 
             onClick={() => router.push('/admin/enquiries')}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            className="bg-blue-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             Enquiries
           </button>
@@ -486,7 +486,7 @@ export default function AdminPanel() {
                 handleAddBox();
                 setDrawerOpen(false);
               }}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-blue-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               <Box className="w-5 h-5" />
               Add Box
@@ -496,7 +496,7 @@ export default function AdminPanel() {
                 handleAddNamkeen();
                 setDrawerOpen(false);
               }}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-blue-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               <Cookie className="w-5 h-5" />
               Add Namkeen
@@ -506,7 +506,7 @@ export default function AdminPanel() {
                 router.push("/admin/enquiries");
                 setDrawerOpen(false);
               }}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               Enquiries
             </button>
@@ -612,14 +612,14 @@ export default function AdminPanel() {
               </button>
               <button
                 onClick={handleAddBox}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-blue-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Box className="w-5 h-5" />
                 Add Box
               </button>
               <button
                 onClick={handleAddNamkeen}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Cookie className="w-5 h-5" />
                 Add Namkeen
