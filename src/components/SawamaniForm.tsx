@@ -399,13 +399,6 @@ export function SawamaniForm() {
               <p className="text-gray-600">Fill in your details and we'll prepare your fresh sweets!</p>
             </div>
 
-            {/* Status Messages */}
-            {submitStatus === 'success' && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-green-700">Thank you! Your order has been placed successfully. We'll contact you soon to confirm.</span>
-              </div>
-            )}
 
             {submitStatus === 'validation_error' && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
@@ -646,6 +639,13 @@ export function SawamaniForm() {
                   {formData.message.length}/1000 characters
                 </p>
               </div>
+                          {/* Status Messages */}
+            {submitStatus === 'success' && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-green-700">Thank you! Your order has been placed successfully. We'll contact you soon to confirm.</span>
+              </div>
+            )}
 
               {/* Submit Button */}
               <button

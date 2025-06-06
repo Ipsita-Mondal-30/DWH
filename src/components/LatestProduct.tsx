@@ -122,7 +122,7 @@ export default function LatestProduct() {
                     ? 'bg-blue-100 text-blue-800' 
                     : 'bg-orange-100 text-orange-800'
                 }`}>
-                  {item.itemType === 'product' ? 'Product' : 'Namkeen'}
+                  {item.itemType === 'product' ? 'Sweet' : 'Namkeen'}
                 </span>
               </div>
             </div>

@@ -403,18 +403,6 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                   <ShoppingBag className="h-4 w-4" />
                   Proceed to Checkout
                 </button>
-                
-                {/* Payment Icons */}
-                <div className="flex justify-center items-center gap-2 mb-4">
-                  <span className="text-xs text-gray-500 mr-2">We accept:</span>
-                  <div className="flex gap-1">
-                    {['PT', 'GP', 'V', 'M', 'AP', 'PP'].map((method, index) => (
-                      <div key={index} className="w-8 h-5 bg-gray-600 rounded text-xs flex items-center justify-center text-white font-bold">
-                        {method}
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </>
             )}
             
