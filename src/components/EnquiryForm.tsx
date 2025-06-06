@@ -1,10 +1,12 @@
+// Complete updated EnquiryForm component with pricing support
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { Heart, Phone, Mail, MapPin, Send, User, Package, Hash, MessageSquare, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { useProductNames } from '@/hooks/useProducts';
+import { useProductsWithDisplayNames } from '@/hooks/useProducts';
 
-// Type definitions
+// Type definitions (same as before)
 interface FormData {
   name: string;
   email: string;
@@ -40,7 +42,6 @@ interface ServerError {
   message: string;
 }
 type SubmitStatus = 'success' | 'validation_error' | 'server_error' | 'network_error' | null;
-
 type FieldName = keyof FormData;
 
 export function EnquiryForm() {
@@ -59,26 +60,45 @@ export function EnquiryForm() {
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(null);
   const [touched, setTouched] = useState<TouchedFields>({});
 
-  // Fetch products using our custom hook
+  // Fetch products with pricing display names
   const { 
     data: productsData, 
     isLoading: productsLoading, 
-    // error: productsError,
+    error: productsError,
     isError: hasProductsError 
-  } = useProductNames();
+  } = useProductsWithDisplayNames();
 
- 
+  // Static fallback products in case API fails
+  const fallbackProducts: string[] = [
+    'Custom Birthday Cakes',
+    'Wedding Cakes',
+    'Cupcakes',
+    'Traditional Indian Sweets',
+    'Chocolate Truffles',
+    'Cookies & Biscuits',
+    'Seasonal Specials',
+    'Party Platters',
+    'Other (Please specify in message)'
+  ];
+
+  // Combine API products with fallback, removing duplicates
   const availableProducts = useMemo<string[]>(() => {
     let products: string[] = [];
     
-    // Add products from API if available
+    // Add products from API if available (with pricing display names)
     if (productsData && Array.isArray(productsData)) {
-      products = productsData.map(product => product.name);
+      products = productsData.map(product => product.displayName);
     }
     
+    // Add fallback products that aren't already in the list
+    fallbackProducts.forEach(fallbackProduct => {
+      if (!products.some(p => p.includes(fallbackProduct))) {
+        products.push(fallbackProduct);
+      }
+    });
 
     // Always ensure "Other" option is at the end
-    const otherIndex = products.indexOf('Other (Please specify in message)');
+    const otherIndex = products.findIndex(p => p.includes('Other (Please specify in message)'));
     if (otherIndex > -1) {
       products.splice(otherIndex, 1);
     }
@@ -87,7 +107,7 @@ export function EnquiryForm() {
     return products;
   }, [productsData]);
 
-  // Validation rules
+  // Validation rules (same as before)
   const validateField = (name: FieldName, value: string): string => {
     switch (name) {
       case 'name':
@@ -332,7 +352,7 @@ export function EnquiryForm() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Enquiry</h2>
-              <p className="text-gray-600">Tell us about your sweet requirements and well get back to you!</p>
+              <p className="text-gray-600">Tell us about your sweet requirements and we'll get back to you!</p>
             </div>
 
             {/* Status Messages */}
@@ -486,11 +506,16 @@ export function EnquiryForm() {
                       {errors.product}
                     </p>
                   )}
+                  {formData.product && !formData.product.includes('Other') && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      💡 Price is already included in the selection above
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Hash className="w-4 h-4 inline mr-1" />
-                    Estimated Quantity
+                    Additional Quantity
                   </label>
                   <input
                     type="text"
@@ -499,7 +524,7 @@ export function EnquiryForm() {
                     onChange={handleInputChange}
                     onBlur={handleBlur}
                     className={getInputClasses('quantity')}
-                    placeholder="e.g., 2 kg, 50 pieces"
+                    placeholder="e.g., 2x more, special size"
                   />
                   {errors.quantity && touched.quantity && (
                     <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -510,27 +535,30 @@ export function EnquiryForm() {
                 </div>
               </div>
 
-              {/* Budget */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Budget Range (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  className={getInputClasses('price')}
-                  placeholder="e.g., ₹500-1000, ₹2000+"
-                />
-                {errors.price && touched.price && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.price}
-                  </p>
-                )}
-              </div>
+              {/* Budget - only show for Other option */}
+              {formData.product && formData.product.includes('Other') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Budget Range *
+                  </label>
+                  <input
+                    type="text"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={getInputClasses('price')}
+                    placeholder="e.g., ₹500-1000, ₹2000+"
+                    required={formData.product.includes('Other')}
+                  />
+                  {errors.price && touched.price && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.price}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Message */}
               <div>
@@ -583,7 +611,7 @@ export function EnquiryForm() {
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-4">
-              We will get back to you within 24 hours with a customized quote!
+              We'll get back to you within 24 hours with a customized quote!
             </p>
           </div>
         </div>

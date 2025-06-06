@@ -8,6 +8,7 @@ import { useProducts } from '../hooks/useProducts';
 import Link from "next/link"; 
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
+import { Product } from "../models/Product"
 
 // Helper function to create URL slug from product name
 const createSlug = (name: string) => {
@@ -18,14 +19,7 @@ const createSlug = (name: string) => {
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .trim();
 };
-// Define a type for Product
-type Product = {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  image?: string;
-};
+// Import the Product type from useProducts
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cart } = useCart();
@@ -67,17 +61,24 @@ export default function Navbar() {
 
   // Handle search with debouncing
   useEffect(() => {
-    if (searchQuery && products.length > 0) {
-      const filtered = products.filter((product: Product) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 8); // Limit to 8 results
-      setSearchResults(filtered);
-    } else {
-      setSearchResults([]);
-    }
+    const timeout = setTimeout(() => {
+      if (searchQuery && products.length > 0) {
+        const filtered = products
+          .filter((product) =>
+            product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .slice(0, 8);
+        setSearchResults(filtered);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+  
+    return () => clearTimeout(timeout);
   }, [searchQuery, products]);
-
+  
+  
   // Handle product click
   const handleProductClick = (product: Product) => {
     const slug = createSlug(product.name);

@@ -303,7 +303,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </h4>
                       <div className="flex items-center gap-2 mt-1">
                       <span className="text-sm font-semibold text-gray-800">
-  Rs. {(suggestedProducts[currentSlide]?.price ?? 0).toFixed(2)}
+  Rs. {(suggestedProducts[currentSlide] && 'price' in suggestedProducts[currentSlide] ? (suggestedProducts[currentSlide] as any).price.toFixed(2) : 'N/A')}
 </span>
 
                       </div>
