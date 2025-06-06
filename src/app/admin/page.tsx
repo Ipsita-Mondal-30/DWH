@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import AddProducts from "@/components/AddProduct";
 import { Package, Edit, Trash2, Plus, IndianRupee } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Updated interfaces to match the new pricing structure
 interface Pricing {
@@ -32,6 +33,7 @@ interface Product {
 }
 
 export default function AdminPanel() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [product, setProduct] = useState<Product>({ 
@@ -134,24 +136,6 @@ export default function AdminPanel() {
     }
   };
 
-  // Helper function to format pricing display
-  const formatPricingDisplay = (pricing: Pricing[]): string => {
-    if (!pricing || pricing.length === 0) return 'No pricing set';
-    
-    if (pricing.length === 1) {
-      const p = pricing[0];
-      return `${p.quantity} ${p.unit} - ₹${p.price}`;
-    }
-    
-    const minPrice = Math.min(...pricing.map(p => p.price));
-    const maxPrice = Math.max(...pricing.map(p => p.price));
-    
-    if (minPrice === maxPrice) {
-      return `₹${minPrice} (${pricing.length} options)`;
-    }
-    
-    return `₹${minPrice} - ₹${maxPrice} (${pricing.length} options)`;
-  };
 
   // Helper function to get the cheapest price for sorting
   const getCheapestPrice = (pricing: Pricing[]): number => {
@@ -168,13 +152,20 @@ export default function AdminPanel() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
             <p className="text-gray-600">Manage your sweet products and pricing</p>
           </div>
+          <div className="flex gap-x-2">
           <button
             onClick={handleAdd}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
-            Add Product
+            Add Sweet
           </button>
+          <button 
+          onClick={() => router.push('/admin/enquiries')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
+            Enquiries
+          </button>
+          </div>
         </div>
 
         {/* Stats */}

@@ -94,7 +94,7 @@ export default function AddProducts({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-4">
         <h2 className="text-xl font-bold">
-          {product?._id ? "Edit Product" : "Add Product"}
+          {product?._id ? "Edit sweet" : "Add Sweet"}
         </h2>
 
         {/* Basic Product Info */}
@@ -117,7 +117,7 @@ export default function AddProducts({
             rows={3}
             required
           />
-
+          <label className="block text-sm font-medium text-gray-700 mb-2"> Product Type</label>
           <select
             name="type"
             value={product.type || "none"}

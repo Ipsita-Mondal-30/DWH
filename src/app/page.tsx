@@ -7,6 +7,7 @@ import Carousel from "../components/Carousel";
 import EnquiryForm from "@/components/EnquiryForm";
 import LatestProduct from "@/components/LatestProduct";
 import PopularProduct from "@/components/PopularProduct";
+import SawamaniForm from "@/components/SawamaniForm";
 
 export default function Home() {
   const { status } = useSession();
@@ -31,6 +32,7 @@ export default function Home() {
         <PopularProduct />
       </section>
       <EnquiryForm />
+      <SawamaniForm />
     </>
   );
 }
