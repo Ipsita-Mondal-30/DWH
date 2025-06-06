@@ -6,25 +6,31 @@ const CartItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true,
   },
-  quantity: { type: Number, required: true },
-});
+  quantity: { 
+    type: Number, 
+    required: true,
+    min: 1
+  },
+}, { _id: true });
+
 const CartSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
+  userId: { 
+    type: String, 
+    required: true,
+    index: true
+  },
   items: [CartItemSchema],
+}, {
+  timestamps: true,
 });
 
-export interface Product {
-    id: string;
-    name: string;
-    price: number;
-    originalPrice?: number; // Add this property
-    image?: string;
-    size?: string;
-  }
-export interface CartItem {
-    product: Product;
-    quantity: number;
-  }
+// Add index for faster queries
+CartSchema.index({ userId: 1 });
 
+// Remove items with quantity 0 before saving
+CartSchema.pre('save', function() {
+  const filteredItems = this.items.filter(item => item.quantity > 0);
+  this.items.splice(0, this.items.length, ...filteredItems);
+});
 
-  export const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
+export const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
