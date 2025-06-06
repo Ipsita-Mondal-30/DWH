@@ -368,7 +368,7 @@ export default function AdminPanel() {
     ...boxes.map(b => b.price),
     ...namkeens.flatMap(n => n.pricing?.map(pr => pr.price) || [0])
   ].filter(price => price > 0);
-  
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 0;
 
@@ -376,7 +376,7 @@ export default function AdminPanel() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        {/* <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
             <p className="text-gray-600">Manage your sweets, boxes, and namkeens</p>
@@ -410,7 +410,109 @@ export default function AdminPanel() {
               Enquiries
             </button>
           </div>
+        </div> */}
+
+<div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
+          <p className="text-gray-600">Manage your sweets, boxes, and namkeens</p>
         </div>
+
+        {/* Desktop Buttons */}
+        <div className="hidden md:flex gap-x-2">
+          <button
+            onClick={handleAddProduct}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add Sweet
+          </button>
+          <button
+            onClick={handleAddBox}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Box className="w-5 h-5" />
+            Add Box
+          </button>
+          <button
+            onClick={handleAddNamkeen}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Cookie className="w-5 h-5" />
+            Add Namkeen
+          </button>
+          <button 
+            onClick={() => router.push('/admin/enquiries')}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            Enquiries
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Floating Button */}
+      <div className="md:hidden">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+
+        {/* Drawer */}
+        <div
+          className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+            drawerOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex justify-end p-4">
+            <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
+              ×
+            </button>
+          </div>
+          <div className="flex flex-col gap-4 p-4">
+            <button
+              onClick={() => {
+                handleAddProduct();
+                setDrawerOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Sweet
+            </button>
+            <button
+              onClick={() => {
+                handleAddBox();
+                setDrawerOpen(false);
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Box className="w-5 h-5" />
+              Add Box
+            </button>
+            <button
+              onClick={() => {
+                handleAddNamkeen();
+                setDrawerOpen(false);
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Cookie className="w-5 h-5" />
+              Add Namkeen
+            </button>
+            <button
+              onClick={() => {
+                router.push("/admin/enquiries");
+                setDrawerOpen(false);
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              Enquiries
+            </button>
+          </div>
+        </div>
+      </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
