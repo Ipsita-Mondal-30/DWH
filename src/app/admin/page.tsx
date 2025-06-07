@@ -467,7 +467,7 @@ export default function AdminPanel() {
         >
           <div className="flex justify-end p-4">
             <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
-              ×
+              x
             </button>
           </div>
           <div className="flex flex-col gap-4 p-4">
@@ -515,86 +515,88 @@ export default function AdminPanel() {
       </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-semibold text-gray-900">{totalProducts}</p>
-              </div>
-            </div>
-          </div>
+{/* Stats */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-blue-100 rounded-lg">
+        <Package className="w-6 h-6 text-blue-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Total Products</p>
+        <p className="text-2xl font-semibold text-gray-900">{totalProducts}</p>
+      </div>
+    </div>
+  </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Sweets</p>
-                <p className="text-2xl font-semibold text-gray-900">{products.length}</p>
-              </div>
-            </div>
-          </div>
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-blue-100 rounded-lg">
+        <Package className="w-6 h-6 text-blue-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Sweets</p>
+        <p className="text-2xl font-semibold text-gray-900">{products.length}</p>
+      </div>
+    </div>
+  </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Box className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Boxes</p>
-                <p className="text-2xl font-semibold text-gray-900">{boxes.length}</p>
-              </div>
-            </div>
-          </div>
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-orange-100 rounded-lg">
+        <Box className="w-6 h-6 text-orange-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Boxes</p>
+        <p className="text-2xl font-semibold text-gray-900">{boxes.length}</p>
+      </div>
+    </div>
+  </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Cookie className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Namkeens</p>
-                <p className="text-2xl font-semibold text-gray-900">{namkeens.length}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-green-100 rounded-lg">
+        <Cookie className="w-6 h-6 text-green-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Namkeens</p>
+        <p className="text-2xl font-semibold text-gray-900">{namkeens.length}</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-        {/* Price Range Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <IndianRupee className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Price Range</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {totalProducts > 0 ? `₹${minPrice} - ₹${maxPrice}` : '₹0'}
-                </p>
-              </div>
-            </div>
-          </div>
+{/* Price Range Stats */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-green-100 rounded-lg">
+        <IndianRupee className="w-6 h-6 text-green-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Price Range</p>
+        <p className="text-2xl font-semibold text-gray-900">
+          {totalProducts > 0 ? `₹${minPrice} - ₹${maxPrice}` : '₹0'}
+        </p>
+      </div>
+    </div>
+  </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Edit className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {new Set([...products.map(p => p.type), ...namkeens.map(n => n.type)].filter(Boolean)).size}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div className="bg-white p-6 rounded-lg shadow-sm border">
+    <div className="flex items-center">
+      <div className="p-2 bg-purple-100 rounded-lg">
+        <Edit className="w-6 h-6 text-purple-600" />
+      </div>
+      <div className="ml-4">
+        <p className="text-sm font-medium text-gray-600">Categories</p>
+        <p className="text-2xl font-semibold text-gray-900">
+          {new Set([...products.map(p => p.type), ...namkeens.map(n => n.type)].filter(Boolean)).size}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         {/* Products Section */}
         {totalProducts === 0 ? (
@@ -632,82 +634,88 @@ export default function AdminPanel() {
             {products.length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Sweets ({products.length})</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.map((p) => (
-                    <div key={p._id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                      {p.image && (
-                        <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                          <Image
-                            src={p.image}
-                            alt={p.name || "Product Image"}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((p) => (
+                  <div
+                    key={p._id}
+                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                  >
+                    {p.image && (
+                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                        <Image
+                          src={p.image}
+                          alt={p.name || "Product Image"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
 
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{p.name}</h3>
-                            {p.type && p.type !== 'none' && (
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                p.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
-                                p.type === 'latest' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {p.type}
-                              </span>
-                            )}
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{p.description}</p>
-                          
-                          <div className="mb-4">
-                            <p className="text-sm font-medium text-gray-700 mb-2">Pricing Options:</p>
-                            {p.pricing && p.pricing.length > 0 ? (
-                              <div className="space-y-1">
-                                {p.pricing.slice(0, 3).map((pricing, index) => (
-                                  <div key={index} className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600">
-                                      {pricing.quantity} {pricing.unit}
-                                    </span>
-                                    <span className="font-semibold text-green-700">
-                                      ₹{pricing.price}
-                                    </span>
-                                  </div>
-                                ))}
-                                {p.pricing.length > 3 && (
-                                  <p className="text-xs text-gray-500">
-                                    +{p.pricing.length - 3} more options
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-500">No pricing set</p>
-                            )}
-                          </div>
+                    <div className="p-4 sm:p-6">
+                      <div className="mb-3 sm:mb-4">
+                        <div className="flex items-start justify-between mb-1 sm:mb-2">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
+                            {p.name}
+                          </h3>
+                          {p.type && p.type !== 'none' && (
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              p.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
+                              p.type === 'latest' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {p.type}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditProduct(p)}
-                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(p._id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </button>
+                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{p.description}</p>
+
+                        <div className="mb-3 sm:mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
+                          {p.pricing && p.pricing.length > 0 ? (
+                            <div className="space-y-1">
+                              {p.pricing.slice(0, 3).map((pricing, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">
+                                    {pricing.quantity} {pricing.unit}
+                                  </span>
+                                  <span className="font-semibold text-green-700">
+                                    ₹{pricing.price}
+                                  </span>
+                                </div>
+                              ))}
+                              {p.pricing.length > 3 && (
+                                <p className="text-xs text-gray-500">
+                                  +{p.pricing.length - 3} more options
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">No pricing set</p>
+                          )}
                         </div>
                       </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditProduct(p)}
+                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p._id)}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
+
                 </div>
               </div>
             )}
@@ -717,45 +725,55 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Boxes ({boxes.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {boxes.map((b) => (
-                    <div key={b._id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                      {b.image && (
-                        <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                          <Image
-                            src={b.image}
-                            alt={b.name || "Box Image"}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
+                {boxes.map((b) => (
+                  <div
+                    key={b._id}
+                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                  >
+                    {b.image && (
+                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                        <Image
+                          src={b.image}
+                          alt={b.name || "Box Image"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
 
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">{b.name}</h3>
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{b.description}</p>
-                          <div className="text-2xl font-bold text-orange-600">₹{b.price}</div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditBox(b)}
-                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBox(b._id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </button>
+                    <div className="p-4 sm:p-6">
+                      <div className="mb-3 sm:mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
+                          {b.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">
+                          {b.description}
+                        </p>
+                        <div className="text-xl sm:text-2xl font-bold text-orange-600">
+                          ₹{b.price}
                         </div>
                       </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditBox(b)}
+                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBox(b._id)}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
+
                 </div>
               </div>
             )}
@@ -765,81 +783,87 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Namkeens ({namkeens.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {namkeens.map((n) => (
-                    <div key={n._id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                      {n.image && (
-                        <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                          <Image
-                            src={n.image}
-                            alt={n.name || "Namkeen Image"}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
+                {namkeens.map((n) => (
+                  <div
+                    key={n._id}
+                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                  >
+                    {n.image && (
+                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                        <Image
+                          src={n.image}
+                          alt={n.name || "Namkeen Image"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
 
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{n.name}</h3>
-                            {n.type && n.type !== 'none' && (
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                n.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
-                                n.type === 'latest' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {n.type}
-                              </span>
-                            )}
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{n.description}</p>
-                          
-                          <div className="mb-4">
-                            <p className="text-sm font-medium text-gray-700 mb-2">Pricing Options:</p>
-                            {n.pricing && n.pricing.length > 0 ? (
-                              <div className="space-y-1">
-                                {n.pricing.slice(0, 3).map((pricing, index) => (
-                                  <div key={index} className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600">
-                                      {pricing.quantity} {pricing.unit}
-                                    </span>
-                                    <span className="font-semibold text-green-700">
-                                      ₹{pricing.price}
-                                    </span>
-                                  </div>
-                                ))}
-                                {n.pricing.length > 3 && (
-                                  <p className="text-xs text-gray-500">
-                                    +{n.pricing.length - 3} more options
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-500">No pricing set</p>
-                            )}
-                          </div>
+                    <div className="p-4 sm:p-6">
+                      <div className="mb-3 sm:mb-4">
+                        <div className="flex items-start justify-between mb-1 sm:mb-2">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
+                            {n.name}
+                          </h3>
+                          {n.type && n.type !== 'none' && (
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              n.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
+                              n.type === 'latest' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {n.type}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditNamkeen(n)}
-                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteNamkeen(n._id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </button>
+                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{n.description}</p>
+
+                        <div className="mb-3 sm:mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
+                          {n.pricing && n.pricing.length > 0 ? (
+                            <div className="space-y-1">
+                              {n.pricing.slice(0, 3).map((pricing, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">
+                                    {pricing.quantity} {pricing.unit}
+                                  </span>
+                                  <span className="font-semibold text-green-700">
+                                    ₹{pricing.price}
+                                  </span>
+                                </div>
+                              ))}
+                              {n.pricing.length > 3 && (
+                                <p className="text-xs text-gray-500">
+                                  +{n.pricing.length - 3} more options
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">No pricing set</p>
+                          )}
                         </div>
                       </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditNamkeen(n)}
+                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteNamkeen(n._id)}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
+
                 </div>
               </div>
             )}
