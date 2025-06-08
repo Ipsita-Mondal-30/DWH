@@ -8,7 +8,22 @@ import { useProducts } from '../hooks/useProducts';
 import Link from "next/link"; 
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
-import { Product } from "../models/Product"
+import type { IProduct } from "../models/Product"; // Import the interface, not the model
+import axios from "axios";
+
+// Define interfaces for search results
+interface SearchProduct {
+  _id?: string;
+  name: string;
+  description?: string;
+  image?: string;
+  pricing?: Array<{
+    quantity: number;
+    unit: 'gm' | 'kg' | 'piece' | 'dozen';
+    price: number;
+  }>;
+  type?: string;
+}
 
 // Helper function to create URL slug from product name
 const createSlug = (name: string) => {
@@ -19,22 +34,94 @@ const createSlug = (name: string) => {
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .trim();
 };
-// Import the Product type from useProducts
+
+// Login Modal Component
+const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Sign In Required</h2>
+          <p className="text-gray-600 mb-6">
+            Please sign in to access your cart and continue shopping.
+          </p>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => signIn("google")}
+              className="w-full flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium space-x-3"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-red-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">G</span>
+              </div>
+              <span>Sign in with Google</span>
+            </button>
+            
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              Continue as Guest
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { cart } = useCart();
+  const { data: session, status } = useSession();
 
-  const toggleCart = () => setIsCartOpen(!isCartOpen);
+  const toggleCart = () => {
+    // Check if user is authenticated before opening cart
+    if (status === "unauthenticated") {
+      setShowLoginModal(true);
+      return;
+    }
+    setIsCartOpen(!isCartOpen);
+  };
 
-  const { data: session } = useSession();
+  // Function to handle protected actions
+  const handleProtectedAction = (action: () => void) => {
+    if (status === "unauthenticated") {
+      setShowLoginModal(true);
+      return;
+    }
+    action();
+  };
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<SearchProduct[]>([]);
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
-  // Get all products for search
-  const { data: products = [], isLoading: isLoadingProducts } = useProducts();
+  // Fetch both products and namkeens for search
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const [productsRes, namkeensRes] = await Promise.all([
+          axios.get('/api/product'),
+          axios.get('/api/namkeen')
+        ]);
+        
+        const combined = [...productsRes.data, ...namkeensRes.data];
+        setAllProducts(combined);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
 
   // Close dropdown on outside click
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,51 +149,55 @@ export default function Navbar() {
   // Handle search with debouncing
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (searchQuery && products.length > 0) {
-        const filtered = products
+      if (searchQuery && allProducts.length > 0) {
+        setIsLoadingSearch(true);
+        const filtered = allProducts
           .filter((product) =>
             product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             product.description?.toLowerCase().includes(searchQuery.toLowerCase())
           )
           .slice(0, 8);
         setSearchResults(filtered);
+        setIsLoadingSearch(false);
       } else {
         setSearchResults([]);
+        setIsLoadingSearch(false);
       }
     }, 300);
   
-    return () => clearTimeout(timeout);
-  }, [searchQuery, products]);
+    return () => {
+      clearTimeout(timeout);
+      setIsLoadingSearch(false);
+    };
+  }, [searchQuery, allProducts]);
   
-  
-  // Navbar.tsx mein handleProductClick function ko replace karo:
-
-const handleProductClick = (product: Product) => {
-  // Debug: Console mein product details print karo
-  console.log('Clicked product:', product);
-  console.log('Product ID:', product._id);
-  console.log('Product name:', product.name);
-  
-  const searchParams = new URLSearchParams({
-    _pos: '1',
-    _psq: searchQuery.substring(0, 4),
-    _ss: 'e',
-    _v: '1.0'
-  });
-  
-  // Check if product._id exists
-  if (!product._id) {
-    console.error('Product ID is missing!');
-    alert('Product ID is missing');
-    return;
-  }
-  
-  const url = `/products/${product._id}?${searchParams.toString()}`;
-  console.log('Navigating to URL:', url);
-  
-  // Navigate to product page
-  window.location.href = url;
-};
+  // Handle product click
+  const handleProductClick = (product: SearchProduct) => {
+    // Debug: Console mein product details print karo
+    console.log('Clicked product:', product);
+    console.log('Product ID:', product._id);
+    console.log('Product name:', product.name);
+    
+    const searchParams = new URLSearchParams({
+      _pos: '1',
+      _psq: searchQuery.substring(0, 4),
+      _ss: 'e',
+      _v: '1.0'
+    });
+    
+    // Check if product._id exists
+    if (!product._id) {
+      console.error('Product ID is missing!');
+      alert('Product ID is missing');
+      return;
+    }
+    
+    const url = `/products/${product._id}?${searchParams.toString()}`;
+    console.log('Navigating to URL:', url);
+    
+    // Navigate to product page
+    window.location.href = url;
+  };
 
   // Close search modal
   const closeSearchModal = () => {
@@ -115,9 +206,17 @@ const handleProductClick = (product: Product) => {
     setSearchResults([]);
   };
 
+  // Get price display for search results
+  const getPriceDisplay = (product: SearchProduct) => {
+    if (product.pricing && product.pricing.length > 0) {
+      return product.pricing[0].price;
+    }
+    return 0;
+  };
+
   return (
     <div className="relative">
-      <div className="bg-white shadow-md border-b">
+      <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-40">
         <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
           
           {/* Logo - Left Side */}
@@ -166,7 +265,6 @@ const handleProductClick = (product: Product) => {
               About us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            
 
             {/* More Dropdown */}
             <div ref={moreDropdownRef} className="relative">
@@ -189,14 +287,14 @@ const handleProductClick = (product: Product) => {
                     >
                       Chat with Us
                     </a>
-                    <a
-                      href="https://your-order-track.shiprocket.co/tracking"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    <button
+                      onClick={() => handleProtectedAction(() => {
+                        window.open("https://your-order-track.shiprocket.co/tracking", "_blank");
+                      })}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       Track Your Order
-                    </a>
+                    </button>
                     <Link
                       href="/pages/contact-us"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -295,22 +393,32 @@ const handleProductClick = (product: Product) => {
                 )}
               </div>
 
-              {/* Cart Icon - always visible */}
+              {/* Cart Icon - with login protection */}
               <div className="relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded" onClick={toggleCart}>
                 <FiShoppingBag className="text-lg text-gray-700" />
-                {cart.length > 0 && (
+                {session && cart.length > 0 && (
                   <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center">
                     {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                )}
+                {!session && (
+                  <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-4 h-4 rounded-full flex items-center justify-center">
+                    !
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Cart Drawer */}
-            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            {/* Cart Drawer - only show if authenticated */}
+            {session && (
+              <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            )}
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
       {/* Full Screen Search Modal */}
       {showSearchModal && (
@@ -372,34 +480,34 @@ const handleProductClick = (product: Product) => {
                       )}
                     </div>
                     
-                    {isLoadingProducts ? (
+                    {isLoadingSearch ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {searchResults.map((product: Product) => (
+                        {searchResults.map((product: SearchProduct) => (
                           <div
-                            key={product._id}
+                            key={product._id || Math.random()}
                             className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                             onClick={() => handleProductClick(product)}
                           >
                             {/* Product Image */}
                             <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100 relative">
-  {product.image ? (
-    <Image
-      src={product.image}
-      alt={product.name}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
-      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-    />
-  ) : (
-    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-      <span className="text-gray-400 text-sm">No Image</span>
-    </div>
-  )}
-</div>
+                              {product.image ? (
+                                <Image
+                                  src={product.image}
+                                  alt={product.name}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
+                                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <span className="text-gray-400 text-sm">No Image</span>
+                                </div>
+                              )}
+                            </div>
                             
                             {/* Product Details */}
                             <div className="p-4">
@@ -408,10 +516,10 @@ const handleProductClick = (product: Product) => {
                               </h4>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-500 line-through">
-                                  Rs. {(product.price * 1.2).toFixed(2)}
+                                  Rs. {(getPriceDisplay(product) * 1.2).toFixed(2)}
                                 </span>
                                 <span className="font-semibold text-red-600">
-                                  From Rs. {product.price}
+                                  From Rs. {getPriceDisplay(product)}
                                 </span>
                               </div>
                             </div>
