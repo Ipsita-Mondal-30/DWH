@@ -265,46 +265,6 @@ export default function Navbar() {
               About us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-
-            {/* More Dropdown */}
-            <div ref={moreDropdownRef} className="relative">
-              <button
-                onClick={() => setShowMoreDropdown(!showMoreDropdown)}
-                className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                <span>More</span>
-                <FiChevronDown className={`text-sm transition-transform ${showMoreDropdown ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {showMoreDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="py-1">
-                    <a
-                      href="https://api.whatsapp.com/send/?phone=919888484988&text&type=phone_number&app_absent=0"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Chat with Us
-                    </a>
-                    <button
-                      onClick={() => handleProtectedAction(() => {
-                        window.open("https://your-order-track.shiprocket.co/tracking", "_blank");
-                      })}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Track Your Order
-                    </button>
-                    <Link
-                      href="/pages/contact-us"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Contact Us
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right Side - Icons */}
