@@ -19,14 +19,68 @@ const createSlug = (name: string) => {
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .trim();
 };
-// Import the Product type from useProducts
+
+// Login Modal Component
+const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Sign In Required</h2>
+          <p className="text-gray-600 mb-6">
+            Please sign in to access your cart and continue shopping.
+          </p>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => signIn("google")}
+              className="w-full flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium space-x-3"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-red-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">G</span>
+              </div>
+              <span>Sign in with Google</span>
+            </button>
+            
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              Continue as Guest
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { cart } = useCart();
+  const { data: session, status } = useSession();
 
-  const toggleCart = () => setIsCartOpen(!isCartOpen);
+  const toggleCart = () => {
+    // Check if user is authenticated before opening cart
+    if (status === "unauthenticated") {
+      setShowLoginModal(true);
+      return;
+    }
+    setIsCartOpen(!isCartOpen);
+  };
 
-  const { data: session } = useSession();
+  // Function to handle protected actions
+  const handleProtectedAction = (action: () => void) => {
+    if (status === "unauthenticated") {
+      setShowLoginModal(true);
+      return;
+    }
+    action();
+  };
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -77,7 +131,6 @@ export default function Navbar() {
   
     return () => clearTimeout(timeout);
   }, [searchQuery, products]);
-  
   
   // Handle product click
   const handleProductClick = (product: Product) => {
@@ -151,7 +204,6 @@ export default function Navbar() {
               About us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            
 
             {/* More Dropdown */}
             <div ref={moreDropdownRef} className="relative">
@@ -174,14 +226,14 @@ export default function Navbar() {
                     >
                       Chat with Us
                     </a>
-                    <a
-                      href="https://your-order-track.shiprocket.co/tracking"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    <button
+                      onClick={() => handleProtectedAction(() => {
+                        window.open("https://your-order-track.shiprocket.co/tracking", "_blank");
+                      })}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       Track Your Order
-                    </a>
+                    </button>
                     <Link
                       href="/pages/contact-us"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -280,22 +332,32 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Cart Icon - always visible */}
+              {/* Cart Icon - with login protection */}
               <div className="relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded" onClick={toggleCart}>
                 <FiShoppingBag className="text-lg text-gray-700" />
-                {cart.length > 0 && (
+                {session && cart.length > 0 && (
                   <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center">
                     {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                )}
+                {!session && (
+                  <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-4 h-4 rounded-full flex items-center justify-center">
+                    !
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Cart Drawer */}
-            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            {/* Cart Drawer - only show if authenticated */}
+            {session && (
+              <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            )}
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
       {/* Full Screen Search Modal */}
       {showSearchModal && (
@@ -371,20 +433,20 @@ export default function Navbar() {
                           >
                             {/* Product Image */}
                             <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100 relative">
-  {product.image ? (
-    <Image
-      src={product.image}
-      alt={product.name}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
-      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-    />
-  ) : (
-    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-      <span className="text-gray-400 text-sm">No Image</span>
-    </div>
-  )}
-</div>
+                              {product.image ? (
+                                <Image
+                                  src={product.image}
+                                  alt={product.name}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
+                                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <span className="text-gray-400 text-sm">No Image</span>
+                                </div>
+                              )}
+                            </div>
                             
                             {/* Product Details */}
                             <div className="p-4">

@@ -4,6 +4,13 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 
+interface Pricing {
+  quantity: number;
+  unit: 'gm' | 'kg' | 'piece' | 'dozen';
+  price: number;
+  _id?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -12,16 +19,19 @@ export interface Product {
   image?: string;
   size?: string;
   type?: string;
+  pricing?: Pricing[]; // For namkeens with multiple pricing options
+  selectedPricing?: Pricing; // Currently selected pricing option
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedPricing?: Pricing; // Track which pricing option was selected
 }
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (productId: string, quantity: number) => Promise<void>;
+  addToCart: (productId: string, quantity: number, selectedPricing?: Pricing) => Promise<void>;
   removeFromCart: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   loading: boolean;
@@ -61,15 +71,26 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     fetchCart();
   }, [fetchCart]);
 
-  const addToCart = async (productId: string, quantity: number) => {
+  const addToCart = async (productId: string, quantity: number, selectedPricing?: Pricing) => {
     if (!session) {
       setError('Please login to add items to cart');
-      return;
+      throw new Error('Authentication required');
     }
 
     try {
       setError(null);
-      await axios.post('/api/cart', { productId, quantity });
+      
+      // Prepare the request payload with pricing information
+      const payload: any = { productId, quantity };
+      
+      // If pricing information is provided, include it
+      if (selectedPricing) {
+        payload.selectedPricing = selectedPricing;
+        payload.price = selectedPricing.price; // Use selected price
+        payload.size = `${selectedPricing.quantity}${selectedPricing.unit}`;
+      }
+
+      await axios.post('/api/cart', payload);
       await fetchCart(); // Refresh cart after adding
     } catch (error) {
       console.error('Error adding to cart:', error);

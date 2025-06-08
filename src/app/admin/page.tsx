@@ -375,42 +375,6 @@ export default function AdminPanel() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        {/* <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
-            <p className="text-gray-600">Manage your sweets, boxes, and namkeens</p>
-          </div>
-          <div className="flex gap-x-2">
-            <button
-              onClick={handleAddProduct}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              Add Sweet
-            </button>
-            <button
-              onClick={handleAddBox}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Box className="w-5 h-5" />
-              Add Box
-            </button>
-            <button
-              onClick={handleAddNamkeen}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Cookie className="w-5 h-5" />
-              Add Namkeen
-            </button>
-            <button 
-              onClick={() => router.push('/admin/enquiries')}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              Enquiries
-            </button>
-          </div>
-        </div> */}
 
 <div className="flex items-center justify-between mb-8">
         <div>
@@ -446,6 +410,12 @@ export default function AdminPanel() {
             className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
           >
             Enquiries
+          </button>
+          <button 
+            onClick={() => router.push('/admin/sawamani')}
+            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            Sawamani Orders
           </button>
         </div>
       </div>
@@ -509,6 +479,15 @@ export default function AdminPanel() {
               className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               Enquiries
+            </button>
+            <button
+              onClick={() => {
+                router.push("/admin/sawamani");
+                setDrawerOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              Sawamani Orders
             </button>
           </div>
         </div>
@@ -634,7 +613,7 @@ export default function AdminPanel() {
             {products.length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Sweets ({products.length})</h2>
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((p) => (
                   <div
                     key={p._id}
@@ -724,7 +703,7 @@ export default function AdminPanel() {
             {boxes.length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Boxes ({boxes.length})</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {boxes.map((b) => (
                   <div
                     key={b._id}
@@ -782,7 +761,7 @@ export default function AdminPanel() {
             {namkeens.length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Namkeens ({namkeens.length})</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {namkeens.map((n) => (
                   <div
                     key={n._id}
