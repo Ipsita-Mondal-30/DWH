@@ -1,36 +1,50 @@
-import mongoose from 'mongoose';
+import { Schema, model, models } from 'mongoose';
 
-const CartItemSchema = new mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true,
-  },
-  quantity: { 
-    type: Number, 
-    required: true,
-    min: 1
-  },
-}, { _id: true });
+interface IPricing {
+  quantity: number;
+  unit: 'gm' | 'kg' | 'piece' | 'dozen';
+  price: number;
+}
 
-const CartSchema = new mongoose.Schema({
-  userId: { 
+interface ICartItem {
+  productId: Schema.Types.ObjectId;
+  quantity: number;
+  selectedPricing?: IPricing; // Store the selected pricing option
+}
+
+interface ICart {
+  userId: string;
+  items: ICartItem[];
+}
+
+const PricingSchema = new Schema<IPricing>({
+  quantity: { type: Number, required: true },
+  unit: { 
     type: String, 
-    required: true,
-    index: true
+    enum: ['gm', 'kg', 'piece', 'dozen'],
+    required: true 
   },
-  items: [CartItemSchema],
+  price: { type: Number, required: true }
+});
+
+const CartItemSchema = new Schema<ICartItem>({
+  productId: { 
+    type: Schema.Types.ObjectId, 
+    required: true,
+    refPath: 'model' // This allows referencing different models
+  },
+  quantity: { type: Number, required: true, min: 1 },
+  selectedPricing: { 
+    type: PricingSchema, 
+    required: false // Optional for products without pricing options
+  }
+});
+
+const CartSchema = new Schema<ICart>({
+  userId: { type: String, required: true, unique: true },
+  items: [CartItemSchema]
 }, {
-  timestamps: true,
+  timestamps: true
 });
 
-// Add index for faster queries
-CartSchema.index({ userId: 1 });
-
-// Remove items with quantity 0 before saving
-CartSchema.pre('save', function() {
-  const filteredItems = this.items.filter(item => item.quantity > 0);
-  this.items.splice(0, this.items.length, ...filteredItems);
-});
-
-export const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
+export const Cart = models.Cart || model<ICart>("Cart", CartSchema);
