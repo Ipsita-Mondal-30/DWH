@@ -9,6 +9,7 @@ import LatestProduct from "@/components/LatestProduct";
 import PopularProduct from "@/components/PopularProduct";
 import SawamaniForm from "@/components/SawamaniForm";
 import InteractiveMap from '@/components/InteractiveMap';
+import AboutUs from "@/components/AboutUs";
 
 export default function Home() {
   const { status } = useSession();
@@ -33,6 +34,7 @@ export default function Home() {
         <PopularProduct />
       </section>
       <div> <InteractiveMap /> </div>
+      <div><AboutUs/></div>
       <EnquiryForm />
       <SawamaniForm />
     </>
