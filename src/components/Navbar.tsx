@@ -8,7 +8,22 @@ import { useProducts } from '../hooks/useProducts';
 import Link from "next/link"; 
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
-import { Product } from "../models/Product"
+import type { IProduct } from "../models/Product"; // Import the interface, not the model
+import axios from "axios";
+
+// Define interfaces for search results
+interface SearchProduct {
+  _id?: string;
+  name: string;
+  description?: string;
+  image?: string;
+  pricing?: Array<{
+    quantity: number;
+    unit: 'gm' | 'kg' | 'piece' | 'dozen';
+    price: number;
+  }>;
+  type?: string;
+}
 
 // Helper function to create URL slug from product name
 const createSlug = (name: string) => {
@@ -85,10 +100,28 @@ export default function Navbar() {
   const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<SearchProduct[]>([]);
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
-  // Get all products for search
-  const { data: products = [], isLoading: isLoadingProducts } = useProducts();
+  // Fetch both products and namkeens for search
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const [productsRes, namkeensRes] = await Promise.all([
+          axios.get('/api/product'),
+          axios.get('/api/namkeen')
+        ]);
+        
+        const combined = [...productsRes.data, ...namkeensRes.data];
+        setAllProducts(combined);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
 
   // Close dropdown on outside click
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -116,25 +149,35 @@ export default function Navbar() {
   // Handle search with debouncing
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (searchQuery && products.length > 0) {
-        const filtered = products
+      if (searchQuery && allProducts.length > 0) {
+        setIsLoadingSearch(true);
+        const filtered = allProducts
           .filter((product) =>
             product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             product.description?.toLowerCase().includes(searchQuery.toLowerCase())
           )
           .slice(0, 8);
         setSearchResults(filtered);
+        setIsLoadingSearch(false);
       } else {
         setSearchResults([]);
+        setIsLoadingSearch(false);
       }
     }, 300);
   
-    return () => clearTimeout(timeout);
-  }, [searchQuery, products]);
+    return () => {
+      clearTimeout(timeout);
+      setIsLoadingSearch(false);
+    };
+  }, [searchQuery, allProducts]);
   
   // Handle product click
-  const handleProductClick = (product: Product) => {
-    const slug = createSlug(product.name);
+  const handleProductClick = (product: SearchProduct) => {
+    // Debug: Console mein product details print karo
+    console.log('Clicked product:', product);
+    console.log('Product ID:', product._id);
+    console.log('Product name:', product.name);
+    
     const searchParams = new URLSearchParams({
       _pos: '1',
       _psq: searchQuery.substring(0, 4),
@@ -142,8 +185,18 @@ export default function Navbar() {
       _v: '1.0'
     });
     
+    // Check if product._id exists
+    if (!product._id) {
+      console.error('Product ID is missing!');
+      alert('Product ID is missing');
+      return;
+    }
+    
+    const url = `/products/${product._id}?${searchParams.toString()}`;
+    console.log('Navigating to URL:', url);
+    
     // Navigate to product page
-    window.location.href = `/products/${slug}?${searchParams.toString()}`;
+    window.location.href = url;
   };
 
   // Close search modal
@@ -153,9 +206,17 @@ export default function Navbar() {
     setSearchResults([]);
   };
 
+  // Get price display for search results
+  const getPriceDisplay = (product: SearchProduct) => {
+    if (product.pricing && product.pricing.length > 0) {
+      return product.pricing[0].price;
+    }
+    return 0;
+  };
+
   return (
     <div className="relative">
-      <div className="bg-white shadow-md border-b">
+      <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-40">
         <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
           
           {/* Logo - Left Side */}
@@ -419,15 +480,15 @@ export default function Navbar() {
                       )}
                     </div>
                     
-                    {isLoadingProducts ? (
+                    {isLoadingSearch ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {searchResults.map((product: Product) => (
+                        {searchResults.map((product: SearchProduct) => (
                           <div
-                            key={product._id}
+                            key={product._id || Math.random()}
                             className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                             onClick={() => handleProductClick(product)}
                           >
@@ -455,10 +516,10 @@ export default function Navbar() {
                               </h4>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-500 line-through">
-                                  Rs. {(product.price * 1.2).toFixed(2)}
+                                  Rs. {(getPriceDisplay(product) * 1.2).toFixed(2)}
                                 </span>
                                 <span className="font-semibold text-red-600">
-                                  From Rs. {product.price}
+                                  From Rs. {getPriceDisplay(product)}
                                 </span>
                               </div>
                             </div>

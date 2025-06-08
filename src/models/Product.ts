@@ -6,20 +6,12 @@ export enum ProductType {
   None = "none",
 }
 
-// New interface for quantity-based pricing
+// Interface for quantity-based pricing
 export interface IPricing {
   quantity: number;
   unit: 'gm' | 'kg' | 'piece' | 'dozen';
   price: number;
 }
-export type Product = {
-  _id: string;
-  name: string;
-  description: string;
-  image?: string;
-  price: number; // Added the price property
-  // Add other existing properties here
-};
 
 export interface IProduct {
   _id?: string;
@@ -28,7 +20,6 @@ export interface IProduct {
   image: string;
   type: ProductType;
   pricing: IPricing[]; // Array of quantity-price combinations
-  price: number; // Add the price property
 }
 
 const PricingSchema = new Schema<IPricing>({
