@@ -79,19 +79,34 @@ export default function Navbar() {
   }, [searchQuery, products]);
   
   
-  // Handle product click
-  const handleProductClick = (product: Product) => {
-    const slug = createSlug(product.name);
-    const searchParams = new URLSearchParams({
-      _pos: '1',
-      _psq: searchQuery.substring(0, 4),
-      _ss: 'e',
-      _v: '1.0'
-    });
-    
-    // Navigate to product page
-    window.location.href = `/products/${slug}?${searchParams.toString()}`;
-  };
+  // Navbar.tsx mein handleProductClick function ko replace karo:
+
+const handleProductClick = (product: Product) => {
+  // Debug: Console mein product details print karo
+  console.log('Clicked product:', product);
+  console.log('Product ID:', product._id);
+  console.log('Product name:', product.name);
+  
+  const searchParams = new URLSearchParams({
+    _pos: '1',
+    _psq: searchQuery.substring(0, 4),
+    _ss: 'e',
+    _v: '1.0'
+  });
+  
+  // Check if product._id exists
+  if (!product._id) {
+    console.error('Product ID is missing!');
+    alert('Product ID is missing');
+    return;
+  }
+  
+  const url = `/products/${product._id}?${searchParams.toString()}`;
+  console.log('Navigating to URL:', url);
+  
+  // Navigate to product page
+  window.location.href = url;
+};
 
   // Close search modal
   const closeSearchModal = () => {

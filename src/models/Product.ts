@@ -18,8 +18,16 @@ export type Product = {
   description: string;
   image?: string;
   price: number; // Added the price property
-  // Add other existing properties here
-};
+    
+    type?: string;
+   
+    pricing?: Array<{
+      quantity: number;
+      unit: string;
+      price: number;
+    }>;
+  };
+
 
 export interface IProduct {
   _id?: string;
