@@ -74,8 +74,9 @@ export default function LatestProduct() {
 
     const selected = selectedPricing[item._id];
     
-    if (!session?.user?.id) {
-      console.log("User is not logged in");
+    // Check if user is authenticated
+    if (!session) {
+      console.log("User is not logged in - showing popup");
       setShowSignInPopup(true);
       return;
     }
@@ -113,6 +114,16 @@ export default function LatestProduct() {
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
 
+  // Show loading state while session is being determined
+  if (status !== "authenticated" && status !== "unauthenticated") {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="text-center py-8">
@@ -125,6 +136,7 @@ export default function LatestProduct() {
   return (
     <div className="py-8">
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Latest Products</h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {items.map((item) => {
           const itemId = item._id || '';
@@ -146,7 +158,7 @@ export default function LatestProduct() {
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
                 {item.type && (
-                  <div className="absolute top-2 left-2 bg-blue-100 text-gray-500 px-2 py-1 rounded-full text-xs font-medium">
+                  <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                     {item.type.toUpperCase()}
                   </div>
                 )}
@@ -196,7 +208,7 @@ export default function LatestProduct() {
                       {/* Dropdown Options - Fixed z-index */}
                       {isDropdownOpen && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto">
-                          {item.pricing!.map((pricing, index) => (
+                          {item.pricing?.map((pricing, index) => (
                             <button
                               key={index}
                               onClick={() => handlePricingSelect(itemId, pricing)}
@@ -263,9 +275,9 @@ export default function LatestProduct() {
                 </button>
 
                 {/* Additional Info */}
-                {hasPricingOptions && item.pricing!.length > 1 && (
+                {hasPricingOptions && item.pricing && item.pricing.length > 1 && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    {item.pricing!.length} size options available
+                    {item.pricing.length} size options available
                   </p>
                 )}
               </div>

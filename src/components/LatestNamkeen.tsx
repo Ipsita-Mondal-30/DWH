@@ -78,8 +78,9 @@ export default function LatestNamkeen() {
     const selected = selectedPricing[item._id];
     if (!selected) return;
     
-    if (!session?.user?.id) {
-      console.log("User is not logged in");
+    // Check if user is authenticated
+    if (!session) {
+      console.log("User is not logged in - showing popup");
       setShowSignInPopup(true);
       return;
     }
@@ -112,6 +113,16 @@ export default function LatestNamkeen() {
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
 
+  // Show loading state while session is being determined
+  if (status !== "authenticated" && status !== "unauthenticated") {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
   if (namkeens.length === 0) {
     return (
       <div className="text-center py-8">
@@ -126,6 +137,7 @@ export default function LatestNamkeen() {
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
         Latest Namkeens
       </h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {namkeens.map((item) => {
           const selected = selectedPricing[item._id];
@@ -265,6 +277,7 @@ export default function LatestNamkeen() {
           onClick={() => setDropdownOpen({})}
         />
       )}
+      
       {/* Sign In Popup */}
       <SignInPopup 
         isOpen={showSignInPopup}

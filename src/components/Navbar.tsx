@@ -329,11 +329,6 @@ export default function Navbar() {
                 </div>
                 <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Cart
-                  {session && totalCartItems > 0 && (
-                    <span className="ml-1 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
-                      {totalCartItems}
-                    </span>
-                  )}
                 </span>
               </div>
 
