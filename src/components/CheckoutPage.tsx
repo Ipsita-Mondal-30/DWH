@@ -113,7 +113,6 @@ export default function CheckoutPage() {
             totals={totals}
             userEmail={session?.user?.email || ''}
             userName={session?.user?.name || ''}
-            userId={session?.user?.id || ''}
             onBack={handleBackToCart}
             onPaymentMethodSelect={handlePaymentMethodSelect}
           />

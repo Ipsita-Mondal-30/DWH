@@ -15,7 +15,6 @@ interface CheckoutFormProps {
   };
   userEmail: string;
   userName: string;
-  userId: string;
   onBack: () => void;
   onPaymentMethodSelect: (method: 'cod' | 'upi') => void;
 }
@@ -25,7 +24,6 @@ export default function CheckoutForm({
   totals, 
   userEmail, 
   userName, 
-  userId,
   onBack, 
   onPaymentMethodSelect 
 }: CheckoutFormProps) {
@@ -120,7 +118,6 @@ export default function CheckoutForm({
 
     try {
       const orderData = {
-        userId,
         userEmail: formData.email,
         shippingAddress: {
           fullName: formData.fullName,
@@ -167,7 +164,7 @@ export default function CheckoutForm({
 
   const closeSuccessModal = () => {
     setShowSuccessModal(false);
-    window.location.href = '/orders'; // Redirect to orders page
+    window.location.href = '/my-orders'; // Redirect to orders page
   };
 
   return (

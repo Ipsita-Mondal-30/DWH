@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@/lib/db'; // Adjust import path as needed
 import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '@/models/Order'; // Adjust import path
 import { Cart } from '@/models/Cart'; // Adjust import path
 import { Product } from '@/models/Product'; // Adjust import path
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth'; // Adjust import path
 
 // POST: Create a new order (Checkout)
 export async function POST(request: NextRequest) {
@@ -11,7 +13,6 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json();
     const {
-      userId,
       userEmail,
       shippingAddress,
       paymentMethod,
@@ -19,10 +20,14 @@ export async function POST(request: NextRequest) {
       cartItems // Optional: pass cart items directly, or fetch from cart
     } = body;
 
+    // Get userId from session instead of request body
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+
     // Validate required fields
     if (!userId || !shippingAddress || !paymentMethod) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, shippingAddress, or paymentMethod' },
+        { error: 'Missing required fields: user session, shippingAddress, or paymentMethod' },
         { status: 400 }
       );
     }
@@ -118,6 +123,11 @@ export async function POST(request: NextRequest) {
       paymentStatus: paymentMethod === PaymentMethod.CashOnDelivery ? PaymentStatus.Pending : PaymentStatus.Pending,
       estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
     });
+
+    // Generate orderId manually before saving
+    const count = await Order.countDocuments();
+    const year = new Date().getFullYear();
+    order.orderId = `ORD-${year}-${String(count + 1).padStart(4, '0')}`;
 
     await order.save();
 

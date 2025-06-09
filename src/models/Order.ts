@@ -97,7 +97,7 @@ const ShippingAddressSchema = new Schema<IShippingAddress>({
   addressLine2: { type: String },
   city: { type: String, required: true },
   state: { type: String, required: true },
-  pincode: { type: String, required: true },
+  pincode: { type: String },
   landmark: { type: String }
 });
 
@@ -152,14 +152,21 @@ const OrderSchema = new Schema<IOrder>({
   timestamps: true
 });
 
-// Generate custom order ID before saving
-OrderSchema.pre('save', async function(next) {
-  if (this.isNew) {
-    const count = await models.Order?.countDocuments() || 0;
-    const year = new Date().getFullYear();
-    this.orderId = `ORD-${year}-${String(count + 1).padStart(4, '0')}`;
-  }
-  next();
-});
+// Improved pre-save hook with better error handling
+OrderSchema.pre('save', async function (next) {
+    if (this.isNew && !this.orderId) {
+      try {
+        // Cast `this.constructor` to the actual model type
+        const OrderModel = this.constructor as typeof Order;
+        const count = await OrderModel.countDocuments();
+        const year = new Date().getFullYear();
+        this.orderId = `ORD-${year}-${String(count + 1).padStart(4, '0')}`;
+      } catch (error) {
+        // Cast error to Error before passing to `next`
+        return next(error as Error);
+      }
+    }
+    next();
+  });
 
 export const Order = models.Order || model<IOrder>("Order", OrderSchema);
