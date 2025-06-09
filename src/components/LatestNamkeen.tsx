@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSession, signIn } from 'next-auth/react';
 import Image from "next/image";
 import { useCart } from '../app/context/CartContext';
 import { ChevronDown } from 'lucide-react';
+import SignInPopup from './SigninPopup'; // Import the popup component
 
 interface Pricing {
   quantity: number;
@@ -24,8 +26,10 @@ interface Namkeen {
 
 export default function LatestNamkeen() {
   const [namkeens, setNamkeens] = useState<Namkeen[]>([]);
+  const { data: session, status } = useSession();
   const [selectedPricing, setSelectedPricing] = useState<{[key: string]: Pricing}>({});
   const [dropdownOpen, setDropdownOpen] = useState<{[key: string]: boolean}>({});
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -73,7 +77,13 @@ export default function LatestNamkeen() {
 
     const selected = selectedPricing[item._id];
     if (!selected) return;
-
+    
+    if (!session?.user?.id) {
+      console.log("User is not logged in");
+      setShowSignInPopup(true);
+      return;
+    }
+    
     try {
       console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
       // Pass the selected pricing to the cart
@@ -83,6 +93,13 @@ export default function LatestNamkeen() {
       console.error("Error adding to cart:", error);
       alert('Failed to add item to cart. Please try again.');
     }
+  };
+
+  const handleSignIn = () => {
+    // Trigger Google sign-in using NextAuth
+    signIn('google', { 
+      callbackUrl: window.location.href // Redirect back to current page after sign-in
+    });
   };
 
   const getUnitDisplay = (unit: string) => {
@@ -248,6 +265,12 @@ export default function LatestNamkeen() {
           onClick={() => setDropdownOpen({})}
         />
       )}
+      {/* Sign In Popup */}
+      <SignInPopup 
+        isOpen={showSignInPopup}
+        onClose={() => setShowSignInPopup(false)}
+        onSignIn={handleSignIn}
+      />
     </div>
   );
 }
