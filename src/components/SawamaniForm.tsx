@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Heart, Phone, Mail, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag } from 'lucide-react';
+import Image from 'next/image';
 
 // Type definitions
 interface SawamaniFormData {
@@ -354,7 +355,15 @@ export function SawamaniForm() {
                   <p className="text-lg opacity-90">Made with traditional recipes & pure ghee</p>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="absolute inset-0 bg-green-500 bg-opacity-20">
+                <Image
+                  src="/dwhh.png"
+                  alt="Laddoo & Barfi"
+                  layout="fill"
+                  objectFit="cover"
+                  className="object-cover"
+                />
+              </div>
             </div>
 
             {/* Contact Info */}

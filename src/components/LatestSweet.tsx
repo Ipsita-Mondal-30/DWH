@@ -146,8 +146,8 @@ export default function LatestProduct() {
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
                 {item.type && (
-                  <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                    {item.type}
+                  <div className="absolute top-2 left-2 bg-blue-100 text-gray-500 px-2 py-1 rounded-full text-xs font-medium">
+                    {item.type.toUpperCase()}
                   </div>
                 )}
               </div>

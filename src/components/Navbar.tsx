@@ -2,7 +2,7 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { FiUser, FiShoppingBag, FiSearch, FiChevronDown, FiX } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiSearch, FiX } from "react-icons/fi";
 import { useCart } from '../app/context/CartContext';
 import Link from "next/link"; 
 import Image from "next/image";
@@ -17,6 +17,7 @@ const GoogleIcon = () => (
     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
   </svg>
 );
+
 // Define interfaces for search results
 interface SearchProduct {
   _id?: string;
@@ -31,39 +32,79 @@ interface SearchProduct {
   type?: string;
 }
 
-
 // Login Modal Component
 const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Sign In Required</h2>
-          <p className="text-gray-600 mb-6">
-            Please sign in to access your cart and continue shopping.
-          </p>
-          
-          <div className="space-y-4">
-          <button
-                onClick={() => signIn("google")}
+    <>
+      {/* Backdrop with blur effect */}
+      <div 
+        className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-sm z-[100] transition-all"
+        onClick={onClose}
+      />
+      
+      {/* Popup */}
+      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center space-x-2">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <FiUser className="h-5 w-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Sign In Required</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            >
+              <FiX className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-orange-50 p-4 rounded-full">
+                <FiShoppingBag className="h-8 w-8 text-orange-500" />
+              </div>
+            </div>
+            
+            <div className="text-center mb-6">
+              <h4 className="text-xl font-medium text-gray-800 mb-2">
+                Please Sign In First
+              </h4>
+              <p className="text-gray-600 leading-relaxed">
+                You need to be signed in to access your cart and continue shopping. Sign in to save your favorite items.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  signIn('google', { 
+                    callbackUrl: window.location.href 
+                  });
+                  onClose();
+                }}
                 className="flex items-center justify-center w-full bg-white border-2 border-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-sm"
               >
                 <GoogleIcon />
                 Continue with Google
               </button>
-            
-            <button
-              onClick={onClose}
-              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-            >
-              Continue as Guest
-            </button>
+              <button
+                onClick={onClose}
+                className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+              >
+                Maybe Later
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -82,17 +123,16 @@ export default function Navbar() {
     setIsCartOpen(!isCartOpen);
   };
 
-  // Function to handle protected actions
-  const handleProtectedAction = (action: () => void) => {
-    if (status === "unauthenticated") {
-      setShowLoginModal(true);
-      return;
+  // Function to handle About Us scroll
+  const handleAboutUsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const aboutSection = document.getElementById('AboutUs');
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: 'smooth' });
     }
-    action();
   };
 
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showMoreDropdown, setShowMoreDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchProduct[]>([]);
@@ -120,7 +160,6 @@ export default function Navbar() {
 
   // Close dropdown on outside click
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const moreDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -129,12 +168,6 @@ export default function Navbar() {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setShowDropdown(false);
-      }
-      if (
-        moreDropdownRef.current &&
-        !moreDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowMoreDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -168,10 +201,7 @@ export default function Navbar() {
   
   // Handle product click
   const handleProductClick = (product: SearchProduct) => {
-    // Debug: Console mein product details print karo
     console.log('Clicked product:', product);
-    console.log('Product ID:', product._id);
-    console.log('Product name:', product.name);
     
     const searchParams = new URLSearchParams({
       _pos: '1',
@@ -180,10 +210,8 @@ export default function Navbar() {
       _v: '1.0'
     });
     
-    // Check if product._id exists
     if (!product._id) {
       console.error('Product ID is missing!');
-      alert('Product ID is missing');
       return;
     }
     
@@ -209,6 +237,9 @@ export default function Navbar() {
     return 0;
   };
 
+  // Calculate total cart items
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="relative">
       <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-40">
@@ -231,7 +262,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-8">
             <Link 
               href="/" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
             >
               Home
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
@@ -239,7 +270,7 @@ export default function Navbar() {
             
             <Link 
               href="/collections/sweets" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
             >
               Sweets
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
@@ -247,68 +278,78 @@ export default function Navbar() {
             
             <Link 
               href="/collections/savouries" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
             >
               Savouries
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
-            <Link 
-              href="/pages/about-us" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group"
+            <a
+              href="#AboutUs"
+              onClick={handleAboutUsClick}
+              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group cursor-pointer text-base"
             >
               About us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            </a>
           </div>
 
           {/* Right Side - Icons */}
           <div className="flex justify-end items-center space-x-4">
-            
-            {/* Welcome Message when signed in */}
-            {session && (
-              <div className="text-base text-gray-600">
-                Welcome, {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}!
-              </div>
-            )}
-
             {/* Icons Section */}
-            <div className="flex items-center space-x-3">
-              
-              {/* Search Icon */}
+            <div className="flex items-center space-x-4">
+              {/* Search Icon with Text */}
               <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded"
+                className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded-lg"
                 onClick={() => setShowSearchModal(true)}
               >
-                <FiSearch className="text-lg text-gray-700" />
+                <FiSearch className="text-xl text-gray-700" />
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Search
+                </span>
               </div>
               
-
-                            {/* Cart Icon - with login protection */}
-                            <div className="relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded" onClick={toggleCart}>
-                <FiShoppingBag className="text-lg text-gray-700" />
-                {session && cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center">
-                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
-                )}
-                {!session && (
-                  <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-4 h-4 rounded-full flex items-center justify-center">
-                    !
-                  </span>
-                )}
+              {/* Cart Icon with Text - with login protection */}
+              <div 
+                className="flex items-center space-x-2 relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded-lg" 
+                onClick={toggleCart}
+              >
+                <div className="relative">
+                  <FiShoppingBag className="text-xl text-gray-700" />
+                  {session && totalCartItems > 0 && (
+                    <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                      {totalCartItems}
+                    </span>
+                  )}
+                  {!session && (
+                    <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                      !
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Cart
+                  {session && totalCartItems > 0 && (
+                    <span className="ml-1 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                      {totalCartItems}
+                    </span>
+                  )}
+                </span>
               </div>
 
-              {/* User Icon with Dropdown */}
+              {/* User Icon with Text and Dropdown */}
               <div ref={dropdownRef} className="relative">
                 <div
-                  className="p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded"
+                  className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded-lg"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
-                  <FiUser className="text-lg text-gray-700" />
+                  <FiUser className="text-xl text-gray-700" />
+                  <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    {session ? 'Account' : 'Sign In'}
+                  </span>
                 </div>
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {session ? (
                       <div className="py-2">
                         {/* Welcome Section */}
@@ -326,10 +367,7 @@ export default function Navbar() {
                           <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                             My Account
                           </Link>
-                          <Link href="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                            My Wish List
-                          </Link>
-                          <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Link href="/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                             My Orders
                           </Link>
                         </div>
@@ -342,24 +380,22 @@ export default function Navbar() {
                           >
                             Sign Out
                           </button>
-                          <div className="px-4 py-2 text-sm text-gray-700">
-                            Reward Points
-                          </div>
                         </div>
                       </div>
                     ) : (
+                      <div className="p-2">
                         <button
                           onClick={() => signIn("google")}
-                          className="flex items-center justify-center w-full bg-white border-1 border-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-sm"
+                          className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gray-50 rounded transition-colors font-medium space-x-3"
                         >
                           <GoogleIcon />
-                          Continue with Google
+                          <span>Sign in with Google</span>
                         </button>
+                      </div>
                     )}
                   </div>
                 )}
               </div>
-
 
             </div>
 
@@ -382,7 +418,7 @@ export default function Navbar() {
             {/* Search Header */}
             <div className="flex items-center justify-center py-8 border-b border-gray-200">
               <div className="w-full max-w-2xl px-4">
-                <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+                <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
                   Search our site
                 </h2>
                 
@@ -483,7 +519,7 @@ export default function Navbar() {
                     ) : (
                       <div className="text-center py-12">
                         <p className="text-gray-500">
-                        &quot; No products found for {searchQuery} &quot;
+                          &quot; No products found for {searchQuery} &quot;
                         </p>
                       </div>
                     )}

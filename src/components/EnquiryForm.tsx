@@ -5,6 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import { Heart, Phone, Mail, MapPin, Send, User, Package, Hash, MessageSquare, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useProductsWithDisplayNames } from '@/hooks/useProducts';
+import Image from 'next/image';
 
 // Type definitions (same as before)
 interface FormData {
@@ -67,18 +68,7 @@ export function EnquiryForm() {
     isError: hasProductsError 
   } = useProductsWithDisplayNames();
 
-  // Static fallback products in case API fails
-  const fallbackProducts = useMemo(() => [
-    'Custom Birthday Cakes',
-    'Wedding Cakes',
-    'Cupcakes',
-    'Traditional Indian Sweets',
-    'Chocolate Truffles',
-    'Cookies & Biscuits',
-    'Seasonal Specials',
-    'Party Platters',
-    'Other (Please specify in message)'
-  ], []);
+
   
   // Combine API products with fallback, removing duplicates
   const availableProducts = useMemo<string[]>(() => {
@@ -90,11 +80,7 @@ export function EnquiryForm() {
     }
     
     // Add fallback products that aren't already in the list
-    fallbackProducts.forEach(fallbackProduct => {
-      if (!products.some(p => p.includes(fallbackProduct))) {
-        products.push(fallbackProduct);
-      }
-    });
+
 
     // Always ensure "Other" option is at the end
     const otherIndex = products.findIndex(p => p.includes('Other (Please specify in message)'));
@@ -104,7 +90,7 @@ export function EnquiryForm() {
     products.push('Other (Please specify in message)');
 
     return products;
-  }, [productsData,fallbackProducts]);
+  }, [productsData]);
 
   
   // Validation rules (same as before)
@@ -325,7 +311,15 @@ export function EnquiryForm() {
                   <p className="text-lg opacity-90">Made with love, served with joy</p>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              <div className="absolute inset-0  ">
+                <Image
+                  src="/dwhh.png"
+                  alt="Delhi Wala Halwai"
+                  layout="fill"
+                  objectFit="cover"
+                  className="object-cover"
+                />
+              </div>
             </div>
 
             {/* Contact Info */}
@@ -353,8 +347,8 @@ export function EnquiryForm() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Enquiry</h2>
               <p className="text-gray-600">
-  Tell us about your sweet requirements and we&#39;ll get back to you!
-</p>
+                Tell us about your sweet requirements and we&#39;ll get back to you!
+              </p>  
             </div>
 
             {/* Status Messages */}
