@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Product } from '../../../models/Product';
 import Image from 'next/image';
 
 export default function ProductPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

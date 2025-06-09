@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Package, Eye, Calendar, Truck, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react';
+import { Package, Eye,  Truck, CheckCircle, XCircle, Clock,  } from 'lucide-react';
+import Image from 'next/image';
 
 // Type definitions
 interface OrderItem {
@@ -432,7 +433,9 @@ export default function MyOrders(): React.JSX.Element {
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, index) => (
                       <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
-                        <img
+                        <Image
+                        width={100}
+                        height={100}
                           src={item.productImage || '/placeholder-image.jpg'}
                           alt={item.productName}
                           className="w-16 h-16 object-cover rounded-lg"

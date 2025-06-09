@@ -43,12 +43,6 @@ interface CartItem {
   selectedPricing?: Pricing;
 }
 
-interface PopulatedCartItem {
-  productId: ProductData;
-  quantity: number;
-  selectedPricing?: Pricing;
-  _id?: string;
-}
 
 export async function GET() {
   try {

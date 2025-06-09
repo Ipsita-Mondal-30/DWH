@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import { ShippingAddress } from './CheckoutPage';
+import Image from 'next/image';
 
 interface CheckoutFormProps {
   cartItems: CartItem[];
@@ -69,37 +70,6 @@ export default function CheckoutForm({
     }
   };
 
-  const validateForm = useCallback(() => {
-    const newErrors: Record<string, string> = {};
-    
-    // Required field validation
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state.trim()) newErrors.state = 'State is required';
-    if (!formData.pincode.trim()) newErrors.pincode = 'Pincode is required';
-
-    // Format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
-    }
-
-    const pincodeRegex = /^\d{6}$/;
-    if (formData.pincode && !pincodeRegex.test(formData.pincode)) {
-      newErrors.pincode = 'Please enter a valid 6-digit pincode';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
 
   const isFormValid = useMemo(() => {
     // Check required fields without calling validateForm (to prevent infinite loop)
@@ -357,7 +327,9 @@ export default function CheckoutForm({
             <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
               {cartItems.map((item, index) => (
                 <div key={`${item.product._id}-${index}`} className="flex items-center space-x-3 py-2">
-                  <img
+                  <Image
+                    width={40}
+                    height={40}
                     src={item.product.image || '/placeholder-image.jpg'}
                     alt={item.product.name}
                     className="w-12 h-12 rounded-lg object-cover flex-shrink-0"

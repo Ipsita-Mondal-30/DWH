@@ -23,7 +23,7 @@ interface SignInPopupProps {
   onSignIn?: () => void;
 }
 
-export default function SignInPopup({ isOpen, onClose, onSignIn }: SignInPopupProps) {
+export default function SignInPopup({ isOpen, onClose }: SignInPopupProps) {
   if (!isOpen) return null;
 
 

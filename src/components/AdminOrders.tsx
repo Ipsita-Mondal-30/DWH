@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Edit, Calendar, User, Package, Filter, TrendingUp, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Calendar, User, Package, Filter, TrendingUp, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 // Type definitions (same as user component but with admin fields)
 interface OrderItem {
@@ -488,7 +489,9 @@ export default function AdminOrders(): React.JSX.Element {
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, index) => (
                       <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
-                        <img
+                        <Image
+                          width={100}
+                          height={100}
                           src={item.productImage || '/placeholder-image.jpg'}
                           alt={item.productName}
                           className="w-16 h-16 object-cover rounded-lg"

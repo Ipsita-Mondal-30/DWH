@@ -28,7 +28,6 @@ export default function CheckoutPage() {
     totals, 
     isLoading, 
     error, 
-    refetch 
   } = useCart();
 
   // Debug logging (can be removed in production)
