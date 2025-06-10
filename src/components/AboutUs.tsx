@@ -22,10 +22,10 @@ const AboutUs = () => {
           
           {/* Left Column - Image */}
           <div className="flex justify-center">
-            <Image
-              src='/dwhh.png'
-              width={400}
-              height={400}
+            <img
+              width={800}
+              height={800}
+              src="./dwhh.png" 
               alt="Ram Chander Shambhu Dayal - Founder 1943" 
               className="w-80 h-80 object-cover rounded-lg shadow-lg"
             />
