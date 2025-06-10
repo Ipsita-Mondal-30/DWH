@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSession, signIn } from 'next-auth/react';
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from '../app/context/CartContext';
 import { ChevronDown } from 'lucide-react';
+import SignInPopup from './SigninPopup'; // Import the popup component
 
 interface Pricing {
   quantity: number;
@@ -25,8 +27,10 @@ interface Namkeen {
 
 export default function LatestNamkeen() {
   const [namkeens, setNamkeens] = useState<Namkeen[]>([]);
+  const { data: session, status } = useSession();
   const [selectedPricing, setSelectedPricing] = useState<{[key: string]: Pricing}>({});
   const [dropdownOpen, setDropdownOpen] = useState<{[key: string]: boolean}>({});
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -74,7 +78,14 @@ export default function LatestNamkeen() {
 
     const selected = selectedPricing[item._id];
     if (!selected) return;
-
+    
+    // Check if user is authenticated
+    if (!session) {
+      console.log("User is not logged in - showing popup");
+      setShowSignInPopup(true);
+      return;
+    }
+    
     try {
       console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
       // Pass the selected pricing to the cart
@@ -86,6 +97,13 @@ export default function LatestNamkeen() {
     }
   };
 
+  const handleSignIn = () => {
+    // Trigger Google sign-in using NextAuth
+    signIn('google', { 
+      callbackUrl: window.location.href // Redirect back to current page after sign-in
+    });
+  };
+
   const getUnitDisplay = (unit: string) => {
     const unitMap = {
       'gm': 'g',
@@ -95,6 +113,16 @@ export default function LatestNamkeen() {
     };
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
+
+  // Show loading state while session is being determined
+  if (status !== "authenticated" && status !== "unauthenticated") {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   if (namkeens.length === 0) {
     return (
@@ -113,6 +141,7 @@ export default function LatestNamkeen() {
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
         Latest Namkeens
       </h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayedNamkeens.map((item) => {
           const selected = selectedPricing[item._id];
@@ -263,6 +292,13 @@ export default function LatestNamkeen() {
           onClick={() => setDropdownOpen({})}
         />
       )}
+      
+      {/* Sign In Popup */}
+      <SignInPopup 
+        isOpen={showSignInPopup}
+        onClose={() => setShowSignInPopup(false)}
+        onSignIn={handleSignIn}
+      />
     </div>
   );
 }

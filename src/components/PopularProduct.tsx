@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSession, signIn } from 'next-auth/react';
 import type { IProduct } from "../models/Product";
 import { useCart } from "../app/context/CartContext";
 import Image from "next/image";
 import { ChevronDown } from 'lucide-react';
+import SignInPopup from './SigninPopup'; // Import the popup component
 
 interface Pricing {
   quantity: number;
@@ -36,8 +38,10 @@ interface CombinedItem {
 
 export default function PopularProduct() {
   const [items, setItems] = useState<CombinedItem[]>([]);
+  const { data: session, status } = useSession();
   const [selectedPricing, setSelectedPricing] = useState<{[key: string]: Pricing}>({});
   const [dropdownOpen, setDropdownOpen] = useState<{[key: string]: boolean}>({});
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -72,8 +76,8 @@ export default function PopularProduct() {
         // Set default selected pricing (first option for each item)
         const defaultPricing: {[key: string]: Pricing} = {};
         combinedItems.forEach((item: CombinedItem) => {
-          if (item.pricing && item.pricing.length > 0) {
-            defaultPricing[item._id!] = item.pricing[0];
+          if (item._id && item.pricing && item.pricing.length > 0) {
+            defaultPricing[item._id] = item.pricing[0];
           }
         });
         setSelectedPricing(defaultPricing);
@@ -108,6 +112,13 @@ export default function PopularProduct() {
 
     const selected = selectedPricing[item._id];
     
+    // Check if user is authenticated
+    if (!session) {
+      console.log("User is not logged in - showing popup");
+      setShowSignInPopup(true);
+      return;
+    }
+    
     try {
       console.log('Adding popular item to cart:', { itemId: item._id, selected }); // Debug log
       if (selected) {
@@ -124,6 +135,13 @@ export default function PopularProduct() {
     }
   };
 
+  const handleSignIn = () => {
+    // Trigger Google sign-in using NextAuth
+    signIn('google', { 
+      callbackUrl: window.location.href // Redirect back to current page after sign-in
+    });
+  };
+
   const getUnitDisplay = (unit: string) => {
     const unitMap = {
       'gm': 'g',
@@ -133,6 +151,16 @@ export default function PopularProduct() {
     };
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
+
+  // Show loading state while session is being determined
+  if (status !== "authenticated" && status !== "unauthenticated") {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -146,15 +174,17 @@ export default function PopularProduct() {
   return (
     <div className="py-8">
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Popular Products</h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {items.map((item) => {
-          const selected = selectedPricing[item._id!];
-          const isDropdownOpen = dropdownOpen[item._id!];
+          const itemId = item._id || '';
+          const selected = selectedPricing[itemId];
+          const isDropdownOpen = dropdownOpen[itemId];
           const hasPricingOptions = item.pricing && item.pricing.length > 0;
           
           return (
             <div 
-              key={item._id} 
+              key={item._id || Math.random()} 
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
             >
               {/* Product Image */}
@@ -195,7 +225,7 @@ export default function PopularProduct() {
                     </label>
                     <div className="relative">
                       <button
-                        onClick={() => toggleDropdown(item._id!)}
+                        onClick={() => toggleDropdown(itemId)}
                         className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 transition-colors"
                       >
                         <div className="flex flex-col items-start">
@@ -222,10 +252,10 @@ export default function PopularProduct() {
                       {/* Dropdown Options - Fixed z-index */}
                       {isDropdownOpen && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto">
-                          {item.pricing!.map((pricing, index) => (
+                          {item.pricing?.map((pricing, index) => (
                             <button
                               key={index}
-                              onClick={() => handlePricingSelect(item._id!, pricing)}
+                              onClick={() => handlePricingSelect(itemId, pricing)}
                               className={`w-full flex items-center justify-between p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 ${
                                 selected && 
                                 selected.quantity === pricing.quantity && 
@@ -287,9 +317,9 @@ export default function PopularProduct() {
                 </button>
 
                 {/* Additional Info */}
-                {hasPricingOptions && item.pricing!.length > 1 && (
+                {hasPricingOptions && item.pricing && item.pricing.length > 1 && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    {item.pricing!.length} size options available
+                    {item.pricing.length} size options available
                   </p>
                 )}
               </div>
@@ -305,6 +335,13 @@ export default function PopularProduct() {
           onClick={() => setDropdownOpen({})}
         />
       )}
+
+      {/* Sign In Popup */}
+      <SignInPopup 
+        isOpen={showSignInPopup}
+        onClose={() => setShowSignInPopup(false)}
+        onSignIn={handleSignIn}
+      />
     </div>
   );
 }

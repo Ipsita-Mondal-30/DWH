@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Product } from '../../../models/Product';
 import { useCart } from '../../context/CartContext';
 import { useSession } from 'next-auth/react';
@@ -20,7 +20,6 @@ interface Pricing {
 
 export default function ProductPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -470,7 +469,16 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
-      )}
+
+        {/* Debug Info - Remove in production */}
+        {/* <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-600">
+          <h4 className="font-semibold mb-2">Debug Info:</h4>
+          <p>Product ID: {productId}</p>
+          <p>Search Position: {searchParams.get('_pos')}</p>
+          <p>Search Query: {searchParams.get('_psq')}</p>
+          <p>API URL: /api/product/{productId}</p>
+        </div> */}
+      </div>
     </div>
   );
 }

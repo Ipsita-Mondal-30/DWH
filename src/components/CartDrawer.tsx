@@ -1,6 +1,5 @@
 'use client';
 import { useCart } from '@/app/context/CartContext';
-import { useProducts } from '@/hooks/useProducts';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
+import Image from 'next/image';
 
 interface UPIPaymentProps {
   cartItems: CartItem[];
@@ -100,7 +101,7 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
               <p className="text-gray-600">Please complete the payment in your UPI app</p>
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  Don't close this page until payment is complete
+                  Do not close this page until payment is complete
                 </p>
               </div>
             </div>
@@ -158,7 +159,9 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
           <div className="space-y-4 mb-6">
             {cartItems.slice(0, 3).map((item) => (
               <div key={`${item.product._id}-${item.selectedPricing?.quantity || 'default'}`} className="flex items-center space-x-3">
-                <img
+                <Image
+                  width={100}
+                  height={100}
                   src={item.product.image || '/placeholder-image.jpg'}
                   alt={item.product.name}
                   className="w-12 h-12 rounded-lg object-cover"

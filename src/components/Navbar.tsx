@@ -284,13 +284,14 @@ export default function Navbar() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
-            <Link
-              href="/AboutUs"
+            <a
+              href="#AboutUs"
+              onClick={handleAboutUsClick}
               className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group cursor-pointer text-base"
             >
               About us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            </a>
           </div>
 
           {/* Right Side - Icons */}
@@ -328,11 +329,6 @@ export default function Navbar() {
                 </div>
                 <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Cart
-                  {session && totalCartItems > 0 && (
-                    <span className="ml-1 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
-                      {totalCartItems}
-                    </span>
-                  )}
                 </span>
               </div>
 

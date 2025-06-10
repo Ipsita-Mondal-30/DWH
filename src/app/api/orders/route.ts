@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    let query: any = {};
+    const query: any = {};
     
     // If not admin request, filter by userId
     if (!isAdmin && userId) {
@@ -251,7 +251,7 @@ export async function PUT(request: NextRequest) {
     await connectDB();
     
     const body = await request.json();
-    const { orderId, orderStatus, paymentStatus, adminNotes, trackingInfo } = body;
+    const { orderId, orderStatus, paymentStatus, adminNotes } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -333,7 +333,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Build query - if not admin, must match userId
-    let query: any = { orderId };
+    const query: any = { orderId };
     if (!isAdmin && userId) {
       query.userId = userId;
     }
