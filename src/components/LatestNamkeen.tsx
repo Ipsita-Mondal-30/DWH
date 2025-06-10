@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
+import Link from "next/link";
 import { useCart } from '../app/context/CartContext';
 import { ChevronDown } from 'lucide-react';
 
@@ -104,13 +105,16 @@ export default function LatestNamkeen() {
     );
   }
 
+  // Show only first 3 namkeens
+  const displayedNamkeens = namkeens.slice(0, 3);
+
   return (
     <div className="py-8">
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
         Latest Namkeens
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {namkeens.map((item) => {
+        {displayedNamkeens.map((item) => {
           const selected = selectedPricing[item._id];
           const isDropdownOpen = dropdownOpen[item._id];
           
@@ -240,6 +244,17 @@ export default function LatestNamkeen() {
           );
         })}
       </div>
+
+      {/* View More Button - Only show if there are more than 3 namkeens */}
+      {namkeens.length > 3 && (
+        <div className="flex justify-center mt-8">
+          <Link href="/collections/savouries">
+            <button className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              View More Savouries
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Click outside to close dropdowns */}
       {Object.values(dropdownOpen).some(open => open) && (

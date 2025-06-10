@@ -5,6 +5,7 @@ import axios from "axios";
 import type { IProduct } from "../models/Product";
 import { useCart } from '../app/context/CartContext';
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronDown } from 'lucide-react';
 
 interface Pricing {
@@ -99,17 +100,20 @@ export default function LatestProduct() {
   if (items.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
         <p className="text-gray-500">Loading latest products...</p>
       </div>
     );
   }
 
+  // Show only first 3 products
+  const displayedItems = items.slice(0, 3);
+
   return (
     <div className="py-8">
       <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Latest Products</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map((item) => {
+        {displayedItems.map((item) => {
           const itemId = item._id || '';
           const selected = selectedPricing[itemId];
           const isDropdownOpen = dropdownOpen[itemId];
@@ -129,7 +133,7 @@ export default function LatestProduct() {
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
                 {item.type && (
-                  <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  <div className="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
                     {item.type}
                   </div>
                 )}
@@ -153,7 +157,7 @@ export default function LatestProduct() {
                     <div className="relative">
                       <button
                         onClick={() => toggleDropdown(itemId)}
-                        className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
+                        className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 transition-colors"
                       >
                         <div className="flex flex-col items-start">
                           {selected ? (
@@ -161,7 +165,7 @@ export default function LatestProduct() {
                               <span className="text-sm font-medium text-gray-800">
                                 {selected.quantity}{getUnitDisplay(selected.unit)}
                               </span>
-                              <span className="text-lg font-bold text-blue-600">
+                              <span className="text-lg font-bold text-orange-600">
                                 ₹{selected.price}
                               </span>
                             </>
@@ -183,12 +187,12 @@ export default function LatestProduct() {
                             <button
                               key={index}
                               onClick={() => handlePricingSelect(itemId, pricing)}
-                              className={`w-full flex items-center justify-between p-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                              className={`w-full flex items-center justify-between p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 ${
                                 selected && 
                                 selected.quantity === pricing.quantity && 
                                 selected.unit === pricing.unit && 
                                 selected.price === pricing.price
-                                  ? 'bg-blue-100 text-blue-700' 
+                                  ? 'bg--100 text-orange-700' 
                                   : 'text-gray-700'
                               }`}
                             >
@@ -200,7 +204,7 @@ export default function LatestProduct() {
                                   Per {pricing.unit === 'piece' ? 'piece' : pricing.unit === 'dozen' ? 'dozen' : 'unit'}
                                 </span>
                               </div>
-                              <span className="font-bold text-blue-600">
+                              <span className="font-bold text-orange-600">
                                 ₹{pricing.price}
                               </span>
                             </button>
@@ -213,7 +217,7 @@ export default function LatestProduct() {
                   /* Simple Price Display for products without pricing options */
                   <div className="mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-blue-600">
+                      <span className="text-lg font-bold text-orange-600">
                         {item.pricing && item.pricing.length > 0 ? `₹${item.pricing[0].price}` : 'Price not available'}
                       </span>
                     </div>
@@ -224,7 +228,7 @@ export default function LatestProduct() {
                 <button
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                     (!hasPricingOptions || selected)
-                      ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md transform hover:-translate-y-0.5'
+                      ? 'bg-orange-500 text-white hover:bg-orange-600 hover:shadow-md transform hover:-translate-y-0.5'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                   onClick={() => handleAddToCart(item)}
@@ -256,6 +260,17 @@ export default function LatestProduct() {
           );
         })}
       </div>
+
+      {/* View More Button - Only show if there are more than 3 items */}
+      {items.length > 3 && (
+        <div className="flex justify-center mt-8">
+          <Link href="/collections/sweets">
+            <button className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              View More Sweets
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Click outside to close dropdowns */}
       {Object.values(dropdownOpen).some(open => open) && (

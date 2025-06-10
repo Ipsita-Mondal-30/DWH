@@ -36,7 +36,7 @@ export default function Home() {
       </section>
       <section className="max-w-7xl mx-auto px-4 py-8"> 
         <InteractiveMap /> 
-        <AboutUs />
+       
       </section>
       <section className="max-w-7xl bg-gradient-to-br from-pink-50 via-orange-50 to-red-50">
         <SawamaniForm />
