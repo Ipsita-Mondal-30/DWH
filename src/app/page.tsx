@@ -9,8 +9,8 @@ import PopularProduct from "@/components/PopularProduct";
 import SawamaniForm from "@/components/SawamaniForm";
 import InteractiveMap from '@/components/InteractiveMap';
 import LatestNamkeen from "@/components/LatestNamkeen";
-import AboutUs from "@/components/AboutUs";
 import FloatingEnquiryButton from "@/components/FloatingEnquiryButton";
+import About from "@/components/About";
 
 export default function Home() {
   const { status } = useSession();
@@ -21,7 +21,7 @@ export default function Home() {
     <>
       <div className="bg-gradient-to-br from-pink-50 via-orange-50 to-red-50">
         <Navbar />
-        <div className="mt-10">
+        <div className="mt-35">
           <Carousel />
         </div>
 
@@ -36,7 +36,7 @@ export default function Home() {
         
         <section className="max-w-7xl mx-auto px-4 py-8"> 
           <InteractiveMap /> 
-          <AboutUs />
+          <About />
         </section>
         
         <section className="max-w-7xl mx-auto bg-gradient-to-br from-pink-50 via-orange-50 to-red-50">

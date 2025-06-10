@@ -46,18 +46,18 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       
       {/* Popup */}
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all border border-orange-100">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="bg-orange-100 p-2 rounded-full">
+          <div className="flex items-center justify-between p-6 border-b border-orange-100">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-2 rounded-xl">
                 <FiUser className="h-5 w-5 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">Sign In Required</h3>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+              className="text-gray-400 hover:text-orange-500 transition-colors p-1 rounded-lg hover:bg-orange-50"
             >
               <FiX className="h-5 w-5" />
             </button>
@@ -66,13 +66,13 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           {/* Content */}
           <div className="p-6">
             <div className="flex items-center justify-center mb-4">
-              <div className="bg-orange-50 p-4 rounded-full">
+              <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-4 rounded-2xl">
                 <FiShoppingBag className="h-8 w-8 text-orange-500" />
               </div>
             </div>
             
             <div className="text-center mb-6">
-              <h4 className="text-xl font-medium text-gray-800 mb-2">
+              <h4 className="text-xl font-semibold text-gray-800 mb-2">
                 Please Sign In First
               </h4>
               <p className="text-gray-600 leading-relaxed">
@@ -89,14 +89,14 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                   });
                   onClose();
                 }}
-                className="flex items-center justify-center w-full bg-white border-2 border-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-sm"
+                className="flex items-center justify-center w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 shadow-lg hover:shadow-xl"
               >
                 <GoogleIcon />
                 Continue with Google
               </button>
               <button
                 onClick={onClose}
-                className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
               >
                 Maybe Later
               </button>
@@ -242,8 +242,8 @@ export default function Navbar() {
 
   return (
     <div className="relative">
-      <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-40">
-        <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+      <div className="bg-gradient-to-r from-white via-orange-50/30 to-white shadow-lg border-b border-orange-100 fixed top-0 left-0 right-0 z-40">
+        <div className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
           
           {/* Logo - Left Side */}
           <div className="flex items-center">
@@ -251,7 +251,7 @@ export default function Navbar() {
               <Image
                 src="/delwh.png"
                 alt="Vaishnavi Logo"
-                className="h-16 object-contain cursor-pointer"
+                className="h-16 object-contain cursor-pointer hover:scale-105 transition-transform duration-300"
                 width={120}
                 height={64}
               />
@@ -259,74 +259,74 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links - Center */}
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-10">
             <Link 
               href="/" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
             
             <Link 
               href="/collections/sweets" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
             >
               Sweets
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
             
             <Link 
               href="/collections/savouries" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group text-base"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
             >
-              Savouries
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+              Namkeen
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
             
             <Link
               href="/AboutUs"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors relative group cursor-pointer text-base"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group cursor-pointer text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
             >
               About us
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
           </div>
 
           {/* Right Side - Icons */}
-          <div className="flex justify-end items-center space-x-4">
+          <div className="flex justify-end items-center space-x-2">
             {/* Icons Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               {/* Search Icon with Text */}
               <div 
-                className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded-lg"
+                className="flex items-center space-x-2 p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg"
                 onClick={() => setShowSearchModal(true)}
               >
-                <FiSearch className="text-xl text-gray-700" />
-                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                <FiSearch className="text-xl text-gray-700 hover:text-orange-600 transition-colors" />
+                <span className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
                   Search
                 </span>
               </div>
               
               {/* Cart Icon with Text - with login protection */}
               <div 
-                className="flex items-center space-x-2 relative cursor-pointer p-2 hover:bg-gray-100 transition-colors rounded-lg" 
+                className="flex items-center space-x-2 relative cursor-pointer p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg" 
                 onClick={toggleCart}
               >
                 <div className="relative">
-                  <FiShoppingBag className="text-xl text-gray-700" />
+                  <FiShoppingBag className="text-xl text-gray-700 hover:text-orange-600 transition-colors" />
                   {session && totalCartItems > 0 && (
-                    <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                    <span className="absolute -top-1 -right-1 text-xs bg-gradient-to-r from-orange-500 to-orange-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg">
                       {totalCartItems}
                     </span>
                   )}
                   {!session && (
-                    <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                    <span className="absolute -top-1 -right-1 text-xs bg-gray-400 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold">
                       !
                     </span>
                   )}
                 </div>
-                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                <span className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
                   Cart
                 </span>
               </div>
@@ -334,53 +334,58 @@ export default function Navbar() {
               {/* User Icon with Text and Dropdown */}
               <div ref={dropdownRef} className="relative">
                 <div
-                  className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded-lg"
+                  className="flex items-center space-x-2 p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
-                  <FiUser className="text-xl text-gray-700" />
-                  <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  <FiUser className="text-xl text-gray-700 hover:text-orange-600 transition-colors" />
+                  <span className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
                     {session ? 'Account' : 'Sign In'}
                   </span>
                 </div>
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-2 w-52 bg-white border border-orange-200 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
                     {session ? (
                       <div className="py-2">
                         {/* Welcome Section */}
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <div className="flex items-center space-x-2">
-                            <FiUser className="text-lg text-gray-600" />
-                            <span className="text-sm font-medium text-gray-800">
-                              Welcome, {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
-                            </span>
+                        <div className="px-4 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
+                          <div className="flex items-center space-x-3">
+                            <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-2 rounded-xl">
+                              <FiUser className="text-lg text-orange-600" />
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold text-gray-800 block">Welcome!</span>
+                              <span className="text-xs text-orange-600 font-medium">
+                                {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
+                              </span>
+                            </div>
                           </div>
                         </div>
                         
                         {/* Menu Items */}
                         <div className="py-1">
-                          <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Link href="/account" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all duration-200">
                             My Account
                           </Link>
-                          <Link href="/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Link href="/my-orders" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all duration-200">
                             My Orders
                           </Link>
                         </div>
 
                         {/* Sign Out Section */}
-                        <div className="border-t border-gray-100 py-1">
+                        <div className="border-t border-orange-100 py-1">
                           <button
                             onClick={() => signOut()}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="block w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all duration-200"
                           >
                             Sign Out
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="p-2">
+                      <div className="p-3">
                         <button
                           onClick={() => signIn("google")}
-                          className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gray-50 rounded transition-colors font-medium space-x-3"
+                          className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 rounded-xl transition-all duration-200 font-semibold space-x-3 border border-orange-200 hover:border-orange-300 hover:shadow-lg"
                         >
                           <GoogleIcon />
                           <span>Sign in with Google</span>
@@ -410,20 +415,20 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             
             {/* Search Header */}
-            <div className="flex items-center justify-center py-8 border-b border-gray-200">
+            <div className="flex items-center justify-center py-8 border-b border-orange-200 bg-gradient-to-r from-orange-50/50 to-white">
               <div className="w-full max-w-2xl px-4">
-                <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
                   Search our site
                 </h2>
                 
                 {/* Search Input */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <FiSearch className="h-5 w-5 text-gray-400" />
+                    <FiSearch className="h-5 w-5 text-orange-400" />
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-12 pr-12 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="block w-full pl-12 pr-12 py-4 text-lg border-2 border-orange-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-gradient-to-r from-white to-orange-50/30 shadow-lg"
                     placeholder="Search for products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -434,7 +439,7 @@ export default function Navbar() {
                       onClick={() => setSearchQuery("")}
                       className="absolute inset-y-0 right-0 pr-4 flex items-center"
                     >
-                      <FiX className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiX className="h-5 w-5 text-orange-400 hover:text-orange-600" />
                     </button>
                   )}
                 </div>
@@ -443,22 +448,22 @@ export default function Navbar() {
               {/* Close Button */}
               <button
                 onClick={closeSearchModal}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-xl hover:bg-orange-100 transition-colors"
               >
                 <FiX className="h-6 w-6 text-gray-600" />
               </button>
             </div>
 
             {/* Search Results */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-orange-50/20">
               <div className="max-w-4xl mx-auto px-4 py-8">
                 
                 {searchQuery && (
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">Products</h3>
+                      <h3 className="text-lg font-bold text-gray-800">Products</h3>
                       {searchResults.length > 0 && (
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        <button className="text-sm text-orange-600 hover:text-orange-800 font-semibold flex items-center">
                           View all →
                         </button>
                       )}
@@ -466,43 +471,43 @@ export default function Navbar() {
                     
                     {isLoadingSearch ? (
                       <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {searchResults.map((product: SearchProduct) => (
                           <div
                             key={product._id || Math.random()}
-                            className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+                            className="bg-white rounded-2xl border-2 border-orange-100 hover:shadow-2xl hover:border-orange-300 transition-all duration-300 cursor-pointer group overflow-hidden"
                             onClick={() => handleProductClick(product)}
                           >
                             {/* Product Image */}
-                            <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100 relative">
+                            <div className="aspect-square overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100 relative">
                               {product.image ? (
                                 <Image
                                   src={product.image}
                                   alt={product.name}
                                   fill
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
-                                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                  <span className="text-gray-400 text-sm">No Image</span>
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
+                                  <span className="text-orange-400 text-sm font-semibold">No Image</span>
                                 </div>
                               )}
                             </div>
                             
                             {/* Product Details */}
-                            <div className="p-4">
-                              <h4 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                            <div className="p-4 bg-gradient-to-br from-white to-orange-50/30">
+                              <h4 className="font-bold text-gray-800 mb-2 line-clamp-2">
                                 {product.name}
                               </h4>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-500 line-through">
                                   Rs. {(getPriceDisplay(product) * 1.2).toFixed(2)}
                                 </span>
-                                <span className="font-semibold text-red-600">
+                                <span className="font-bold text-orange-600">
                                   From Rs. {getPriceDisplay(product)}
                                 </span>
                               </div>
@@ -512,7 +517,7 @@ export default function Navbar() {
                       </div>
                     ) : (
                       <div className="text-center py-12">
-                        <p className="text-gray-500">
+                        <p className="text-gray-500 font-semibold">
                           &quot; No products found for {searchQuery} &quot;
                         </p>
                       </div>
@@ -522,8 +527,10 @@ export default function Navbar() {
 
                 {!searchQuery && (
                   <div className="text-center py-20">
-                    <FiSearch className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg">
+                    <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-6 rounded-2xl inline-block mb-4">
+                      <FiSearch className="h-16 w-16 text-orange-500 mx-auto" />
+                    </div>
+                    <p className="text-gray-500 text-lg font-semibold">
                       Start typing to search for products...
                     </p>
                   </div>
