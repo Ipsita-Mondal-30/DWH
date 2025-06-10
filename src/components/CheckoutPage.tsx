@@ -31,7 +31,7 @@ export default function CheckoutPage() {
   } = useCart();
 
   // Debug logging (can be removed in production)
-  console.log('🚀 Checkout Page - Items:', cartItems.length, 'Loading:', isLoading);
+  // console.log('🚀 Checkout Page - Items:', cartItems.length, 'Loading:', isLoading);
 
   // Redirect if not authenticated
   useEffect(() => {

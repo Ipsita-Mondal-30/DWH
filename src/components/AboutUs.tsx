@@ -2,6 +2,7 @@ import Image from 'next/image';
 import React from 'react';
 
 const AboutUs = () => {
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
       {/* Header Section */}
@@ -22,9 +23,9 @@ const AboutUs = () => {
           {/* Left Column - Image */}
           <div className="flex justify-center">
             <Image
-              width={800}
-              height={800}
-              src="./dwhh.png" 
+              src='/dwhh.png'
+              width={400}
+              height={400}
               alt="Ram Chander Shambhu Dayal - Founder 1943" 
               className="w-80 h-80 object-cover rounded-lg shadow-lg"
             />

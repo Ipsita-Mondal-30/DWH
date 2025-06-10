@@ -56,12 +56,12 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching cart...'); // Debug log
+      // console.log('Fetching cart...'); // Debug log
       const res = await axios.get('/api/cart');
-      console.log('Cart API response:', res.data); // Debug log
+      // console.log('Cart API response:', res.data); // Debug log
       setCart(res.data.items || []);
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      // console.error('Error fetching cart:', error);
       setError('Failed to fetch cart');
       setCart([]);
     } finally {

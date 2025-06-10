@@ -101,7 +101,7 @@ export const useCart = () => {
 
   // Always enabled except when explicitly unauthenticated
   const shouldFetch = status !== 'unauthenticated';
-  console.log('Session :', session);
+  // console.log('Session :', session);
 
   // Fetch cart items
   const {

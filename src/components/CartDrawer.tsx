@@ -156,14 +156,14 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
     // First check the cart item for pricing data
     const cartItem = cart.find(item => item.product._id === productId);
     if (cartItem && cartItem.product.pricing) {
-      console.log('Found pricing in cart item:', cartItem.product.pricing); // Debug log
+      // console.log('Found pricing in cart item:', cartItem.product.pricing); // Debug log
       return cartItem.product.pricing;
     }
     
     // Fallback to combined products data
     const product = allProducts.find(p => p._id === productId);
     if (product && product.pricing) {
-      console.log('Found pricing in products data:', product.pricing); // Debug log
+      // console.log('Found pricing in products data:', product.pricing); // Debug log
       return product.pricing;
     }
     
@@ -237,13 +237,13 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                   const pricingOptions = getProductPricingOptions(item.product._id);
                   const isEditing = editingSize[item.product._id];
                   
-                  console.log('Cart item:', {
-                    name: item.product.name,
-                    id: item.product._id,
-                    selectedPricing: item.selectedPricing,
-                    productPricing: item.product.pricing,
-                    pricingOptionsLength: pricingOptions.length
-                  }); // Debug log
+                  // console.log('Cart item:', {
+                  //   name: item.product.name,
+                  //   id: item.product._id,
+                  //   selectedPricing: item.selectedPricing,
+                  //   productPricing: item.product.pricing,
+                  //   pricingOptionsLength: pricingOptions.length
+                  // }); // Debug log
                   
                   return (
                     <div key={item.product._id} className="bg-white border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow">

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Package, Eye, Calendar, Truck, CheckCircle, XCircle, Clock, CreditCard, User, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { Package, Eye, CheckCircle, XCircle, Clock, User, Mail, MapPin, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 // Type definitions (same as MyOrders.tsx)
@@ -197,7 +197,7 @@ export default function MyAccount(): React.JSX.Element {
                   MAKE YOUR FIRST ORDER
                 </Link>
               </div>
-              <p className="text-green-600">You haven't placed any orders yet.</p>
+              <p className="text-green-600">You haven&lsquot placed any orders yet.</p>
             </div>
           ) : (
             <div className="space-y-4">

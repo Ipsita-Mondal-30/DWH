@@ -117,7 +117,7 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
               <h4 className="text-lg font-semibold text-gray-800 mb-2">Payment Successful!</h4>
               <p className="text-gray-600 mb-6">Your order has been confirmed</p>
               <button
-                onClick={() => window.location.href = '/orders'}
+                onClick={() => window.location.href = '/my-orders'}
                 className="bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
               >
                 View Orders

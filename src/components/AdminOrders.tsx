@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Calendar, User, Package, Filter, TrendingUp, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Calendar, User, Package, Filter,  DollarSign, Clock, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 // Type definitions (same as user component but with admin fields)

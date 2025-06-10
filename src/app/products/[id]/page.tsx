@@ -8,7 +8,6 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 // Define the pricing interface to match your cart system
 interface Pricing {
@@ -31,7 +30,7 @@ export default function ProductPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { addToCart } = useCart();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const productId = params.id as string;
 
   // Mock multiple images for carousel (you can replace with actual multiple images from your product data)
