@@ -470,15 +470,9 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Debug Info - Remove in production */}
-        {/* <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-600">
-          <h4 className="font-semibold mb-2">Debug Info:</h4>
-          <p>Product ID: {productId}</p>
-          <p>Search Position: {searchParams.get('_pos')}</p>
-          <p>Search Query: {searchParams.get('_psq')}</p>
-          <p>API URL: /api/product/{productId}</p>
-        </div> */}
-      </div>
-    </div>
+      
+        
+      
+        )}    </div>
   );
 }
