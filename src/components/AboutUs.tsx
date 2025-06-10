@@ -31,13 +31,13 @@ const AboutUs = () => {
           <div className="flex justify-center relative">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-2xl blur-xl transform rotate-6"></div>
-              <img
-                width={800}
-                height={800}
-                src="./dwhh.png" 
-                alt="Ram Chander Shambhu Dayal - Founder 1943" 
-                className="relative w-80 h-80 object-cover rounded-2xl shadow-2xl border-4 border-white"
-              />
+              <Image
+  src="/dwhh.png" 
+  alt="Ram Chander Shambhu Dayal - Founder 1943"
+  width={320}
+  height={320}
+  className="relative w-80 h-80 object-cover rounded-2xl shadow-2xl border-4 border-white"
+/>
               <div className="absolute -bottom-4 -right-4 bg-amber-600 text-white px-4 py-2 rounded-full font-semibold text-sm shadow-lg">
                 Est. 1943
               </div>
@@ -48,7 +48,7 @@ const AboutUs = () => {
           <div className="space-y-8 text-gray-700 leading-relaxed">
             <div className="border-l-4 border-amber-600 pl-6">
               <p className="text-lg font-light">
-                Our story began with <strong className="text-amber-800">Ram Chander Shambhu Dayal</strong>, who founded Delhi Wala Halwai in 1943 with a vision to create authentic Indian sweets that reflect the purity, flavor, and richness of India's cultural heritage. What started as a small sweet-making establishment in the heart of Hisar, Haryana, has grown into a cherished tradition spanning over seven decades.
+                Our story began with <strong className="text-amber-800">Ram Chander Shambhu Dayal</strong>, who founded Delhi Wala Halwai in 1943 with a vision to create authentic Indian sweets that reflect the purity, flavor, and richness of India&rsquo;s cultural heritage. What started as a small sweet-making establishment in the heart of Hisar, Haryana, has grown into a cherished tradition spanning over seven decades.
               </p>
             </div>
 
@@ -132,7 +132,7 @@ const AboutUs = () => {
 
               <div className="border-t border-white/20 pt-8">
                 <p className="text-xl font-semibold text-amber-200 mb-2">
-                  "Taste the Tradition. Experience the Love."
+                &ldquo;Taste the Tradition. Experience the Love.&rdquo;
                 </p>
                 <p className="text-amber-100">
                   Delhi Wala Halwai — Your Sweet Destination Since 1943

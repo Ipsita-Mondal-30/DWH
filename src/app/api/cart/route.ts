@@ -44,6 +44,7 @@ interface CartItem {
 }
 
 
+
 export async function GET() {
   try {
     await connectDB();
@@ -144,10 +145,15 @@ export async function POST(req: Request) {
 
     let cart = await Cart.findOne({ userId });
 
-    const cartItem: any = { 
-      productId: new Types.ObjectId(productId), 
-      quantity 
+    const cartItem: {
+      productId: Types.ObjectId;
+      quantity: number;
+      selectedPricing?: Pricing;
+    } = {
+      productId: new Types.ObjectId(productId),
+      quantity,
     };
+    
 
     // Add pricing information if provided
     if (selectedPricing) {
@@ -156,7 +162,7 @@ export async function POST(req: Request) {
         unit: selectedPricing.unit,
         price: selectedPricing.price
       };
-      console.log('Adding pricing info:', cartItem.selectedPricing); // Debug log
+      // console.log('Adding pricing info:', cartItem.selectedPricing); // Debug log
     }
 
     if (!cart) {

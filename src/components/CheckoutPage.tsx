@@ -26,7 +26,6 @@ export default function CheckoutPage() {
   const { 
     cartItems, 
     totals, 
-    isLoading, 
     error, 
   } = useCart();
 

@@ -123,14 +123,7 @@ export default function Navbar() {
     setIsCartOpen(!isCartOpen);
   };
 
-  // Function to handle About Us scroll
-  const handleAboutUsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const aboutSection = document.getElementById('AboutUs');
-    if (aboutSection) {
-      aboutSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);

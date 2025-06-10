@@ -52,22 +52,21 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       setCart([]);
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-      // console.log('Fetching cart...'); // Debug log
       const res = await axios.get('/api/cart');
-      // console.log('Cart API response:', res.data); // Debug log
       setCart(res.data.items || []);
     } catch (error) {
-      // console.error('Error fetching cart:', error);
+      console.error('Error fetching cart:', error);
       setError('Failed to fetch cart');
-      setCart([]);
+      setCart([]); // Moved inside catch block
     } finally {
       setLoading(false);
     }
   }, [session, status]);
+  
 
   useEffect(() => {
     fetchCart();
@@ -84,7 +83,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Adding to cart - Context:', { productId, quantity, selectedPricing }); // Debug log
       
       // Prepare the request payload with pricing information
-      const payload: any = { productId, quantity };
+      const payload: {
+        productId: string;
+        quantity: number;
+        selectedPricing?: Pricing;
+      } = {
+        productId,
+        quantity,
+        ...(selectedPricing && { selectedPricing }),
+      };
+      
       
       // If pricing information is provided, include it
       if (selectedPricing) {

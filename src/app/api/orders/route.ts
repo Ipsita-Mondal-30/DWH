@@ -172,7 +172,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: Record<string, unknown> = {};
+
     
     // If not admin request, filter by userId
     if (!isAdmin && userId) {
@@ -260,7 +261,15 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updateData: any = {};
+    interface OrderUpdateData {
+      orderStatus?: OrderStatus;
+      deliveredAt?: Date;
+      cancelledAt?: Date;
+      paymentStatus?: PaymentStatus;
+      adminNotes?: string;
+    }
+    const updateData: OrderUpdateData = {};
+    
     
     if (orderStatus && Object.values(OrderStatus).includes(orderStatus)) {
       updateData.orderStatus = orderStatus;
@@ -333,10 +342,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Build query - if not admin, must match userId
-    const query: any = { orderId };
+    interface OrderQuery {
+      orderId: string;
+      userId?: string;
+    }
+    const query: OrderQuery = { orderId };
     if (!isAdmin && userId) {
       query.userId = userId;
     }
+    
 
     // Find the order first
     const order = await Order.findOne(query);

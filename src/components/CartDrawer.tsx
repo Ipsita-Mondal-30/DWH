@@ -26,13 +26,21 @@ interface Pricing {
   price: number;
   _id?: string;
 }
+interface Product {
+  _id: string;
+  name: string;
+  image?: string;
+  price: number;
+  pricing?: Pricing[];
+}
+
 
 export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cart, removeFromCart, updateQuantity, addToCart } = useCart();
   const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [editingSize, setEditingSize] = useState<{[key: string]: boolean}>({});
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   // Fetch both products and namkeens for suggestions
   useEffect(() => {

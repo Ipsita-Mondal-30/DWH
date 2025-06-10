@@ -96,7 +96,7 @@ const removeFromCart = async (productId: string) => {
 
 // Custom hook - exact copy of working simplified version
 export const useCart = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const queryClient = useQueryClient();
 
   // Always enabled except when explicitly unauthenticated

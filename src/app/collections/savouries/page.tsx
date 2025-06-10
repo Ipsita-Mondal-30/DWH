@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { useCart } from '../../../app/context/CartContext';
-import { ChevronDown, ArrowLeft } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from "@/components/Navbar";
 

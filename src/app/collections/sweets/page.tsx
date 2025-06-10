@@ -5,7 +5,7 @@ import axios from "axios";
 import type { IProduct } from "../../../models/Product";
 import { useCart } from '../../../app/context/CartContext';
 import Image from "next/image";
-import { ChevronDown, ArrowLeft } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from "@/components/Navbar";
 

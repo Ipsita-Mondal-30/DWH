@@ -207,8 +207,9 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium text-gray-800 mb-2">Secure Payment</h4>
             <p className="text-xs text-gray-600">
-              Your payment information is encrypted and secure. We don't store your UPI details.
-            </p>
+  Your payment information is encrypted and secure. We don&#39;t store your UPI details.
+</p>
+
           </div>
         </div>
       </div>

@@ -39,11 +39,39 @@ export default function CheckoutForm({
     pincode: '',
     landmark: ''
   });
+  interface OrderResult {
+    _id: string;
+    orderId: string; 
+    userEmail: string;
+    shippingAddress: {
+      fullName: string;
+      phone: string;
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      state: string;
+      pincode: string;
+      landmark?: string;
+    };
+    paymentMethod: 'cash_on_delivery' | 'upi';
+    cartItems: {
+      productId: string;
+      quantity: number;
+      selectedPricing: number; 
+      product: number;
+    }[];
+    createdAt?: string;
+    totalAmount: number;
+    updatedAt?: string;
+    estimatedDelivery?: string;
+  }
+  
 
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | ''>('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderResult, setOrderResult] = useState<any>(null);
+  const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
