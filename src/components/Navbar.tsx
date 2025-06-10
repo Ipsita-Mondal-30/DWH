@@ -2,7 +2,7 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { FiUser, FiShoppingBag, FiSearch, FiX } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiSearch, FiX, FiMenu } from "react-icons/fi";
 import { useCart } from '../app/context/CartContext';
 import Link from "next/link"; 
 import Image from "next/image";
@@ -108,9 +108,140 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   );
 };
 
+// Mobile Menu Slider Component
+const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session: any }) => {
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-black bg-opacity-50 z-[90] transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
+      
+      {/* Slider */}
+      <div className={`fixed top-0 left-0 h-full w-80 bg-white z-[95] transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } shadow-xl`}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white">
+          <div className="flex items-center space-x-3">
+            <Image
+              src="/delwh.png"
+              alt="Vaishnavi Logo"
+              className="h-8 object-contain"
+              width={60}
+              height={32}
+            />
+            <span className="font-semibold text-gray-800">Menu</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-orange-100 transition-colors"
+          >
+            <FiX className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="py-4">
+          <Link 
+            href="/" 
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            Home
+          </Link>
+          
+          <Link 
+            href="/collections/sweets" 
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            Sweets
+          </Link>
+          
+          <Link 
+            href="/collections/savouries" 
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            Namkeen
+          </Link>
+          
+          <Link
+            href="/AboutUs"
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            About us
+          </Link>
+        </div>
+
+        {/* User Section */}
+        <div className="border-t border-orange-100 mt-4">
+          {session ? (
+            <div className="py-4">
+              {/* Welcome Section */}
+              <div className="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 mx-4 my-2 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-2 rounded-xl">
+                    <FiUser className="text-lg text-orange-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-800 block">Welcome!</span>
+                    <span className="text-xs text-orange-600 font-medium">
+                      {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Menu Items */}
+              <Link href="/account" onClick={onClose} className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold">
+                My Account
+              </Link>
+              <Link href="/my-orders" onClick={onClose} className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold">
+                My Orders
+              </Link>
+              
+              {/* Sign Out */}
+              <button
+                onClick={() => {
+                  signOut();
+                  onClose();
+                }}
+                className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="p-4">
+              <button
+                onClick={() => {
+                  signIn("google");
+                  onClose();
+                }}
+                className="flex items-center justify-center w-full px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 rounded-xl transition-all duration-200 font-semibold space-x-3 border border-orange-200 hover:border-orange-300 hover:shadow-lg"
+              >
+                <GoogleIcon />
+                <span>Sign in with Google</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cart } = useCart();
   const { data: session, status } = useSession();
 
@@ -122,8 +253,6 @@ export default function Navbar() {
     }
     setIsCartOpen(!isCartOpen);
   };
-
-  
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -236,23 +365,31 @@ export default function Navbar() {
   return (
     <div className="relative">
       <div className="bg-gradient-to-r from-white via-orange-50/30 to-white shadow-lg border-b border-orange-100 fixed top-0 left-0 right-0 z-40">
-        <div className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 max-w-7xl mx-auto">
           
-          {/* Logo - Left Side */}
-          <div className="flex items-center">
+          {/* Mobile Hamburger Menu - Left Side */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-lg hover:bg-orange-100 transition-colors md:hidden"
+            >
+              <FiMenu className="h-6 w-6 text-gray-700" />
+            </button>
+            
+            {/* Logo */}
             <Link href="/">
               <Image
                 src="/delwh.png"
                 alt="Vaishnavi Logo"
-                className="h-16 object-contain cursor-pointer hover:scale-105 transition-transform duration-300"
+                className="h-12 sm:h-16 object-contain cursor-pointer hover:scale-105 transition-transform duration-300"
                 width={120}
                 height={64}
               />
             </Link>
           </div>
 
-          {/* Navigation Links - Center */}
-          <div className="flex items-center space-x-10">
+          {/* Navigation Links - Center (Desktop Only) */}
+          <div className="hidden md:flex items-center space-x-10">
             <Link 
               href="/" 
               className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
@@ -287,27 +424,27 @@ export default function Navbar() {
           </div>
 
           {/* Right Side - Icons */}
-          <div className="flex justify-end items-center space-x-2">
+          <div className="flex justify-end items-center space-x-1 sm:space-x-2">
             {/* Icons Section */}
-            <div className="flex items-center space-x-2">
-              {/* Search Icon with Text */}
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              {/* Search Icon */}
               <div 
-                className="flex items-center space-x-2 p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg"
+                className="flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg"
                 onClick={() => setShowSearchModal(true)}
               >
-                <FiSearch className="text-xl text-gray-700 hover:text-orange-600 transition-colors" />
-                <span className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
+                <FiSearch className="text-lg sm:text-xl text-gray-700 hover:text-orange-600 transition-colors" />
+                <span className="hidden sm:block text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
                   Search
                 </span>
               </div>
               
-              {/* Cart Icon with Text - with login protection */}
+              {/* Cart Icon - with login protection */}
               <div 
-                className="flex items-center space-x-2 relative cursor-pointer p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg" 
+                className="flex items-center space-x-1 sm:space-x-2 relative cursor-pointer p-2 sm:p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg" 
                 onClick={toggleCart}
               >
                 <div className="relative">
-                  <FiShoppingBag className="text-xl text-gray-700 hover:text-orange-600 transition-colors" />
+                  <FiShoppingBag className="text-lg sm:text-xl text-gray-700 hover:text-orange-600 transition-colors" />
                   {session && totalCartItems > 0 && (
                     <span className="absolute -top-1 -right-1 text-xs bg-gradient-to-r from-orange-500 to-orange-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg">
                       {totalCartItems}
@@ -319,13 +456,13 @@ export default function Navbar() {
                     </span>
                   )}
                 </div>
-                <span className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
+                <span className="hidden sm:block text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap">
                   Cart
                 </span>
               </div>
 
-              {/* User Icon with Text and Dropdown */}
-              <div ref={dropdownRef} className="relative">
+              {/* User Icon with Text and Dropdown (Desktop Only) */}
+              <div ref={dropdownRef} className="relative hidden md:block">
                 <div
                   className="flex items-center space-x-2 p-3 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 cursor-pointer transition-all duration-300 rounded-xl border border-transparent hover:border-orange-200 hover:shadow-lg"
                   onClick={() => setShowDropdown(!showDropdown)}
@@ -399,6 +536,13 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Menu Slider */}
+      <MobileMenuSlider 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)}
+        session={session}
+      />
+
       {/* Login Modal */}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
@@ -408,9 +552,9 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             
             {/* Search Header */}
-            <div className="flex items-center justify-center py-8 border-b border-orange-200 bg-gradient-to-r from-orange-50/50 to-white">
+            <div className="flex items-center justify-center py-6 sm:py-8 border-b border-orange-200 bg-gradient-to-r from-orange-50/50 to-white">
               <div className="w-full max-w-2xl px-4">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">
                   Search our site
                 </h2>
                 
@@ -421,7 +565,7 @@ export default function Navbar() {
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-12 pr-12 py-4 text-lg border-2 border-orange-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-gradient-to-r from-white to-orange-50/30 shadow-lg"
+                    className="block w-full pl-12 pr-12 py-3 sm:py-4 text-base sm:text-lg border-2 border-orange-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-gradient-to-r from-white to-orange-50/30 shadow-lg"
                     placeholder="Search for products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
