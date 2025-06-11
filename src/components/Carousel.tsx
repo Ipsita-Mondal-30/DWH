@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from "next/image";
+
 
 // Custom hook for media queries
-interface UseMediaQueryResult {
-  matches: boolean;
-}
 
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState<boolean>(false);
@@ -113,7 +112,7 @@ const Carousel = () => {
         >
           {images.map((src, idx) => (
             <div key={idx} className="min-w-full h-full relative">
-              <img
+              <Image
                 src={src}
                 alt={`Slide ${idx + 1}`}
                 className="w-full h-full object-cover"

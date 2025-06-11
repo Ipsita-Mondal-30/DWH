@@ -20,8 +20,6 @@ interface Box {
 export default function BhajiCollection() {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedBox, setSelectedBox] = useState<Box | null>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -57,18 +55,6 @@ export default function BhajiCollection() {
       console.error("Error adding bhaji box to cart:", error);
       alert('Failed to add item to cart. Please try again.');
     }
-  };
-
-  const handleCustomize = (box: Box, event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setSelectedBox(box);
-    setShowForm(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setSelectedBox(null);
   };
 
   if (loading) {
@@ -112,64 +98,62 @@ export default function BhajiCollection() {
           ) : (
             <div className="flex justify-center">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-8xl">
-                {boxes.map((box, index) => {
-                  return (
-                    <Link
-                      key={box._id}
-                      href={`/products/bhaji/${box._id}?_pos=${index + 1}&_psq=bhaji&_ss=e&_v=1.0`}
-                      className="block"
-                    >
-                      <div className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer">
-                        <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-orange-100 to-orange-50">
-                          <Image
-                            src={box.image || "/placeholder-image.jpg"}
-                            alt={box.name}
-                            fill
-                            className="object-cover hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                            Bhaji Box
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                {boxes.map((box, index) => (
+                  <Link
+                    key={box._id}
+                    href={`/products/bhaji/${box._id}?_pos=${index + 1}&_psq=bhaji&_ss=e&_v=1.0`}
+                    className="block"
+                  >
+                    <div className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer">
+                      <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-orange-100 to-orange-50">
+                        <Image
+                          src={box.image || "/placeholder-image.jpg"}
+                          alt={box.name}
+                          fill
+                          className="object-cover hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                          Bhaji Box
                         </div>
-
-                        <div className="p-6 bg-gradient-to-br from-white to-orange-50/30">
-                          <h3 className="font-bold text-xl mb-3 text-gray-800 line-clamp-1 text-center">
-                            {box.name}
-                          </h3>
-                          <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed text-center">
-                            {box.description}
-                          </p>
-
-                          <div className="mb-6 text-center">
-                            <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4">
-                              <span className="text-sm font-semibold text-gray-700 block mb-1">
-                                Price per box
-                              </span>
-                              <span className="text-2xl font-bold text-orange-600">
-                                ₹{box.price}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-3">
-                            <button
-                              type="button"
-                              className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
-                              onClick={(e) => handleAddToCart(box, e)}
-                            >
-                              Add to Cart - ₹{box.price}
-                            </button>
-                          </div>
-
-                          <p className="text-xs text-orange-600 mt-3 text-center font-medium">
-                            Fresh & Hot Delivery
-                          </p>
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
                       </div>
-                    </Link>
-                  );
-                })}
+
+                      <div className="p-6 bg-gradient-to-br from-white to-orange-50/30">
+                        <h3 className="font-bold text-xl mb-3 text-gray-800 line-clamp-1 text-center">
+                          {box.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed text-center">
+                          {box.description}
+                        </p>
+
+                        <div className="mb-6 text-center">
+                          <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4">
+                            <span className="text-sm font-semibold text-gray-700 block mb-1">
+                              Price per box
+                            </span>
+                            <span className="text-2xl font-bold text-orange-600">
+                              ₹{box.price}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                          <button
+                            type="button"
+                            className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
+                            onClick={(e) => handleAddToCart(box, e)}
+                          >
+                            Add to Cart - ₹{box.price}
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-orange-600 mt-3 text-center font-medium">
+                          Fresh & Hot Delivery
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           )}

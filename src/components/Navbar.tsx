@@ -8,6 +8,8 @@ import Link from "next/link";
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
 import axios from "axios";
+import { Session } from 'next-auth';
+
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -109,7 +111,7 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 };
 
 // Mobile Menu Slider Component
-const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session: any }) => {
+const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session:Session }) => {
   return (
     <>
       {/* Backdrop */}
@@ -545,11 +547,13 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu Slider */}
-      <MobileMenuSlider 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)}
-        session={session}
-      />
+      {session && (
+        <MobileMenuSlider 
+          isOpen={isMobileMenuOpen} 
+          onClose={() => setIsMobileMenuOpen(false)}
+          session={session}
+        />
+      )}
 
       {/* Login Modal */}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />

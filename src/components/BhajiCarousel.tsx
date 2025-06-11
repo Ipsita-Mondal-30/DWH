@@ -23,8 +23,6 @@ export default function BhajiCarousel() {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const { data: session, status } = useSession();
   const [showSignInPopup, setShowSignInPopup] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedBox, setSelectedBox] = useState<Box | null>(null);
   const { addToCart } = useCart();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -62,20 +60,7 @@ export default function BhajiCarousel() {
     }
   };
 
-  const handleCustomize = (box: Box) => {
-    if (!session) {
-      setShowSignInPopup(true);
-      return;
-    }
-
-    setSelectedBox(box);
-    setShowForm(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setSelectedBox(null);
-  };
+  
 
   const handleSignIn = () => {
     signIn('google', { callbackUrl: window.location.href });
@@ -183,7 +168,7 @@ export default function BhajiCarousel() {
                       Add to Cart - ₹{box.price}
                     </button>
                     {/* Uncomment if customize logic added */}
-                    {/* <button onClick={() => handleCustomize(box)}>Customize</button> */}
+                
                   </div>
 
                   <p className="text-xs text-orange-600 mt-3 text-center font-medium">Fresh & Hot Delivery</p>
