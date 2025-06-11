@@ -278,6 +278,7 @@ export default function Navbar() {
     };
 
     fetchAllProducts();
+    fetchAllNamkeens();
   }, []);
 
   // Close dropdown on outside click
@@ -679,4 +680,13 @@ export default function Navbar() {
       )}
     </div>
   );
+}
+async function fetchAllNamkeens() {
+  try {
+    const response = await axios.get('/api/namkeen');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching namkeens:', error);
+    return [];
+  }
 }
