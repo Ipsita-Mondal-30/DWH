@@ -11,6 +11,7 @@ import InteractiveMap from '@/components/InteractiveMap';
 import LatestNamkeen from "@/components/LatestNamkeen";
 import FloatingEnquiryButton from "@/components/FloatingEnquiryButton";
 import About from "@/components/About";
+import BhajiCarousel from "@/components/BhajiCarousel";
 
 export default function Home() {
   const { status } = useSession();
@@ -33,6 +34,10 @@ export default function Home() {
         <section className="max-w-7xl mx-auto px-4 py-8">
           <PopularProduct />
         </section>
+        <section className="max-w-7xl mx-auto px-4 py-8">
+          <BhajiCarousel/>
+        </section>
+        
         
         <section className="max-w-7xl mx-auto px-4 py-8"> 
           <InteractiveMap /> 

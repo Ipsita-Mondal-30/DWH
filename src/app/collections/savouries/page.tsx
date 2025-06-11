@@ -34,6 +34,7 @@ export default function SavouriesCollection() {
   useEffect(() => {
     const fetchNamkeens = async () => {
       try {
+     
         const res = await axios.get("/api/namkeen");
         setNamkeens(res.data);
         
