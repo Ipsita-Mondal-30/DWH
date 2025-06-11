@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Product } from '../../../models/Product';
 import { useCart } from '../../context/CartContext';
 import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import SignInPopup from '@/components/SigninPopup';
-
-
 
 // Define the pricing interface to match your cart system
 interface Pricing {
@@ -20,9 +17,20 @@ interface Pricing {
   _id?: string;
 }
 
+// Interface for both Product and Namkeen (they have the same structure)
+interface ProductItem {
+  _id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  type?: string;
+  pricing?: Pricing[];
+  price?: number; // fallback for legacy products
+}
+
 export default function ProductPage() {
   const params = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductItem | null>(null);
   const [showSignInPopup, setShowSignInPopup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +39,7 @@ export default function ProductPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [productType, setProductType] = useState<'product' | 'namkeen' | null>(null);
 
   const { addToCart } = useCart();
   const { status } = useSession();
@@ -48,16 +57,32 @@ export default function ProductPage() {
         console.log('Fetching product with ID:', productId);
         setLoading(true);
         
-        const response = await fetch(`/api/product/${productId}`);
-        console.log('API Response status:', response.status);
+        // First try to fetch from /api/product
+        let response = await fetch(`/api/product/${productId}`);
+        let productData = null;
+        let fetchedType: 'product' | 'namkeen' = 'product';
         
-        if (!response.ok) {
+        if (response.ok) {
+          productData = await response.json();
+          fetchedType = 'product';
+        } else if (response.status === 404) {
+          // If not found in products, try namkeens
+          console.log('Product not found in /api/product, trying /api/namkeen');
+          response = await fetch(`/api/namkeen/${productId}`);
+          
+          if (response.ok) {
+            productData = await response.json();
+            fetchedType = 'namkeen';
+          } else {
+            throw new Error(`Product not found in either products or namkeens. Status: ${response.status}`);
+          }
+        } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const productData = await response.json();
-        console.log('Product data received:', productData);
+        console.log(`${fetchedType} data received:`, productData);
         setProduct(productData);
+        setProductType(fetchedType);
         
         // Set default selected pricing if available
         if (productData.pricing && productData.pricing.length > 0) {
@@ -90,6 +115,7 @@ export default function ProductPage() {
     // Check if user is authenticated
     if (status === "unauthenticated") {
       setShowSignInPopup(true);
+      setShowSignInPopup(true);
       return;
     }
 
@@ -104,7 +130,8 @@ export default function ProductPage() {
       console.log('Adding to cart:', {
         productId: product._id,
         quantity,
-        selectedPricing: pricingToUse
+        selectedPricing: pricingToUse,
+        productType
       });
 
       await addToCart(product._id, quantity, pricingToUse ? { ...pricingToUse, unit: pricingToUse.unit as 'gm' | 'kg' | 'piece' | 'dozen' } : undefined);
@@ -126,6 +153,7 @@ export default function ProductPage() {
       callbackUrl: window.location.href // Redirect back to current page after sign-in
     });
   };
+  
   const handlePricingChange = (pricing: Pricing) => {
     setSelectedPricing(pricing);
   };
@@ -161,6 +189,11 @@ export default function ProductPage() {
 
   // Check if product is popular (you can modify this logic based on your criteria)
   const isPopular = product?.type === 'popular' || product?.type === 'latest';
+
+  // Get product type display name
+  const getProductTypeDisplay = () => {
+    return productType === 'namkeen' ? 'Namkeen' : 'Product';
+  };
 
   if (loading) {
     return (
@@ -267,6 +300,19 @@ export default function ProductPage() {
 
             {/* Product Details Section */}
             <div className="p-8 flex flex-col">
+              {/* Product Type Badge */}
+              {productType && (
+                <div className="mb-2">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    productType === 'namkeen' 
+                      ? 'bg-yellow-100 text-yellow-800' 
+                      : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {getProductTypeDisplay()}
+                  </span>
+                </div>
+              )}
+
               {/* Product Name */}
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
                 {product.name}
@@ -454,10 +500,7 @@ export default function ProductPage() {
           onClose={() => setShowSignInPopup(false)}
           onSignIn={handleSignIn}
         />
-
-      
-        
-      
-        )}    </div>
+      )}
+    </div>
   );
 }

@@ -8,6 +8,8 @@ import Link from "next/link";
 import Image from "next/image";
 import CartDrawer from "./CartDrawer";
 import axios from "axios";
+import { Session } from 'next-auth';
+
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -109,16 +111,7 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 };
 
 // Mobile Menu Slider Component
-const MobileMenuSlider = ({ isOpen, onClose, session }: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  session: {
-    user?: {
-      name?: string;
-      email?: string;
-    } | null;
-  } | null;
-}) => {
+const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session:Session }) => {
   return (
     <>
       {/* Backdrop */}
@@ -287,6 +280,7 @@ export default function Navbar() {
     };
 
     fetchAllProducts();
+    fetchAllNamkeens();
   }, []);
 
   // Close dropdown on outside click
@@ -422,6 +416,13 @@ export default function Navbar() {
               Namkeen
               <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
+            <Link
+              href="/collections/bhaji"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group cursor-pointer text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
+            >
+              Bhaji
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
+            </Link>
             
             <Link
               href="/AboutUs"
@@ -546,16 +547,13 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu Slider */}
-      <MobileMenuSlider 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)}
-        session={{
-          user: session?.user ? {
-            name: session.user.name || undefined,
-            email: session.user.email || undefined
-          } : null
-        }}
-      />
+      {session && (
+        <MobileMenuSlider 
+          isOpen={isMobileMenuOpen} 
+          onClose={() => setIsMobileMenuOpen(false)}
+          session={session}
+        />
+      )}
 
       {/* Login Modal */}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
@@ -693,4 +691,13 @@ export default function Navbar() {
       )}
     </div>
   );
+}
+async function fetchAllNamkeens() {
+  try {
+    const response = await axios.get('/api/namkeen');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching namkeens:', error);
+    return [];
+  }
 }

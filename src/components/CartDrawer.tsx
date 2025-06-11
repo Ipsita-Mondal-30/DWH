@@ -48,7 +48,8 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
       try {
         const [productsRes, namkeensRes] = await Promise.all([
           axios.get('/api/product'),
-          axios.get('/api/namkeen')
+          axios.get('/api/namkeen'),
+          axios.get('/api/box')
         ]);
         
         const combined = [...productsRes.data, ...namkeensRes.data];
@@ -175,7 +176,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
       return product.pricing;
     }
     
-    console.log('No pricing found for product:', productId); // Debug log
+    console.log('No pricing found for product:', productId); // Debug log 68445752836a7640ff29af7e
     return [];
   };
 

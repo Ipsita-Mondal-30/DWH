@@ -3,6 +3,8 @@ import { connectDB } from '@/lib/db';
 import { Cart } from '@/models/Cart';
 import { Product } from '@/models/Product';
 import { Namkeen } from '@/models/Namkeen';
+// Add this import for your Box model
+import { Box } from '@/models/Box'; // Make sure this path is correct
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Types } from 'mongoose';
@@ -26,6 +28,7 @@ interface ProductData {
   pricing?: Pricing[];
   image?: string;
   type?: string;
+  price?: number; // Add price field for Box items
 }
 
 interface CartItem {
@@ -43,8 +46,6 @@ interface CartItem {
   selectedPricing?: Pricing;
 }
 
-
-
 export async function GET() {
   try {
     await connectDB();
@@ -61,7 +62,7 @@ export async function GET() {
       return NextResponse.json({ items: [] });
     }
 
-    // Manually populate items by fetching from both Product and Namkeen collections
+    // Manually populate items by fetching from Product, Namkeen, and Box collections
     const populatedItems: CartItem[] = [];
 
     for (const item of cart.items) {
@@ -75,11 +76,17 @@ export async function GET() {
         productData = await Namkeen.findById(item.productId);
       }
 
+      // If not found in Namkeen, try Box collection
+      if (!productData) {
+        productData = await Box.findById(item.productId);
+      }
+
       if (productData) {
         // console.log('Product data found:', { 
         //   id: productData._id, 
         //   name: productData.name, 
         //   pricing: productData.pricing,
+        //   price: productData.price,
         //   selectedPricing: item.selectedPricing 
         // }); // Debug log
         
@@ -87,13 +94,14 @@ export async function GET() {
           product: {
             _id: productData._id.toString(),
             name: productData.name,
-            price: item.selectedPricing?.price || (productData.pricing?.[0]?.price ?? 0),
+            // For Box items, use the direct price or selectedPricing price
+            price: item.selectedPricing?.price || productData.price || (productData.pricing?.[0]?.price ?? 0),
             image: productData.image,
             size: item.selectedPricing 
               ? `${item.selectedPricing.quantity}${item.selectedPricing.unit}`
               : undefined,
-            type: productData.type,
-            pricing: productData.pricing, // Make sure to include the full pricing array
+            type: productData.type || 'box', // Default to 'box' if no type specified
+            pricing: productData.pricing, // This might be undefined for Box items
           },
           quantity: item.quantity,
           selectedPricing: item.selectedPricing,
@@ -143,6 +151,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid product ID format' }, { status: 400 });
     }
 
+    // Verify the product exists in one of the collections
+    let productExists = false;
+    
+    // Check in Product collection
+    const productInProducts = await Product.findById(productId);
+    if (productInProducts) productExists = true;
+    
+    // Check in Namkeen collection if not found in Products
+    if (!productExists) {
+      const productInNamkeens = await Namkeen.findById(productId);
+      if (productInNamkeens) productExists = true;
+    }
+    
+    // Check in Box collection if not found in previous collections
+    if (!productExists) {
+      const productInBoxes = await Box.findById(productId);
+      if (productInBoxes) productExists = true;
+    }
+
+    if (!productExists) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
     let cart = await Cart.findOne({ userId });
 
     const cartItem: {
@@ -154,7 +185,6 @@ export async function POST(req: Request) {
       quantity,
     };
     
-
     // Add pricing information if provided
     if (selectedPricing) {
       cartItem.selectedPricing = {
@@ -162,7 +192,7 @@ export async function POST(req: Request) {
         unit: selectedPricing.unit,
         price: selectedPricing.price
       };
-      // console.log('Adding pricing info:', cartItem.selectedPricing); // Debug log
+      console.log('Adding pricing info:', cartItem.selectedPricing); // Debug log
     }
 
     if (!cart) {
