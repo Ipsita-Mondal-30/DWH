@@ -9,7 +9,6 @@ import { useCart } from '../app/context/CartContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SignInPopup from './SigninPopup';
 
-
 interface Box {
   _id: string;
   name: string;

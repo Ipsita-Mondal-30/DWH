@@ -13,6 +13,7 @@ import FloatingEnquiryButton from "@/components/FloatingEnquiryButton";
 import About from "@/components/About";
 import BhajiCarousel from "@/components/BhajiCarousel";
 
+
 export default function Home() {
   const { status } = useSession();
 
@@ -35,8 +36,10 @@ export default function Home() {
           <PopularProduct />
         </section>
         <section className="max-w-7xl mx-auto px-4 py-8">
-          <BhajiCarousel />
+          <BhajiCarousel/>
         </section>
+        
+        
         <section className="max-w-7xl mx-auto px-4 py-8"> 
           <InteractiveMap /> 
           <About />
