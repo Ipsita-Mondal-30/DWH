@@ -49,7 +49,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
         const [productsRes, namkeensRes] = await Promise.all([
           axios.get('/api/product'),
           axios.get('/api/namkeen'),
-          axios.get('api/box')
+          axios.get('/api/box')
         ]);
         
         const combined = [...productsRes.data, ...namkeensRes.data];
