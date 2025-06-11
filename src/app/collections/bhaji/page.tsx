@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
-import { useCart } from '../../context/CartContext';
-import { ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import { useCart } from "../../context/CartContext";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
-
 
 interface Box {
   _id: string;
@@ -42,21 +40,19 @@ export default function BhajiCollection() {
   }, []);
 
   const handleAddToCart = async (box: Box, event: React.MouseEvent) => {
-    // Prevent navigation when clicking add to cart
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (!box._id) return;
 
     try {
-      console.log('Adding bhaji box to cart:', { boxId: box._id }); // Debug log
-      // Add the box to cart with default quantity 1 and price
+      console.log('Adding bhaji box to cart:', { boxId: box._id });
       await addToCart(box._id, 1, {
         quantity: 1,
         unit: 'piece' as const,
         price: box.price
       });
-      console.log('Successfully added bhaji box to cart'); // Debug log
+      console.log('Successfully added bhaji box to cart');
     } catch (error) {
       console.error("Error adding bhaji box to cart:", error);
       alert('Failed to add item to cart. Please try again.');
@@ -91,31 +87,22 @@ export default function BhajiCollection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white mt-16 py-12">
-      {/* ✅ Navbar goes here */}
       <Navbar />
-      
+
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header with Back Button */}
-          <div className="flex items-center mb-8">
-           
-          </div>
-
-          {/* Page Title */}
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-800 mb-4">Bhaji Box Collection</h2>
             <p className="text-gray-600 text-lg mb-4">Explore our complete range of delicious bhaji boxes</p>
             <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
           </div>
 
-          {/* Products Count */}
           <div className="mb-6">
             <p className="text-gray-600">
               Showing <span className="font-semibold">{boxes.length}</span> products
             </p>
           </div>
 
-          {/* Products Grid */}
           {boxes.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">🥘</div>
@@ -127,15 +114,12 @@ export default function BhajiCollection() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-8xl">
                 {boxes.map((box, index) => {
                   return (
-                    <Link 
-                      key={box._id} 
+                    <Link
+                      key={box._id}
                       href={`/products/bhaji/${box._id}?_pos=${index + 1}&_psq=bhaji&_ss=e&_v=1.0`}
                       className="block"
                     >
-                      <div 
-                        className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer"
-                      >
-                        {/* Product Image */}
+                      <div className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer">
                         <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-orange-100 to-orange-50">
                           <Image
                             src={box.image || "/placeholder-image.jpg"}
@@ -149,7 +133,6 @@ export default function BhajiCollection() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
                         </div>
 
-                        {/* Product Details */}
                         <div className="p-6 bg-gradient-to-br from-white to-orange-50/30">
                           <h3 className="font-bold text-xl mb-3 text-gray-800 line-clamp-1 text-center">
                             {box.name}
@@ -158,7 +141,6 @@ export default function BhajiCollection() {
                             {box.description}
                           </p>
 
-                          {/* Price Display */}
                           <div className="mb-6 text-center">
                             <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4">
                               <span className="text-sm font-semibold text-gray-700 block mb-1">
@@ -170,23 +152,16 @@ export default function BhajiCollection() {
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
                           <div className="flex flex-col gap-3">
-                            {/* Add to Cart Button */}
                             <button
                               type="button"
                               className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
                               onClick={(e) => handleAddToCart(box, e)}
-                             
-                              >
+                            >
                               Add to Cart - ₹{box.price}
                             </button>
-
-                            {/* Customize Button */}
-                          
                           </div>
 
-                          {/* Additional Info */}
                           <p className="text-xs text-orange-600 mt-3 text-center font-medium">
                             Fresh & Hot Delivery
                           </p>
@@ -200,8 +175,6 @@ export default function BhajiCollection() {
           )}
         </div>
       </div>
-
-     
     </div>
   );
 }

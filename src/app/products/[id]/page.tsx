@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useCart } from '../../context/CartContext';
 import { signIn, useSession } from 'next-auth/react';
-import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';

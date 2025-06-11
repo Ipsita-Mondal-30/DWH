@@ -414,6 +414,13 @@ export default function Navbar() {
               Namkeen
               <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
+            <Link
+              href="/collections/bhaji"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group cursor-pointer text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
+            >
+              Bhaji
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
+            </Link>
             
             <Link
               href="/AboutUs"
