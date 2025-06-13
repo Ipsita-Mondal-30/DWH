@@ -26,12 +26,13 @@ interface Pricing {
   price: number;
   _id?: string;
 }
+
 interface Product {
   _id: string;
   name: string;
   image?: string;
-  price: number;
-  pricing?: Pricing[];
+  price?: number; // Optional for namkeens
+  pricing?: Pricing[]; // Optional for boxes
 }
 
 export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps) {
@@ -41,17 +42,21 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
   const [editingSize, setEditingSize] = useState<{[key: string]: boolean}>({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
-  // Fetch both products and namkeens for suggestions
+  // Fetch all product types for suggestions
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const [productsRes, namkeensRes] = await Promise.all([
+        const [productsRes, namkeensRes, boxesRes] = await Promise.all([
           axios.get('/api/product'),
           axios.get('/api/namkeen'),
           axios.get('/api/box')
         ]);
         
-        const combined = [...productsRes.data, ...namkeensRes.data];
+        const combined = [
+          ...productsRes.data, 
+          ...namkeensRes.data,
+          ...boxesRes.data
+        ];
         setAllProducts(combined);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -80,7 +85,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
 
   const handleQuantityChange = async (productId: string, newQuantity: number) => {
     try {
-      console.log('Updating quantity:', { productId, newQuantity }); // Debug log
+      console.log('Updating quantity:', { productId, newQuantity });
       if (newQuantity < 1) {
         await removeFromCart(productId);
       } else {
@@ -94,40 +99,62 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
 
   const handleAddSuggestedProduct = async (productId: string) => {
     try {
-      // Get the product data to use first pricing option
+      // Get the product data to determine type and pricing
       const product = suggestedProducts.find(p => p._id === productId);
-      if (product && product.pricing && product.pricing.length > 0) {
-        // Use the first pricing option as default
+      if (!product) {
+        console.error('Product not found in suggestions');
+        return;
+      }
+
+      console.log('Adding suggested product:', {
+        id: productId,
+        name: product.name,
+        pricing: product.pricing,
+        price: product.price
+      });
+
+      // Determine product type and handle pricing accordingly
+      if (product.pricing && Array.isArray(product.pricing) && product.pricing.length > 0) {
+        // Namkeen or Product with pricing array - use first pricing option as default
         await addToCart(productId, 1, product.pricing[0]);
+      } else if (product.price) {
+        // Box or Product with simple price - create pricing object
+        const simplePricing: Pricing = {
+          quantity: 1,
+          unit: 'piece',
+          price: product.price
+        };
+        await addToCart(productId, 1, simplePricing);
       } else {
-        // Fallback for products without pricing
-        await addToCart(productId, 1);
+        console.error('No pricing information found for product:', product);
+        alert('Unable to add product - pricing information missing');
       }
     } catch (error) {
       console.error('Error adding product to cart:', error);
+      alert('Failed to add product to cart. Please try again.');
     }
   };
 
   const handleSizeEdit = async (productId: string, newPricing: Pricing) => {
     try {
-      console.log('Starting size change:', { productId, newPricing }); // Debug log
+      console.log('Starting size change:', { productId, newPricing });
       
       // Find current cart item to get current quantity
       const currentItem = cart.find(item => item.product._id === productId);
       const currentQuantity = currentItem?.quantity || 1;
       
-      console.log('Current quantity:', currentQuantity); // Debug log
+      console.log('Current quantity:', currentQuantity);
       
       // Remove current item and add with new pricing
       await removeFromCart(productId);
-      console.log('Item removed from cart'); // Debug log
+      console.log('Item removed from cart');
       
       await addToCart(productId, currentQuantity, newPricing);
-      console.log('Item added back with new pricing'); // Debug log
+      console.log('Item added back with new pricing');
       
       // Close the dropdown
       setEditingSize(prev => ({ ...prev, [productId]: false }));
-      console.log('Size change completed successfully'); // Debug log
+      console.log('Size change completed successfully');
       
     } catch (error) {
       console.error('Error changing size:', error);
@@ -136,7 +163,11 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
   };
 
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+    return cart.reduce((total, item) => {
+      // Use selectedPricing price if available, otherwise fall back to product price
+      const itemPrice = item.selectedPricing?.price || item.product.price || 0;
+      return total + (itemPrice * item.quantity);
+    }, 0);
   };
 
   const total = calculateTotal();
@@ -164,13 +195,13 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
   };
 
   const getUnitDisplay = (unit: string) => {
-    const unitMap = {
+    const unitMap: Record<string, string> = {
       'gm': 'g',
       'kg': 'kg',
       'piece': 'pc',
       'dozen': 'dz'
     };
-    return unitMap[unit as keyof typeof unitMap] || unit;
+    return unitMap[unit] || unit;
   };
 
   // Get available pricing options for a product
@@ -270,6 +301,9 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                   const pricingOptions = getProductPricingOptions(item.product._id);
                   const isEditing = editingSize[item.product._id];
                   
+                  // Calculate display price
+                  const displayPrice = item.selectedPricing?.price || item.product.price || 0;
+                  
                   return (
                     <div key={item.product._id} className="bg-white border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow relative">
                       <div className="flex gap-3">
@@ -312,7 +346,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                                   </div>
                                 ) : (
                                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                    {item.product.size || 'Standard size'}
+                                    Standard size
                                   </span>
                                 )}
                               </div>
@@ -328,7 +362,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                           
                           <div className="flex items-center justify-between">
                             <p className="font-semibold text-gray-900 text-sm">
-                              ₹{(item.product?.price ?? 0).toFixed(2)}
+                              ₹{displayPrice.toFixed(2)}
                             </p>
                             
                             {/* Quantity Controls */}
@@ -412,13 +446,16 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                     </h4>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">
-                        ₹{suggestedProducts[currentSlide]?.pricing?.[0]?.price?.toFixed(2) ?? 'N/A'}
+                        ₹{(suggestedProducts[currentSlide]?.pricing?.[0]?.price ?? 
+                          suggestedProducts[currentSlide]?.price ?? 0).toFixed(2)}
                       </span>
-                      {suggestedProducts[currentSlide]?.pricing?.[0] && (
+                      {suggestedProducts[currentSlide]?.pricing?.[0] ? (
                         <span className="text-xs text-gray-500">
-                          {suggestedProducts[currentSlide].pricing[0].quantity}
-                          {getUnitDisplay(suggestedProducts[currentSlide].pricing[0].unit)}
+                          {suggestedProducts[currentSlide].pricing![0].quantity}
+                          {getUnitDisplay(suggestedProducts[currentSlide].pricing![0].unit)}
                         </span>
+                      ) : (
+                        <span className="text-xs text-gray-500">per piece</span>
                       )}
                     </div>
                   </div>
@@ -495,3 +532,4 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
     </>
   );
 }
+

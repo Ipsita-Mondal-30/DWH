@@ -3,8 +3,33 @@ import { connectDB } from '@/lib/db'; // Adjust import path as needed
 import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '@/models/Order'; // Adjust import path
 import { Cart } from '@/models/Cart'; // Adjust import path
 import { Product } from '@/models/Product'; // Adjust import path
+import { Namkeen } from '@/models/Namkeen'; // Add this import
+import { Box } from '@/models/Box'; // Add this import
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth'; // Adjust import path
+
+// Helper function to find product by ID across all collections
+async function findProductById(productId: string) {
+  // Try finding in Product collection first
+  let product = await Product.findById(productId);
+  if (product) {
+    return { product, type: 'product' };
+  }
+
+  // Try finding in Namkeen collection
+  product = await Namkeen.findById(productId);
+  if (product) {
+    return { product, type: 'namkeen' };
+  }
+
+  // Try finding in Box collection
+  product = await Box.findById(productId);
+  if (product) {
+    return { product, type: 'box' };
+  }
+
+  return null;
+}
 
 // POST: Create a new order (Checkout)
 export async function POST(request: NextRequest) {
@@ -61,44 +86,124 @@ export async function POST(request: NextRequest) {
     let subtotal = 0;
 
     for (const item of items) {
-      // If cart item, fetch product details
-      let product;
+      // Find product across all collections
+      let productData;
+      let productType;
+
       if (item.productId) {
-        product = await Product.findById(item.productId);
+        // If cart item, fetch product details from any collection
+        const result = await findProductById(item.productId);
+        if (!result) {
+          return NextResponse.json(
+            { error: `Product not found for item with ID: ${item.productId}` },
+            { status: 404 }
+          );
+        }
+        productData = result.product;
+        productType = result.type;
       } else {
         // If direct cart items passed, assume product details are included
-        product = item.product;
+        productData = item.product;
+        // Try to determine type from the product structure
+        if (productData.pricing && Array.isArray(productData.pricing)) {
+          productType = 'namkeen';
+        } else if (productData.pricing && !Array.isArray(productData.pricing)) {
+          productType = 'product';
+        } else {
+          productType = 'box';
+        }
       }
 
-      if (!product) {
+      if (!productData) {
         return NextResponse.json(
-          { error: `Product not found for item` },
+          { error: `Product data not found for item` },
           { status: 404 }
         );
       }
 
-      // Validate selected pricing
-      const selectedPricing = item.selectedPricing;
-      if (!selectedPricing) {
-        return NextResponse.json(
-          { error: `Selected pricing not found for product: ${product.name}` },
-          { status: 400 }
-        );
+      console.log('Processing item:', {
+        productId: productData._id,
+        productName: productData.name,
+        productType,
+        selectedPricing: item.selectedPricing,
+        hasProductPricing: !!productData.pricing
+      });
+
+      // Handle pricing based on product type
+      let selectedPricing;
+      let itemPrice;
+
+      if (productType === 'box') {
+        // Box products have simple price structure
+        selectedPricing = {
+          quantity: 1,
+          unit: 'piece',
+          price: productData.price
+        };
+        itemPrice = productData.price;
+      } else if (productType === 'namkeen') {
+        // Namkeen products have pricing array
+        if (item.selectedPricing) {
+          selectedPricing = item.selectedPricing;
+          itemPrice = selectedPricing.price;
+        } else if (productData.pricing && productData.pricing.length > 0) {
+          // Use first pricing option as default
+          selectedPricing = productData.pricing[0];
+          itemPrice = selectedPricing.price;
+        } else {
+          return NextResponse.json(
+            { error: `No pricing found for namkeen: ${productData.name}` },
+            { status: 400 }
+          );
+        }
+      } else {
+        // Product type - handle both simple price and pricing array
+        if (item.selectedPricing) {
+          selectedPricing = item.selectedPricing;
+          itemPrice = selectedPricing.price;
+        } else if (productData.pricing && Array.isArray(productData.pricing) && productData.pricing.length > 0) {
+          // Use first pricing option as default
+          selectedPricing = productData.pricing[0];
+          itemPrice = selectedPricing.price;
+        } else if (productData.price) {
+          // Simple price structure
+          selectedPricing = {
+            quantity: 1,
+            unit: 'piece',
+            price: productData.price
+          };
+          itemPrice = productData.price;
+        } else {
+          return NextResponse.json(
+            { error: `No pricing found for product: ${productData.name}` },
+            { status: 400 }
+          );
+        }
       }
 
       // Calculate item total
-      const itemTotal = selectedPricing.price * item.quantity;
+      const itemTotal = itemPrice * item.quantity;
       
       orderItems.push({
-        productId: product._id,
-        productName: product.name,
-        productImage: product.image,
+        productId: productData._id,
+        productName: productData.name,
+        productImage: productData.image,
+        productType: productType, // Add product type to order item
         quantity: item.quantity,
         selectedPricing: selectedPricing,
         itemTotal: itemTotal
       });
 
       subtotal += itemTotal;
+      
+      console.log('Added order item:', {
+        productName: productData.name,
+        productType,
+        quantity: item.quantity,
+        itemPrice,
+        itemTotal,
+        runningSubtotal: subtotal
+      });
     }
 
     // Calculate shipping and tax (you can customize these calculations)
