@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import { ShippingAddress } from './CheckoutPage';
 import Image from 'next/image';
+import { log } from 'console';
 
 interface CheckoutFormProps {
   cartItems: CartItem[];
@@ -165,10 +166,12 @@ export default function CheckoutForm({
         setOrderResult(result.order);
         setShowSuccessModal(true);
       } else {
+        console.log('line 169 running');
         alert('Failed to place order: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error placing order:', error);
+
+      console.error('Error placing order: line 174', error);
       alert('Failed to place order. Please try again.');
     } finally {
       setIsPlacingOrder(false);

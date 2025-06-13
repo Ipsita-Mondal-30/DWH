@@ -34,7 +34,6 @@ interface Product {
   pricing?: Pricing[];
 }
 
-
 export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cart, removeFromCart, updateQuantity, addToCart } = useCart();
   const router = useRouter();
@@ -111,11 +110,25 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
 
   const handleSizeEdit = async (productId: string, newPricing: Pricing) => {
     try {
-      console.log('Changing size:', { productId, newPricing }); // Debug log
+      console.log('Starting size change:', { productId, newPricing }); // Debug log
+      
+      // Find current cart item to get current quantity
+      const currentItem = cart.find(item => item.product._id === productId);
+      const currentQuantity = currentItem?.quantity || 1;
+      
+      console.log('Current quantity:', currentQuantity); // Debug log
+      
       // Remove current item and add with new pricing
       await removeFromCart(productId);
-      await addToCart(productId, 1, newPricing);
+      console.log('Item removed from cart'); // Debug log
+      
+      await addToCart(productId, currentQuantity, newPricing);
+      console.log('Item added back with new pricing'); // Debug log
+      
+      // Close the dropdown
       setEditingSize(prev => ({ ...prev, [productId]: false }));
+      console.log('Size change completed successfully'); // Debug log
+      
     } catch (error) {
       console.error('Error changing size:', error);
       alert('Failed to change size. Please try again.');
@@ -165,20 +178,33 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
     // First check the cart item for pricing data
     const cartItem = cart.find(item => item.product._id === productId);
     if (cartItem && cartItem.product.pricing) {
-      // console.log('Found pricing in cart item:', cartItem.product.pricing); // Debug log
       return cartItem.product.pricing;
     }
     
     // Fallback to combined products data
     const product = allProducts.find(p => p._id === productId);
     if (product && product.pricing) {
-      // console.log('Found pricing in products data:', product.pricing); // Debug log
       return product.pricing;
     }
     
-    console.log('No pricing found for product:', productId); // Debug log 68445752836a7640ff29af7e
+    console.log('No pricing found for product:', productId);
     return [];
   };
+
+  // Close dropdown when clicking outside using useEffect
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.pricing-dropdown') && !target.closest('.edit-button')) {
+        setEditingSize({});
+      }
+    };
+
+    if (Object.values(editingSize).some(editing => editing)) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [editingSize]);
 
   // Close drawer when clicking outside
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -219,8 +245,6 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
               <X className="h-5 w-5 text-gray-500" />
             </button>
           </div>
-          
-
         </div>
 
         {/* Cart Items - Scrollable */}
@@ -246,16 +270,8 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                   const pricingOptions = getProductPricingOptions(item.product._id);
                   const isEditing = editingSize[item.product._id];
                   
-                  // console.log('Cart item:', {
-                  //   name: item.product.name,
-                  //   id: item.product._id,
-                  //   selectedPricing: item.selectedPricing,
-                  //   productPricing: item.product.pricing,
-                  //   pricingOptionsLength: pricingOptions.length
-                  // }); // Debug log
-                  
                   return (
-                    <div key={item.product._id} className="bg-white border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                    <div key={item.product._id} className="bg-white border border-gray-100 rounded-lg p-3 hover:shadow-sm transition-shadow relative">
                       <div className="flex gap-3">
                         <div className="relative flex-shrink-0">
                           <Image
@@ -283,8 +299,11 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                                     </span>
                                     {pricingOptions.length > 1 && (
                                       <button
-                                        onClick={() => setEditingSize(prev => ({ ...prev, [item.product._id]: !prev[item.product._id] }))}
-                                        className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingSize(prev => ({ ...prev, [item.product._id]: !prev[item.product._id] }));
+                                        }}
+                                        className="edit-button p-0.5 hover:bg-gray-100 rounded transition-colors relative z-10"
                                         title="Change size"
                                       >
                                         <Edit3 className="h-3 w-3 text-gray-400" />
@@ -297,39 +316,10 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                                   </span>
                                 )}
                               </div>
-
-                              {/* Size Edit Dropdown */}
-                              {isEditing && pricingOptions.length > 1 && (
-                                <div className="mt-2 relative">
-                                  <div className="absolute top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[70] max-h-32 overflow-y-auto">
-                                    {pricingOptions.map((pricing, index) => (
-                                      <button
-                                        key={index}
-                                        onClick={() => handleSizeEdit(item.product._id, pricing)}
-                                        className={`w-full flex items-center justify-between p-2 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 text-left ${
-                                          item.selectedPricing &&
-                                          item.selectedPricing.quantity === pricing.quantity &&
-                                          item.selectedPricing.unit === pricing.unit &&
-                                          item.selectedPricing.price === pricing.price
-                                            ? 'bg-orange-100 text-orange-700'
-                                            : 'text-gray-700'
-                                        }`}
-                                      >
-                                        <span className="text-xs font-medium">
-                                          {pricing.quantity}{getUnitDisplay(pricing.unit)}
-                                        </span>
-                                        <span className="text-xs font-bold text-orange-600">
-                                          ₹{pricing.price}
-                                        </span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                             <button 
                               onClick={() => item.product._id && removeFromCart(item.product._id)} 
-                              className="p-1 hover:bg-red-50 rounded-full transition-colors group ml-2"
+                              className="p-1 hover:bg-red-50 rounded-full transition-colors group ml-2 relative z-10"
                               aria-label="Remove item"
                             >
                               <Trash2 className="h-3.5 w-3.5 text-gray-400 group-hover:text-red-500" />
@@ -342,7 +332,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                             </p>
                             
                             {/* Quantity Controls */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative z-10">
                               <button
                                 className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
                                 onClick={() => item.product._id && handleQuantityChange(item.product._id, item.quantity - 1)}
@@ -362,6 +352,38 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
                           </div>
                         </div>
                       </div>
+
+                      {/* Size Edit Dropdown - Positioned absolutely within the item */}
+                      {isEditing && pricingOptions.length > 1 && (
+                        <div className="pricing-dropdown absolute top-full left-3 right-3 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[200] max-h-32 overflow-y-auto">
+                          {pricingOptions.map((pricing, index) => (
+                            <button
+                              key={index}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('Pricing option clicked:', pricing);
+                                handleSizeEdit(item.product._id, pricing);
+                              }}
+                              className={`pricing-option w-full flex items-center justify-between p-2 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 text-left cursor-pointer ${
+                                item.selectedPricing &&
+                                item.selectedPricing.quantity === pricing.quantity &&
+                                item.selectedPricing.unit === pricing.unit &&
+                                item.selectedPricing.price === pricing.price
+                                  ? 'bg-orange-100 text-orange-700'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="text-xs font-medium">
+                                {pricing.quantity}{getUnitDisplay(pricing.unit)}
+                              </span>
+                              <span className="text-xs font-bold text-orange-600">
+                                ₹{pricing.price}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -469,14 +491,6 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
             Continue Shopping
           </button>
         </div>
-
-        {/* Click outside to close size edit dropdowns */}
-        {Object.values(editingSize).some(editing => editing) && (
-          <div 
-            className="fixed inset-0 z-[90]" 
-            onClick={() => setEditingSize({})}
-          />
-        )}
       </div>
     </>
   );
