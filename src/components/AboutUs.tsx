@@ -90,10 +90,15 @@ const AboutUs = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-100/50 via-transparent to-orange-100/50 rounded-3xl"></div>
             <div className="relative grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 py-12 px-8">
               {[
-                'Besan - moong ladoo',
-                'Gajar barfi - gajarpaak',
-                'Peda - imarti',
-                'Sooji halwa - makhanbada',
+                'Motichoor Ladoo',
+                'GajarPaak',
+                'Imarti',
+                'Gulab Jamun',
+                'Kaju Katli',
+                'Kalakand',
+                'Makhan Bada',
+                'Sooji Halwa',
+                'Moong Ladoo',
               ].map((sweet, index) => (
                 <div key={index} className="text-center group cursor-pointer">
                   <div className="relative">
