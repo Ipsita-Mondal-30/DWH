@@ -181,7 +181,33 @@ const About = () => {
             Join thousands of families who have made us part of their celebrations. 
             Let us sweeten your special moments with our authentic flavors.
           </p>
+          {/* Contact Information */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl max-w-2xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="text-center md:text-left">
+                <h4 className="font-bold text-gray-800 mb-2 flex items-center justify-center md:justify-start gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Visit Our Heritage Store
+                </h4>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Delhi Wala Halwai<br />
+                  Nagori Gate<br />
+                  Hisar, Haryana 125001
+                </p>
+              </div>
+              <div className="text-center md:text-right">
+                <h4 className="font-bold text-gray-800 mb-2 flex items-center justify-center md:justify-end gap-2">
+                  Call Us Today
+                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                </h4>
+                <a href="tel:9034033999" className="text-lg font-bold text-orange-600 hover:text-orange-700 transition-colors duration-300">
+                  📞 9034033999
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   );

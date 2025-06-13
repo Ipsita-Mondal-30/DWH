@@ -19,7 +19,7 @@ const AboutUs = () => {
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-800 to-orange-700 bg-clip-text text-transparent mb-4">
             Celebrating Deliciousness
           </h1>
-          <h2 className="text-4xl md:text-5xl font-bold text-amber-700 mb-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-amber-700 mb-16 mt-5">
             Since 1943
           </h2>
           <div className="flex justify-center items-center gap-4 mb-12">
@@ -128,8 +128,8 @@ const AboutUs = () => {
                   <p className="text-amber-100">+91 90340 33999</p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-amber-200">Email</h4>
-                  <p className="text-amber-100">info@delhiwala-halwai.com</p>
+                  <h4 className="font-semibold text-amber-200">Address</h4>
+                  <p className="text-amber-100">Delhi wala halwai, Nagori gate, Hisar, haryana, 125001</p>
                 </div>
               </div>
 
