@@ -172,7 +172,13 @@ const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClo
           >
             Namkeen
           </Link>
-          
+          <Link 
+            href="/collections/bhaji" 
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            Bhaji
+          </Link>
           <Link
             href="/AboutUs"
             onClick={onClose}
