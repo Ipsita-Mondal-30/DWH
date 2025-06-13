@@ -57,8 +57,7 @@ export default function LatestSweet() {
     setDropdownOpen(prev => ({ ...prev, [productId]: !prev[productId] }));
   };
 
-  const handleAddToCart = async (item: Product) => {
-
+  const handleAddToCart = async (item: any) => {
     if (!item._id) return;
 
     const selected = selectedPricing[item._id];

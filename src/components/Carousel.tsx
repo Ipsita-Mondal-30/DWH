@@ -112,7 +112,7 @@ const Carousel = () => {
         >
           {images.map((src, idx) => (
             <div key={idx} className="min-w-full h-full relative">
-              <Image
+              <img
                 src={src}
                 alt={`Slide ${idx + 1}`}
                 className="w-full h-full object-cover"
