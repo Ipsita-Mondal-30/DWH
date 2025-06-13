@@ -335,18 +335,18 @@ export function SawamaniForm() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <ShoppingBag className="text-orange-500 w-8 h-8" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            <ShoppingBag className="text-orange-500 w-8 h-8  lg:block" />
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               Sawamani Sweets
             </h1>
-            <ShoppingBag className="text-orange-500 w-8 h-8" />
+            <ShoppingBag className="text-orange-500 w-8 h-8  lg:block" />
           </div>
-          <p className="text-gray-600 text-lg">Traditional Indian Sweets Made with Pure Ingredients</p>
+          <p className="text-gray-600 text-base md:text-lg  lg:block">Traditional Indian Sweets Made with Pure Ingredients</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Side - Image and Info */}
-          <div className="space-y-6">
+          {/* Left Side - Image and Info - Hidden on mobile */}
+          <div className="space-y-6 hidden lg:block">
             <div className="relative overflow-hidden rounded-2xl shadow-xl">
               <div className="h-96 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 flex items-center justify-center">
                 <div className="text-center text-white">
@@ -401,11 +401,11 @@ export function SawamaniForm() {
             </div>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Right Side - Form - Full width on mobile */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 lg:col-span-1 col-span-1">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
-              <p className="text-gray-600">Fill in your details and we will prepare your fresh sweets!</p>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
+              <p className="text-gray-600 text-sm md:text-base">Fill in your details and we will prepare your fresh sweets!</p>
             </div>
 
 
@@ -430,7 +430,7 @@ export function SawamaniForm() {
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Name and Phone */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -661,7 +661,7 @@ export function SawamaniForm() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-orange-600 hover:to-amber-600 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 md:py-4 px-6 rounded-lg font-semibold text-base md:text-lg hover:from-orange-600 hover:to-amber-600 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
