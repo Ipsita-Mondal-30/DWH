@@ -111,7 +111,7 @@ const LoginModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 };
 
 // Mobile Menu Slider Component
-const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session:Session }) => {
+const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClose: () => void; session: Session | null }) => {
   return (
     <>
       {/* Backdrop */}
@@ -546,14 +546,13 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Slider */}
-      {session && (
-        <MobileMenuSlider 
-          isOpen={isMobileMenuOpen} 
-          onClose={() => setIsMobileMenuOpen(false)}
-          session={session}
-        />
-      )}
+     {/* Mobile Menu Slider */}
+<MobileMenuSlider 
+  isOpen={isMobileMenuOpen} 
+  onClose={() => setIsMobileMenuOpen(false)}
+  session={session}
+/>
+      
 
       {/* Login Modal */}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
