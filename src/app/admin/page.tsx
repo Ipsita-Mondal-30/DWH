@@ -5,7 +5,8 @@ import Image from "next/image";
 import AddProducts from "@/components/AddProduct";
 import AddBox from "@/components/AddBox";
 import AddNamkeen from "@/components/AddNamkeen";
-import { Package, Edit, Trash2, Plus, IndianRupee, Box, Cookie } from "lucide-react";
+import AdminLogin from "@/components/AdminLoginForm";
+import { Package, Edit, Trash2, Plus, IndianRupee, Box, Cookie, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Updated interfaces to match the new pricing structure
@@ -62,10 +63,31 @@ interface Namkeen {
   pricing: Pricing[];
 }
 
-
-
 export default function AdminPanel() {
   const router = useRouter();
+  
+  // Authentication states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Authentication handlers
+  const handleLogin = async (username: string, password: string) => {
+    // Simulate loading delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (username === ADMIN_CREDENTIALS.username && 
+        password === ADMIN_CREDENTIALS.password) {
+      setIsAuthenticated(true);
+    } else {
+      throw new Error('Invalid username or password');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+
+  // Original states
   const [products, setProducts] = useState<Product[]>([]);
   const [boxes, setBoxes] = useState<BoxItem[]>([]);
   const [namkeens, setNamkeens] = useState<Namkeen[]>([]);
@@ -91,6 +113,15 @@ export default function AdminPanel() {
     description: '', 
     pricing: [{ quantity: 0, unit: 'gm', price: 0 }]
   });
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Hardcoded credentials
+  const ADMIN_CREDENTIALS = {
+    username: 'admin',
+    password: 'admin'
+  };
 
   // Fetch functions
   const fetchProducts = async () => {
@@ -124,10 +155,27 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
-    fetchProducts();
-    fetchBoxes();
-    fetchNamkeens();
-  }, []);
+    if (isAuthenticated) {
+      fetchProducts();
+      fetchBoxes();
+      fetchNamkeens();
+    }
+  }, [isAuthenticated]);
+
+  // Calculate stats
+  const totalProducts = products.length + boxes.length + namkeens.length;
+  const allPrices = [
+    ...products.flatMap(p => p.pricing?.map(pr => pr.price) || [0]),
+    ...boxes.map(b => b.price),
+    ...namkeens.flatMap(n => n.pricing?.map(pr => pr.price) || [0])
+  ].filter(price => price > 0);
+  const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+  const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 0;
+
+  // If not authenticated, show login form
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={handleLogin} />;
+  }
 
   // Add handlers
   const handleAddProduct = () => {
@@ -288,8 +336,8 @@ export default function AdminPanel() {
         name: box.name,
         description: box.description,
         price: box.price,
-        type: "default", // Add a default type value
-        pricing: [{ quantity: 0, unit: "piece", price: 0 }] // Add a default pricing array
+        type: "default",
+        pricing: [{ quantity: 0, unit: "piece", price: 0 }]
       };
 
       if (box.imageBase64?.startsWith("data:image")) {
@@ -361,236 +409,239 @@ export default function AdminPanel() {
     }
   };
 
-
-  const totalProducts = products.length + boxes.length + namkeens.length;
-  const allPrices = [
-    ...products.flatMap(p => p.pricing?.map(pr => pr.price) || [0]),
-    ...boxes.map(b => b.price),
-    ...namkeens.flatMap(n => n.pricing?.map(pr => pr.price) || [0])
-  ].filter(price => price > 0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
-  const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 0;
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-
-<div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
-          <p className="text-gray-600">Manage your sweets, boxes, and namkeens</p>
-        </div>
-
-        {/* Desktop Buttons */}
-        <div className="hidden md:flex gap-x-2">
-          <button
-            onClick={handleAddProduct}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Add Sweet
-          </button>
-          <button
-            onClick={handleAddBox}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Box className="w-5 h-5" />
-            Add Box
-          </button>
-          <button
-            onClick={handleAddNamkeen}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Cookie className="w-5 h-5" />
-            Add Namkeen
-          </button>
-          <button 
-            onClick={() => router.push('/admin/enquiries')}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            Enquiries
-          </button>
-          <button 
-            onClick={() => router.push('/admin/sawamani')}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            Sawamani Orders
-          </button>
-          <button 
-            onClick={() => router.push('/admin/orders')}
-            className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            All Orders
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Floating Button */}
-      <div className="md:hidden">
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-
-        {/* Drawer */}
-        <div
-          className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
-            drawerOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <div className="flex justify-end p-4">
-            <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
-              x
-            </button>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
+            <p className="text-gray-600">Manage your sweets, boxes, and namkeens</p>
           </div>
-          <div className="flex flex-col gap-4 p-4">
+
+          {/* Desktop Buttons */}
+          {/* <div className="hidden md:flex gap-x-2 items-center">
             <button
-              onClick={() => {
-                handleAddProduct();
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              onClick={handleAddProduct}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Add Sweet
             </button>
             <button
-              onClick={() => {
-                handleAddBox();
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              onClick={handleAddBox}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               <Box className="w-5 h-5" />
               Add Box
             </button>
             <button
-              onClick={() => {
-                handleAddNamkeen();
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              onClick={handleAddNamkeen}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               <Cookie className="w-5 h-5" />
               Add Namkeen
             </button>
-            <button
-              onClick={() => {
-                router.push("/admin/enquiries");
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            <button 
+              onClick={() => router.push('/admin/enquiries')}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               Enquiries
             </button>
-            <button
-              onClick={() => {
-                router.push("/admin/sawamani");
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            <button 
+              onClick={() => router.push('/admin/sawamani')}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               Sawamani Orders
             </button>
-            <button
-              onClick={() => {
-                router.push("/admin/orders");
-                setDrawerOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            <button 
+              onClick={() => router.push('/admin/orders')}
+              className="bg-blue-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
             >
               All Orders
             </button>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+            >
+              <Lock className="w-5 h-5" />
+              Logout
+            </button>
+          </div> */}
+        </div>
+
+        {/* Mobile Floating Button */}
+        <div className="md:">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          {/* Drawer */}
+          <div
+            className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+              drawerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex justify-end p-4">
+              <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 p-4">
+              <button
+                onClick={() => {
+                  handleAddProduct();
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Add Sweet
+              </button>
+              <button
+                onClick={() => {
+                  handleAddBox();
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Box className="w-5 h-5" />
+                Add Box
+              </button>
+              <button
+                onClick={() => {
+                  handleAddNamkeen();
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Cookie className="w-5 h-5" />
+                Add Namkeen
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/enquiries");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Enquiries
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/sawamani");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Sawamani Orders
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/orders");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                All Orders
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setDrawerOpen(false);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
         {/* Stats */}
-{/* Stats */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-blue-100 rounded-lg">
-        <Package className="w-6 h-6 text-blue-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Total Products</p>
-        <p className="text-2xl font-semibold text-gray-900">{totalProducts}</p>
-      </div>
-    </div>
-  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Package className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-semibold text-gray-900">{totalProducts}</p>
+              </div>
+            </div>
+          </div>
 
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-blue-100 rounded-lg">
-        <Package className="w-6 h-6 text-blue-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Sweets</p>
-        <p className="text-2xl font-semibold text-gray-900">{products.length}</p>
-      </div>
-    </div>
-  </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Package className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Sweets</p>
+                <p className="text-2xl font-semibold text-gray-900">{products.length}</p>
+              </div>
+            </div>
+          </div>
 
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-orange-100 rounded-lg">
-        <Box className="w-6 h-6 text-orange-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Boxes</p>
-        <p className="text-2xl font-semibold text-gray-900">{boxes.length}</p>
-      </div>
-    </div>
-  </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Box className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Boxes</p>
+                <p className="text-2xl font-semibold text-gray-900">{boxes.length}</p>
+              </div>
+            </div>
+          </div>
 
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-green-100 rounded-lg">
-        <Cookie className="w-6 h-6 text-green-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Namkeens</p>
-        <p className="text-2xl font-semibold text-gray-900">{namkeens.length}</p>
-      </div>
-    </div>
-  </div>
-</div>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Cookie className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Namkeens</p>
+                <p className="text-2xl font-semibold text-gray-900">{namkeens.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-{/* Price Range Stats */}
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-green-100 rounded-lg">
-        <IndianRupee className="w-6 h-6 text-green-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Price Range</p>
-        <p className="text-2xl font-semibold text-gray-900">
-          {totalProducts > 0 ? `₹${minPrice} - ₹${maxPrice}` : '₹0'}
-        </p>
-      </div>
-    </div>
-  </div>
+        {/* Price Range Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <IndianRupee className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Price Range</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {totalProducts > 0 ? `₹${minPrice} - ₹${maxPrice}` : '₹0'}
+                </p>
+              </div>
+            </div>
+          </div>
 
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center">
-      <div className="p-2 bg-purple-100 rounded-lg">
-        <Edit className="w-6 h-6 text-purple-600" />
-      </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">Categories</p>
-        <p className="text-2xl font-semibold text-gray-900">
-          {new Set([...products.map(p => p.type), ...namkeens.map(n => n.type)].filter(Boolean)).size}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Edit className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Categories</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {new Set([...products.map(p => p.type), ...namkeens.map(n => n.type)].filter(Boolean)).size}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Products Section */}
         {totalProducts === 0 ? (
@@ -629,87 +680,86 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Sweets ({products.length})</h2>
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((p) => (
-                  <div
-                    key={p._id}
-                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
-                  >
-                    {p.image && (
-                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
-                        <Image
-                          src={p.image}
-                          alt={p.name || "Product Image"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-
-                    <div className="p-4 sm:p-6">
-                      <div className="mb-3 sm:mb-4">
-                        <div className="flex items-start justify-between mb-1 sm:mb-2">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
-                            {p.name}
-                          </h3>
-                          {p.type && p.type !== 'none' && (
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              p.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
-                              p.type === 'latest' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {p.type}
-                            </span>
-                          )}
+                  {products.map((p) => (
+                    <div
+                      key={p._id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                    >
+                      {p.image && (
+                        <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                          <Image
+                            src={p.image}
+                            alt={p.name || "Product Image"}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
+                      )}
 
-                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{p.description}</p>
-
+                      <div className="p-4 sm:p-6">
                         <div className="mb-3 sm:mb-4">
-                          <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
-                          {p.pricing && p.pricing.length > 0 ? (
-                            <div className="space-y-1">
-                              {p.pricing.slice(0, 3).map((pricing, index) => (
-                                <div key={index} className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">
-                                    {pricing.quantity} {pricing.unit}
-                                  </span>
-                                  <span className="font-semibold text-green-700">
-                                    ₹{pricing.price}
-                                  </span>
-                                </div>
-                              ))}
-                              {p.pricing.length > 3 && (
-                                <p className="text-xs text-gray-500">
-                                  +{p.pricing.length - 3} more options
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500">No pricing set</p>
-                          )}
-                        </div>
-                      </div>
+                          <div className="flex items-start justify-between mb-1 sm:mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
+                              {p.name}
+                            </h3>
+                            {p.type && p.type !== 'none' && (
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                p.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
+                                p.type === 'latest' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {p.type}
+                              </span>
+                            )}
+                          </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditProduct(p)}
-                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(p._id)}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
+                          <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{p.description}</p>
+
+                          <div className="mb-3 sm:mb-4">
+                            <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
+                            {p.pricing && p.pricing.length > 0 ? (
+                              <div className="space-y-1">
+                                {p.pricing.slice(0, 3).map((pricing, index) => (
+                                  <div key={index} className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600">
+                                      {pricing.quantity} {pricing.unit}
+                                    </span>
+                                    <span className="font-semibold text-green-700">
+                                      ₹{pricing.price}
+                                    </span>
+                                  </div>
+                                ))}
+                                {p.pricing.length > 3 && (
+                                  <p className="text-xs text-gray-500">
+                                    +{p.pricing.length - 3} more options
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">No pricing set</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditProduct(p)}
+                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(p._id)}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
                 </div>
               </div>
             )}
@@ -719,55 +769,54 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Boxes ({boxes.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {boxes.map((b) => (
-                  <div
-                    key={b._id}
-                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
-                  >
-                    {b.image && (
-                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
-                        <Image
-                          src={b.image}
-                          alt={b.name || "Box Image"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
+                  {boxes.map((b) => (
+                    <div
+                      key={b._id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                    >
+                      {b.image && (
+                        <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                          <Image
+                            src={b.image}
+                            alt={b.name || "Box Image"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
 
-                    <div className="p-4 sm:p-6">
-                      <div className="mb-3 sm:mb-4">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
-                          {b.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">
-                          {b.description}
-                        </p>
-                        <div className="text-xl sm:text-2xl font-bold text-orange-600">
-                          ₹{b.price}
+                      <div className="p-4 sm:p-6">
+                        <div className="mb-3 sm:mb-4">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
+                            {b.name}
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">
+                            {b.description}
+                          </p>
+                          <div className="text-xl sm:text-2xl font-bold text-orange-600">
+                            ₹{b.price}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditBox(b)}
+                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBox(b._id)}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditBox(b)}
-                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBox(b._id)}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
                 </div>
               </div>
             )}
@@ -777,87 +826,86 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Namkeens ({namkeens.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {namkeens.map((n) => (
-                  <div
-                    key={n._id}
-                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
-                  >
-                    {n.image && (
-                      <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
-                        <Image
-                          src={n.image}
-                          alt={n.name || "Namkeen Image"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-
-                    <div className="p-4 sm:p-6">
-                      <div className="mb-3 sm:mb-4">
-                        <div className="flex items-start justify-between mb-1 sm:mb-2">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
-                            {n.name}
-                          </h3>
-                          {n.type && n.type !== 'none' && (
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              n.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
-                              n.type === 'latest' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {n.type}
-                            </span>
-                          )}
+                  {namkeens.map((n) => (
+                    <div
+                      key={n._id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow w-full sm:max-w-sm mx-auto"
+                    >
+                      {n.image && (
+                        <div className="relative overflow-hidden rounded-t-lg h-48 sm:h-64">
+                          <Image
+                            src={n.image}
+                            alt={n.name || "Namkeen Image"}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
+                      )}
 
-                        <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{n.description}</p>
-
+                      <div className="p-4 sm:p-6">
                         <div className="mb-3 sm:mb-4">
-                          <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
-                          {n.pricing && n.pricing.length > 0 ? (
-                            <div className="space-y-1">
-                              {n.pricing.slice(0, 3).map((pricing, index) => (
-                                <div key={index} className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">
-                                    {pricing.quantity} {pricing.unit}
-                                  </span>
-                                  <span className="font-semibold text-green-700">
-                                    ₹{pricing.price}
-                                  </span>
-                                </div>
-                              ))}
-                              {n.pricing.length > 3 && (
-                                <p className="text-xs text-gray-500">
-                                  +{n.pricing.length - 3} more options
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500">No pricing set</p>
-                          )}
-                        </div>
-                      </div>
+                          <div className="flex items-start justify-between mb-1 sm:mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
+                              {n.name}
+                            </h3>
+                            {n.type && n.type !== 'none' && (
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                n.type === 'popular' ? 'bg-yellow-100 text-yellow-800' :
+                                n.type === 'latest' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {n.type}
+                              </span>
+                            )}
+                          </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditNamkeen(n)}
-                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteNamkeen(n._id)}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
+                          <p className="text-gray-600 text-sm mb-2 sm:mb-3 line-clamp-2">{n.description}</p>
+
+                          <div className="mb-3 sm:mb-4">
+                            <p className="text-sm font-medium text-gray-700 mb-1 sm:mb-2">Pricing Options:</p>
+                            {n.pricing && n.pricing.length > 0 ? (
+                              <div className="space-y-1">
+                                {n.pricing.slice(0, 3).map((pricing, index) => (
+                                  <div key={index} className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600">
+                                      {pricing.quantity} {pricing.unit}
+                                    </span>
+                                    <span className="font-semibold text-green-700">
+                                      ₹{pricing.price}
+                                    </span>
+                                  </div>
+                                ))}
+                                {n.pricing.length > 3 && (
+                                  <p className="text-xs text-gray-500">
+                                    +{n.pricing.length - 3} more options
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">No pricing set</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditNamkeen(n)}
+                            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNamkeen(n._id)}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
                 </div>
               </div>
             )}
