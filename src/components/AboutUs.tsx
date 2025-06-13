@@ -1,10 +1,17 @@
 import Image from 'next/image';
 import React from 'react';
+import Navbar from './Navbar'; // Adjust the import path if Navbar is in a different directory
 
 const AboutUs = () => {
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+      
+      {/* ✅ Navbar Added */}
+
+      <Navbar />
+
+      <div className="mt-15" />
+
       {/* Header Section with Enhanced Design */}
       <div className="relative text-center py-20 px-8">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-100/30 to-transparent"></div>
@@ -83,14 +90,10 @@ const AboutUs = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-100/50 via-transparent to-orange-100/50 rounded-3xl"></div>
             <div className="relative grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 py-12 px-8">
               {[
-                'Motichoor Ladoo',
-                'Gajar Burfi', 
-                'Gulab Jamun',
-                'Kalakand',
-                'Doodh Peda',
-                'Kaju Katli',
-                'Sooji Halwa',
-                'Besan Ladoo'
+                'Besan - moong ladoo',
+                'Gajar barfi - gajarpaak',
+                'Peda - imarti',
+                'Sooji halwa - makhanbada',
               ].map((sweet, index) => (
                 <div key={index} className="text-center group cursor-pointer">
                   <div className="relative">

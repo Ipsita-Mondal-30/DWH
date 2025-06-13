@@ -107,6 +107,22 @@ export default function SavouriesCollection() {
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside dropdown elements
+      if (!target.closest('[data-dropdown]')) {
+        setDropdownOpen({});
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white mt-10">
@@ -198,7 +214,7 @@ export default function SavouriesCollection() {
 
                           {/* Price Options Dropdown */}
                           {item.pricing.length > 0 && (
-                            <div className="mb-6">
+                            <div className="mb-6" data-dropdown>
                               <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
                                 Select Size & Price:
                               </label>
@@ -231,8 +247,11 @@ export default function SavouriesCollection() {
 
                                 {/* Dropdown Options - Fixed positioning and z-index */}
                                 {isDropdownOpen && (
-                                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-orange-200 rounded-xl shadow-2xl max-h-60 overflow-y-auto"
-                                       style={{ zIndex: 9999 }}>
+                                  <div 
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-orange-200 rounded-xl shadow-2xl max-h-60 overflow-y-auto"
+                                    style={{ zIndex: 9999 }}
+                                    data-dropdown
+                                  >
                                     {item.pricing.map((pricing, pricingIndex) => (
                                       <button
                                         key={pricingIndex}
@@ -305,15 +324,6 @@ export default function SavouriesCollection() {
                 })}
               </div>
             </div>
-          )}
-
-          {/* Click outside to close dropdowns */}
-          {Object.values(dropdownOpen).some(open => open) && (
-            <div 
-              className="fixed inset-0"
-              style={{ zIndex: 999 }}
-              onClick={() => setDropdownOpen({})}
-            />
           )}
         </div>
       </div>

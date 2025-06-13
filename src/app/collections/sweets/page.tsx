@@ -28,9 +28,8 @@ export default function SweetsCollection() {
       try {
         const productsRes = await axios.get("/api/product");
 
-        const sweetProducts = productsRes.data.filter(
-          (p: IProduct) => p.type === "latest"
-        );
+        // Show ALL products from the product API (sweets), not just "latest" type
+        const sweetProducts = productsRes.data;
 
         setItems(sweetProducts);
 
@@ -52,7 +51,9 @@ export default function SweetsCollection() {
     fetchSweetItems();
   }, []);
 
-  const handlePricingSelect = (productId: string, pricing: Pricing) => {
+  const handlePricingSelect = (productId: string, pricing: Pricing, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setSelectedPricing(prev => ({
       ...prev,
       [productId]: pricing
@@ -97,6 +98,14 @@ export default function SweetsCollection() {
     }
   };
 
+  const handleCardClick = (item: IProduct, index: number) => {
+    // Only navigate if no dropdown is open for this item
+    const itemId = item._id || '';
+    if (!dropdownOpen[itemId]) {
+      window.location.href = `/products/${item._id}?_pos=${index + 1}&_psq=sweets&_ss=e&_v=1.0`;
+    }
+  };
+
   const getUnitDisplay = (unit: string) => {
     const unitMap = {
       'gm': 'g',
@@ -107,6 +116,18 @@ export default function SweetsCollection() {
     return unitMap[unit as keyof typeof unitMap] || unit;
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setDropdownOpen({});
+    };
+
+    if (Object.values(dropdownOpen).some(open => open)) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [dropdownOpen]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white ">
@@ -116,7 +137,7 @@ export default function SweetsCollection() {
         <div className="flex justify-center items-center py-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading sweet collection...</p>
+            <p className="text-gray-600 font-medium ">Loading sweet collection...</p>
           </div>
         </div>
       </div>
@@ -166,14 +187,14 @@ export default function SweetsCollection() {
                   const hasPricingOptions = item.pricing && item.pricing.length > 0;
                   
                   return (
-                    <Link 
+                    <div 
                       key={item._id || Math.random()} 
-                      href={`/products/${item._id}?_pos=${index + 1}&_psq=sweets&_ss=e&_v=1.0`}
                       className="block"
                     >
                       <div 
-                        className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer"
+                        className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer relative"
                         style={{ zIndex: isDropdownOpen ? 1000 : 1 }}
+                        onClick={() => handleCardClick(item, index)}
                       >
                         {/* Product Image */}
                         <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-orange-100 to-orange-50">
@@ -183,7 +204,7 @@ export default function SweetsCollection() {
                             fill
                             className="object-cover hover:scale-110 transition-transform duration-500"
                           />
-                          {item.type && (
+                          {item.type && item.type !== 'none' && (
                             <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
                               {item.type}
                             </div>
@@ -202,7 +223,7 @@ export default function SweetsCollection() {
 
                           {/* Price Options Dropdown - Only show if product has pricing options */}
                           {hasPricingOptions ? (
-                            <div className="mb-6">
+                            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
                               <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
                                 Select Size & Price:
                               </label>
@@ -241,11 +262,7 @@ export default function SweetsCollection() {
                                       <button
                                         key={pricingIndex}
                                         type="button"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handlePricingSelect(itemId, pricing);
-                                        }}
+                                        onClick={(e) => handlePricingSelect(itemId, pricing, e)}
                                         className={`w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors border-b border-orange-100 last:border-b-0 ${
                                           selected && 
                                           selected.quantity === pricing.quantity && 
@@ -282,7 +299,7 @@ export default function SweetsCollection() {
                           )}
 
                           {/* Add to Cart Button - Centered */}
-                          <div className="flex justify-center">
+                          <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                             <button
                               type="button"
                               className={`w-full max-w-xs py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
@@ -317,20 +334,11 @@ export default function SweetsCollection() {
                           )}
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
             </div>
-          )}
-
-          {/* Click outside to close dropdowns */}
-          {Object.values(dropdownOpen).some(open => open) && (
-            <div 
-              className="fixed inset-0"
-              style={{ zIndex: 999 }}
-              onClick={() => setDropdownOpen({})}
-            />
           )}
         </div>
       </div>

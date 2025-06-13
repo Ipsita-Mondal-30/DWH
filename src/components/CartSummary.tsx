@@ -81,12 +81,7 @@ export default function CartSummary({ cartItems, totals, onProceedToPay }: CartS
             <span>₹{totals.subtotal.toFixed(2)}</span>
           </div>
           
-          <div className="flex justify-between text-gray-600">
-            <span>Shipping Cost</span>
-            <span className={totals.shippingCost === 0 ? 'text-green-600' : ''}>
-              {totals.shippingCost === 0 ? 'FREE' : `₹${totals.shippingCost}`}
-            </span>
-          </div>
+          
           
           <div className="flex justify-between text-gray-600">
             <span>Tax (GST 18%)</span>
@@ -101,10 +96,10 @@ export default function CartSummary({ cartItems, totals, onProceedToPay }: CartS
           </div>
         </div>
 
-        {totals.subtotal < 500 && (
+        {totals.subtotal < 1000 && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              Add ₹{(500 - totals.subtotal).toFixed(2)} more to get free shipping!
+              Add ₹{(1000 - totals.subtotal).toFixed(2)} more to get free shipping!
             </p>
           </div>
         )}

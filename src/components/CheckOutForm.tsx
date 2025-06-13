@@ -74,6 +74,21 @@ export default function CheckoutForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Calculate totals with shipping logic
+  const calculatedTotals = useMemo(() => {
+    const subtotal = totals.subtotal;
+    const shippingCost = subtotal >= 1000 ? 0 : 59;
+    const tax = totals.tax;
+    const totalAmount = subtotal + shippingCost + tax;
+    
+    return {
+      subtotal,
+      shippingCost,
+      tax,
+      totalAmount
+    };
+  }, [totals.subtotal, totals.tax]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -382,22 +397,32 @@ export default function CheckoutForm({
             <div className="space-y-3 text-sm border-t pt-4">
               <div className="flex justify-between">
                 <span>Subtotal ({cartItems.length} items)</span>
-                <span>₹{totals.subtotal.toFixed(2)}</span>
+                <span>₹{calculatedTotals.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span className={totals.shippingCost === 0 ? 'text-green-600' : ''}>
-                  {totals.shippingCost === 0 ? 'FREE' : `₹${totals.shippingCost}`}
+                <span className={calculatedTotals.shippingCost === 0 ? 'text-green-600' : ''}>
+                  {calculatedTotals.shippingCost === 0 ? 'FREE' : `₹${calculatedTotals.shippingCost}`}
                 </span>
               </div>
+              {calculatedTotals.subtotal >= 1000 && calculatedTotals.shippingCost === 0 && (
+                <div className="text-xs text-green-600">
+                  🎉 You saved ₹59 on shipping!
+                </div>
+              )}
+              {calculatedTotals.subtotal < 1000 && (
+                <div className="text-xs text-blue-600">
+                  Add ₹{(1000 - calculatedTotals.subtotal).toFixed(2)} more to get FREE shipping!
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Tax (GST 18%)</span>
-                <span>₹{totals.tax.toFixed(2)}</span>
+                <span>₹{calculatedTotals.tax.toFixed(2)}</span>
               </div>
               <div className="border-t pt-3">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>₹{totals.totalAmount.toFixed(2)}</span>
+                  <span>₹{calculatedTotals.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -477,7 +502,7 @@ export default function CheckoutForm({
                   <span>Placing Order...</span>
                 </div>
               ) : (
-                `Place Order - ₹${totals.totalAmount.toFixed(2)}`
+                `Place Order - ₹${calculatedTotals.totalAmount.toFixed(2)}`
               )}
             </button>
             
