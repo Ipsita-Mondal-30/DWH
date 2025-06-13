@@ -82,13 +82,13 @@ export async function GET() {
       }
 
       if (productData) {
-        console.log('Product data found:', { 
-          id: productData._id, 
-          name: productData.name, 
-          pricing: productData.pricing,
-          price: productData.price,
-          selectedPricing: item.selectedPricing 
-        }); // Debug log
+        // console.log('Product data found:', { 
+        //   id: productData._id, 
+        //   name: productData.name, 
+        //   pricing: productData.pricing,
+        //   price: productData.price,
+        //   selectedPricing: item.selectedPricing 
+        // }); // Debug log
         
         const cartItem: CartItem = {
           product: {

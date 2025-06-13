@@ -176,7 +176,7 @@ export default function ImprovedCartDrawer({ isOpen, onClose }: CartDrawerProps)
       return product.pricing;
     }
     
-    console.log('No pricing found for product:', productId); // Debug log
+    console.log('No pricing found for product:', productId); // Debug log 68445752836a7640ff29af7e
     return [];
   };
 

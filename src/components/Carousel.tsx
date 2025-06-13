@@ -114,6 +114,8 @@ const Carousel = () => {
             <div key={idx} className="min-w-full h-full relative">
               <img
                 src={src}
+                height={1000}
+                width={1000}
                 alt={`Slide ${idx + 1}`}
                 className="w-full h-full object-cover"
                 loading={idx === 0 ? "eager" : "lazy"}

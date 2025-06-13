@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession, signIn } from 'next-auth/react';
 import Image from "next/image";
 import Link from "next/link";
@@ -33,7 +33,9 @@ export default function LatestSweet() {
   const [dropdownOpen, setDropdownOpen] = useState<{ [key: string]: boolean }>({});
   const [showSignInPopup, setShowSignInPopup] = useState(false);
 
-  const latestItems = items.filter(p => p.type === "latest").slice(0, 3);
+  const latestItems = useMemo(() => {
+    return items.filter(p => p.type === "latest").slice(0, 3);
+  }, [items]);
 
   useEffect(() => {
     const defaultPricing: { [key: string]: Pricing } = {};
