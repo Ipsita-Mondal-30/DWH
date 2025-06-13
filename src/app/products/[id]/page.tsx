@@ -39,7 +39,7 @@ export default function ProductPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [productType, setProductType] = useState<'product' | 'namkeen' | null>(null);
+  const [productType, setProductType] = useState<'product' | 'namkeen' | 'bhaji' | null>(null);
 
   const { addToCart } = useCart();
   const { status } = useSession();
@@ -60,7 +60,7 @@ export default function ProductPage() {
         // First try to fetch from /api/product
         let response = await fetch(`/api/product/${productId}`);
         let productData = null;
-        let fetchedType: 'product' | 'namkeen' = 'product';
+        let fetchedType: 'product' | 'namkeen' | 'bhaji' = 'product';
         
         if (response.ok) {
           productData = await response.json();
@@ -73,8 +73,19 @@ export default function ProductPage() {
           if (response.ok) {
             productData = await response.json();
             fetchedType = 'namkeen';
+          } else if (response.status === 404) {
+            // If not found in namkeens, try bhaji boxes
+            console.log('Product not found in /api/namkeen, trying /api/box');
+            response = await fetch(`/api/box/${productId}`);
+            
+            if (response.ok) {
+              productData = await response.json();
+              fetchedType = 'bhaji';
+            } else {
+              throw new Error(`Product not found in products, namkeens, or bhaji boxes. Status: ${response.status}`);
+            }
           } else {
-            throw new Error(`Product not found in either products or namkeens. Status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -87,6 +98,13 @@ export default function ProductPage() {
         // Set default selected pricing if available
         if (productData.pricing && productData.pricing.length > 0) {
           setSelectedPricing(productData.pricing[0]);
+        } else if (productData.price && fetchedType === 'bhaji') {
+          // For bhaji boxes, create a default pricing structure
+          setSelectedPricing({
+            quantity: 1,
+            unit: 'piece',
+            price: productData.price
+          });
         }
       } catch (err) {
         console.error('Error fetching product:', err);
@@ -125,7 +143,18 @@ export default function ProductPage() {
       setAddingToCart(true);
       
       // Use the selected pricing or default pricing
-      const pricingToUse = selectedPricing || (product.pricing && product.pricing.length > 0 ? product.pricing[0] : undefined);
+      let pricingToUse = selectedPricing;
+      
+      // For bhaji boxes, if no pricing structure exists, create one from the price
+      if (!pricingToUse && productType === 'bhaji' && product.price) {
+        pricingToUse = {
+          quantity: 1,
+          unit: 'piece' as const,
+          price: product.price
+        };
+      } else if (!pricingToUse && product.pricing && product.pricing.length > 0) {
+        pricingToUse = product.pricing[0];
+      }
       
       console.log('Adding to cart:', {
         productId: product._id,
@@ -192,7 +221,9 @@ export default function ProductPage() {
 
   // Get product type display name
   const getProductTypeDisplay = () => {
-    return productType === 'namkeen' ? 'Namkeen' : 'Product';
+    if (productType === 'namkeen') return 'Namkeen';
+    if (productType === 'bhaji') return 'Bhaji Box';
+    return 'Product';
   };
 
   if (loading) {
@@ -306,6 +337,8 @@ export default function ProductPage() {
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     productType === 'namkeen' 
                       ? 'bg-yellow-100 text-yellow-800' 
+                      : productType === 'bhaji'
+                      ? 'bg-orange-100 text-orange-800'
                       : 'bg-blue-100 text-blue-800'
                   }`}>
                     {getProductTypeDisplay()}
@@ -373,6 +406,16 @@ export default function ProductPage() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* For bhaji boxes, show unit type */}
+              {productType === 'bhaji' && (!product.pricing || product.pricing.length === 0) && (
+                <div className="mb-6">
+                  <div className="mb-3">
+                    <span className="text-gray-700 font-medium">Unit: </span>
+                    <span className="font-semibold">1 PIECE</span>
+                  </div>
                 </div>
               )}
 
