@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import { ShippingAddress } from './CheckoutPage';
 import Image from 'next/image';
-import { log } from 'console';
+
 
 interface CheckoutFormProps {
   cartItems: CartItem[];
