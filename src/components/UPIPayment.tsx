@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
 
@@ -14,35 +14,55 @@ interface UPIPaymentProps {
     totalAmount: number;
   };
   onBack: () => void;
+  onPaymentSuccess: () => void; // Callback for successful payment
 }
 
-export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProps) {
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success' | 'failed'>('pending');
-  const [upiId, setUpiId] = useState('');
+export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess }: UPIPaymentProps) {
+  const [paymentStep, setPaymentStep] = useState<'payment' | 'confirmation' | 'processing' | 'success'>('payment');
+  const [customerUpiId, setCustomerUpiId] = useState('');
+  const [transactionId, setTransactionId] = useState('');
 
-  // This component is a placeholder for UPI payment integration
-  // You can integrate with payment gateways like Razorpay, Paytm, etc.
+  // Your business UPI details
+  const businessUpiId = 'business@paytm'; // Replace with your actual UPI ID
+  const businessName = 'Your Business Name';
+  const qrCodeUrl = '/upi-qr-code.png'; // Replace with actual QR code image path
 
-  const handleUPIPayment = async () => {
-    if (!upiId.trim()) {
-      alert('Please enter a valid UPI ID');
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(businessUpiId);
+    alert('UPI ID copied to clipboard!');
+  };
+
+  const copyAmount = () => {
+    navigator.clipboard.writeText(totals.totalAmount.toFixed(2));
+    alert('Amount copied to clipboard!');
+  };
+
+  const handlePaymentMade = () => {
+    if (!customerUpiId.trim()) {
+      alert('Please enter your UPI ID for verification');
       return;
     }
+    setPaymentStep('confirmation');
+  };
 
-    setPaymentStatus('processing');
+  const confirmPayment = () => {
+    if (!transactionId.trim()) {
+      alert('Please enter the transaction ID');
+      return;
+    }
+    setPaymentStep('processing');
 
-    // Simulate payment processing
-    // Replace this with actual UPI payment integration
+    // Simulate order processing
     setTimeout(() => {
-      // For demo purposes, randomly succeed or fail
-      const isSuccess = Math.random() > 0.3; // 70% success rate
-      setPaymentStatus(isSuccess ? 'success' : 'failed');
-    }, 3000);
+      setPaymentStep('success');
+      onPaymentSuccess(); // Trigger order placement
+    }, 2000);
   };
 
   const resetPayment = () => {
-    setPaymentStatus('pending');
-    setUpiId('');
+    setPaymentStep('payment');
+    setCustomerUpiId('');
+    setTransactionId('');
   };
 
   return (
@@ -59,95 +79,205 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left Column - Payment Form */}
+        {/* Left Column - Payment Instructions */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6">Complete Your Payment</h3>
-          
-          {paymentStatus === 'pending' && (
+          {paymentStep === 'payment' && (
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Enter UPI ID
-                </label>
-                <input
-                  type="text"
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="yourname@paytm / yourname@gpay"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-800 mb-2">Payment Information</h4>
-                <p className="text-sm text-blue-700">
-                  You will be redirected to your UPI app to complete the payment of ₹{totals.totalAmount.toFixed(2)}
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Complete Your Payment</h3>
+              
+              {/* QR Code Section */}
+              <div className="text-center bg-gray-50 rounded-lg p-6">
+                <h4 className="font-medium text-gray-800 mb-4">Scan QR Code to Pay</h4>
+                <div className="bg-white p-4 rounded-lg inline-block shadow-sm">
+                  <Image
+                    src={qrCodeUrl}
+                    alt="UPI QR Code"
+                    width={200}
+                    height={200}
+                    className="mx-auto"
+                    onError={(e) => {
+                      // Fallback if QR code image doesn't exist
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="hidden bg-gray-200 w-48 h-48  items-center justify-center text-gray-500 text-sm">
+                    QR Code Here
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mt-3">
+                  Open any UPI app and scan this QR code
                 </p>
               </div>
 
+              {/* Manual Payment Details */}
+              <div className="border-t pt-6">
+                <h4 className="font-medium text-gray-800 mb-4">Or Pay Manually</h4>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">UPI ID:</span>
+                      <button
+                        onClick={copyUpiId}
+                        className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copy
+                      </button>
+                    </div>
+                    <p className="font-mono text-lg font-semibold text-gray-900">{businessUpiId}</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">Amount:</span>
+                      <button
+                        onClick={copyAmount}
+                        className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copy
+                      </button>
+                    </div>
+                    <p className="font-mono text-xl font-bold text-green-600">₹{totals.totalAmount.toFixed(2)}</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">Merchant Name:</span>
+                    <p className="font-semibold text-gray-900">{businessName}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer UPI ID Input */}
+              <div className="border-t pt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your UPI ID (for verification)
+                </label>
+                <input
+                  type="text"
+                  value={customerUpiId}
+                  onChange={(e) => setCustomerUpiId(e.target.value)}
+                  placeholder="yourname@paytm / yourname@gpay"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  We need this to verify your payment
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2">Payment Instructions</h4>
+                <ol className="text-sm text-blue-700 space-y-1">
+                  <li>1. Pay ₹{totals.totalAmount.toFixed(2)} using any UPI app</li>
+                  <li>2. Enter your UPI ID above for verification</li>
+                  <li>3. Click "I have made the payment" below</li>
+                  <li>4. Enter transaction ID to confirm</li>
+                </ol>
+              </div>
+
               <button
-                onClick={handleUPIPayment}
-                className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+                onClick={handlePaymentMade}
+                disabled={!customerUpiId.trim()}
+                className="w-full bg-green-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                Pay ₹{totals.totalAmount.toFixed(2)}
+                I have made the payment ✓
               </button>
             </div>
           )}
 
-          {paymentStatus === 'processing' && (
+          {paymentStep === 'confirmation' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-yellow-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Confirm Your Payment</h3>
+                <p className="text-gray-600">Please provide transaction details for verification</p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">Payment Details</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount Paid:</span>
+                    <span className="font-semibold">₹{totals.totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Your UPI ID:</span>
+                    <span className="font-semibold">{customerUpiId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Paid to:</span>
+                    <span className="font-semibold">{businessUpiId}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Transaction ID / Reference Number
+                </label>
+                <input
+                  type="text"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  placeholder="e.g., 123456789012"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Find this in your UPI app's transaction history
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={confirmPayment}
+                  disabled={!transactionId.trim()}
+                  className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Confirm & Place Order
+                </button>
+                <button
+                  onClick={resetPayment}
+                  className="w-full bg-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Back to Payment
+                </button>
+              </div>
+            </div>
+          )}
+
+          {paymentStep === 'processing' && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Processing Payment</h4>
-              <p className="text-gray-600">Please complete the payment in your UPI app</p>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">Processing Your Order</h4>
+              <p className="text-gray-600">Please wait while we confirm your payment...</p>
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  Do not close this page until payment is complete
+                  Do not close this page. We are verifying your transaction.
                 </p>
               </div>
             </div>
           )}
 
-          {paymentStatus === 'success' && (
+          {paymentStep === 'success' && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Payment Successful!</h4>
-              <p className="text-gray-600 mb-6">Your order has been confirmed</p>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">Order Placed Successfully!</h4>
+              <p className="text-gray-600 mb-2">Transaction ID: {transactionId}</p>
+              <p className="text-gray-600 mb-6">Your order is being processed and will be delivered soon.</p>
               <button
                 onClick={() => window.location.href = '/my-orders'}
                 className="bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
               >
-                View Orders
+                View My Orders
               </button>
-            </div>
-          )}
-
-          {paymentStatus === 'failed' && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </div>
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Payment Failed</h4>
-              <p className="text-gray-600 mb-6">Something went wrong with your payment</p>
-              <div className="space-y-3">
-                <button
-                  onClick={resetPayment}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={onBack}
-                  className="w-full bg-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-400 transition-colors"
-                >
-                  Choose Different Payment Method
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -157,22 +287,30 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Order Summary</h3>
           
           <div className="space-y-4 mb-6">
-            {cartItems.slice(0, 3).map((item) => (
-              <div key={`${item.product._id}-${item.selectedPricing?.quantity || 'default'}`} className="flex items-center space-x-3">
-                <Image
-                  width={100}
-                  height={100}
-                  src={item.product.image || '/placeholder-image.jpg'}
-                  alt={item.product.name}
-                  className="w-12 h-12 rounded-lg object-cover"
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-800 text-sm">{item.product.name}</h4>
-                  <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+            {cartItems.slice(0, 3).map((item) => {
+              const itemPrice = item.selectedPricing?.price || item.product.price || 0;
+              return (
+                <div key={`${item.product._id}-${item.selectedPricing?.quantity || 'default'}`} className="flex items-center space-x-3">
+                  <Image
+                    width={48}
+                    height={48}
+                    src={item.product.image || '/placeholder-image.jpg'}
+                    alt={item.product.name}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-800 text-sm">{item.product.name}</h4>
+                    <p className="text-xs text-gray-600">
+                      Qty: {item.quantity}
+                      {item.selectedPricing && (
+                        <span> • {item.selectedPricing.quantity}{item.selectedPricing.unit}</span>
+                      )}
+                    </p>
+                  </div>
+                  <p className="font-semibold text-gray-800 text-sm">₹{(itemPrice * item.quantity).toFixed(2)}</p>
                 </div>
-                <p className="font-semibold text-gray-800 text-sm">₹{(item.product.price * item.quantity).toFixed(2)}</p>
-              </div>
-            ))}
+              );
+            })}
             
             {cartItems.length > 3 && (
               <p className="text-sm text-gray-600 text-center">
@@ -205,12 +343,20 @@ export default function UPIPayment({ cartItems, totals, onBack }: UPIPaymentProp
           </div>
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium text-gray-800 mb-2">Secure Payment</h4>
+            <h4 className="font-medium text-gray-800 mb-2">Payment Security</h4>
             <p className="text-xs text-gray-600">
-  Your payment information is encrypted and secure. We don&#39;t store your UPI details.
-</p>
-
+              Your payment is processed securely. We do not store your financial information.
+            </p>
           </div>
+
+          {paymentStep === 'payment' && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-800 mb-2">Need Help?</h4>
+              <p className="text-xs text-blue-700">
+                If you face any issues with payment, please contact our support team.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
