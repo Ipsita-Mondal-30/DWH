@@ -172,7 +172,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                 <ol className="text-sm text-blue-700 space-y-1">
                   <li>1. Pay ₹{totals.totalAmount.toFixed(2)} using any UPI app</li>
                   <li>2. Enter your UPI ID above for verification</li>
-                  <li>3. Click "I have made the payment" below</li>
+                  <li>3. Click &quots;I have made the payment&quots; below</li>
                   <li>4. Enter transaction ID to confirm</li>
                 </ol>
               </div>
@@ -227,7 +227,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Find this in your UPI app's transaction history
+                  Find this in your UPI app&quots;s transaction history
                 </p>
               </div>
 

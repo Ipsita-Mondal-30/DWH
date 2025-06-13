@@ -121,6 +121,7 @@ export default function CheckoutPage() {
             cartItems={cartItems}
             totals={totals}
             onBack={handleBackToForm}
+            onPaymentSuccess={() => router.push('/my-orders')}
           />
         )}
       </div>
