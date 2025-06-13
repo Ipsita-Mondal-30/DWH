@@ -164,21 +164,42 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     
+    // Get session to verify authentication
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const requestedUserId = searchParams.get('userId');
     const isAdmin = searchParams.get('admin') === 'true';
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
+    console.log('GET Orders - Session user ID:', session.user?.id);
+    console.log('GET Orders - Requested user ID:', requestedUserId);
+    console.log('GET Orders - Is admin:', isAdmin);
+
     const query: Record<string, unknown> = {};
 
-    
-    // If not admin request, filter by userId
-    if (!isAdmin && userId) {
-      query.userId = userId;
+    // Security: Users can only see their own orders unless they're admin
+    if (isAdmin) {
+      // Admin can see all orders or filter by specific user
+      if (requestedUserId) {
+        query.userId = requestedUserId;
+      }
+    } else {
+      // Regular users can only see their own orders
+      // Ignore the requestedUserId and use session user ID
+      query.userId = session.user?.id;
     }
+
+    console.log('GET Orders - Final query:', query);
 
     // Filter by status if provided
     if (status && Object.values(OrderStatus).includes(status as OrderStatus)) {
@@ -194,6 +215,8 @@ export async function GET(request: NextRequest) {
 
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limit);
+
+    console.log('GET Orders - Found orders:', orders.length);
 
     // If admin request, include additional stats
     let stats = {};
@@ -250,6 +273,24 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     await connectDB();
+    
+    // Check if user is admin
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Add admin check here if you have role-based access
+    // const isAdmin = session.user?.role === 'admin';
+    // if (!isAdmin) {
+    //   return NextResponse.json(
+    //     { error: 'Forbidden - Admin access required' },
+    //     { status: 403 }
+    //   );
+    // }
     
     const body = await request.json();
     const { orderId, orderStatus, paymentStatus, adminNotes } = body;
@@ -326,9 +367,18 @@ export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
     
+    // Get session to verify authentication
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
-    const userId = searchParams.get('userId');
+    const requestedUserId = searchParams.get('userId');
     const isAdmin = searchParams.get('admin') === 'true';
     
     const body = await request.json().catch(() => ({}));
@@ -341,23 +391,35 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Build query - if not admin, must match userId
+    console.log('DELETE Order - Session user ID:', session.user?.id);
+    console.log('DELETE Order - Requested user ID:', requestedUserId);
+    console.log('DELETE Order - Is admin:', isAdmin);
+
+    // Build query - security check
     interface OrderQuery {
       orderId: string;
       userId?: string;
     }
     const query: OrderQuery = { orderId };
-    if (!isAdmin && userId) {
-      query.userId = userId;
-    }
     
+    if (isAdmin) {
+      // Admin can cancel any order, optionally filter by userId
+      if (requestedUserId) {
+        query.userId = requestedUserId;
+      }
+    } else {
+      // Regular users can only cancel their own orders
+      query.userId = session.user?.id;
+    }
+
+    console.log('DELETE Order - Final query:', query);
 
     // Find the order first
     const order = await Order.findOne(query);
     
     if (!order) {
       return NextResponse.json(
-        { error: 'Order not found' },
+        { error: 'Order not found or you do not have permission to cancel this order' },
         { status: 404 }
       );
     }

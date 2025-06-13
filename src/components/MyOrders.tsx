@@ -88,7 +88,10 @@ export default function MyOrders(): React.JSX.Element {
   };
 
   const fetchOrders = useCallback(async (): Promise<void> => {
-    if (!session?.user?.email) return;
+    if (!session?.user) {
+      console.log('No user found in session:', session);
+      return;
+    }
 
     try {
       const params = new URLSearchParams({
@@ -100,25 +103,39 @@ export default function MyOrders(): React.JSX.Element {
         params.set('status', statusFilter);
       }
 
+      console.log('Fetching orders with params:', params.toString());
+
       const response = await fetch(`/api/orders?${params}`);
       const data: OrdersResponse = await response.json();
+
+      console.log('Orders API response:', data);
 
       if (data.success) {
         setOrders(data.orders);
         setTotalPages(data.pagination.totalPages);
+      } else {
+        console.error('Failed to fetch orders:', data);
+        if (response.status === 401) {
+          alert('Please sign in again to view your orders.');
+          window.location.href = '/auth/signin';
+        }
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter, session?.user?.email]);
+  }, [currentPage, statusFilter, session?.user]);
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && session?.user) {
+      console.log('User authenticated, fetching orders for user:', session.user.email);
       fetchOrders();
+    } else if (status === 'authenticated' && !session?.user) {
+      console.error('User authenticated but no user found in session');
+      setLoading(false);
     }
-  }, [fetchOrders, status]);
+  }, [fetchOrders, status, session?.user]);
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -148,6 +165,11 @@ export default function MyOrders(): React.JSX.Element {
   const cancelOrder = async (orderId: string): Promise<void> => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
 
+    if (!session?.user) {
+      alert('User session not found. Please sign in again.');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/orders?orderId=${orderId}`, {
         method: 'DELETE',
@@ -155,11 +177,14 @@ export default function MyOrders(): React.JSX.Element {
         body: JSON.stringify({ cancellationReason: 'Cancelled by customer' }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         fetchOrders();
         closeModal();
+        alert('Order cancelled successfully');
       } else {
-        alert('Failed to cancel order. Please try again.');
+        alert(result.error || 'Failed to cancel order. Please try again.');
       }
     } catch (error) {
       console.error('Error cancelling order:', error);
@@ -196,6 +221,25 @@ export default function MyOrders(): React.JSX.Element {
     );
   }
 
+  // Check if user session is missing
+  if (status === 'authenticated' && !session?.user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Session Error</h2>
+          <p className="text-gray-600 mb-4">Your session is missing user information. Please sign in again.</p>
+          <button
+            onClick={() => window.location.href = '/auth/signin'}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          >
+            Sign In Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -214,6 +258,8 @@ export default function MyOrders(): React.JSX.Element {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
           <p className="text-gray-600">Track and manage your orders</p>
+          {/* Debug info - remove in production */}
+          <p className="text-xs text-gray-400 mt-2">User: {session?.user?.email}</p>
         </div>
 
         {/* Filters */}
