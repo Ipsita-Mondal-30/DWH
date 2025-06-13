@@ -101,7 +101,7 @@ export default function BhajiCollection() {
                 {boxes.map((box, index) => (
                   <Link
                     key={box._id}
-                    href={`/products/bhaji/${box._id}?_pos=${index + 1}&_psq=bhaji&_ss=e&_v=1.0`}
+                    href={`/products/${box._id}?_pos=${index + 1}&_psq=bhaji&_ss=e&_v=1.0`}
                     className="block"
                   >
                     <div className="bg-white rounded-2xl shadow-lg overflow-visible hover:shadow-2xl transition-all duration-300 border border-orange-100 transform hover:-translate-y-1 cursor-pointer">
