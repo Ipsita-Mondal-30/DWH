@@ -15,14 +15,25 @@ interface Pricing {
   price: number;
   _id?: string;
 }
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  type: string;
-  image?: string;
-  pricing: Pricing[];
-}
+// interface Product {
+//   _id: string;
+//   name: string;
+//   description: string;
+//   type: string;
+//   image?: string;
+//   pricing: Pricing[];
+// }
+
+
+  interface Product {
+    _id?: string;
+    name: string;
+    description: string;
+    type: string;
+    image?: string;
+    pricing: Pricing[];
+  }
+
 
 export default function LatestSweet() {
   const { data: session, status } = useSession();
@@ -59,7 +70,7 @@ export default function LatestSweet() {
     setDropdownOpen(prev => ({ ...prev, [productId]: !prev[productId] }));
   };
 
-  const handleAddToCart = async (item: any) => {
+  const handleAddToCart = async (item: Product) => {
     if (!item._id) return;
 
     const selected = selectedPricing[item._id];

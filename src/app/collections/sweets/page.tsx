@@ -6,7 +6,6 @@ import type { IProduct } from "../../../models/Product";
 import { useCart } from '../../../app/context/CartContext';
 import Image from "next/image";
 import { ChevronDown } from 'lucide-react';
-import Link from 'next/link';
 import Navbar from "@/components/Navbar";
 
 interface Pricing {

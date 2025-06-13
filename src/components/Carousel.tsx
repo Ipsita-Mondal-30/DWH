@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from "next/image";
+import Image from 'next/image';
 
 
 // Custom hook for media queries
@@ -112,7 +112,7 @@ const Carousel = () => {
         >
           {images.map((src, idx) => (
             <div key={idx} className="min-w-full h-full relative">
-              <img
+              <Image
                 src={src}
                 height={1000}
                 width={1000}
