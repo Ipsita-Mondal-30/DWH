@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
+import QRCode from 'qrcode';
 
 interface UPIPaymentProps {
   cartItems: CartItem[];
@@ -14,18 +15,47 @@ interface UPIPaymentProps {
     totalAmount: number;
   };
   onBack: () => void;
-  onPaymentSuccess: () => void; // Callback for successful payment
+  onPaymentSuccess: () => void;
 }
 
 export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess }: UPIPaymentProps) {
   const [paymentStep, setPaymentStep] = useState<'payment' | 'confirmation' | 'processing' | 'success'>('payment');
   const [customerUpiId, setCustomerUpiId] = useState('');
   const [transactionId, setTransactionId] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
-  // Your business UPI details
-  const businessUpiId = 'business@paytm'; // Replace with your actual UPI ID
-  const businessName = 'Your Business Name';
-  const qrCodeUrl = '/upi-qr-code.png'; // Replace with actual QR code image path
+  // ⚠️ CHANGE THESE VALUES TO YOUR BUSINESS DETAILS
+  const businessUpiId = 'q305666833@ybl'; // Replace with your actual UPI ID
+  const businessName = 'Delhi Wala Halwai'; // Replace with your business name
+  const transactionNote = 'Order Payment from Website '; // Optional: Add transaction note
+  
+  // Generate UPI payment URL
+  const generateUPIUrl = () => {
+    const upiUrl = `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${totals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+    return upiUrl;
+  };
+
+  // Generate QR Code
+  useEffect(() => {
+    const generateQRCode = async () => {
+      try {
+        const upiUrl = generateUPIUrl();
+        const qrDataUrl = await QRCode.toDataURL(upiUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataUrl(qrDataUrl);
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    };
+
+    generateQRCode();
+  }, [totals.totalAmount]);
 
   const copyUpiId = () => {
     navigator.clipboard.writeText(businessUpiId);
@@ -35,6 +65,12 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
   const copyAmount = () => {
     navigator.clipboard.writeText(totals.totalAmount.toFixed(2));
     alert('Amount copied to clipboard!');
+  };
+
+  const copyUPIUrl = () => {
+    const upiUrl = generateUPIUrl();
+    navigator.clipboard.writeText(upiUrl);
+    alert('UPI payment link copied to clipboard!');
   };
 
   const handlePaymentMade = () => {
@@ -55,7 +91,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
     // Simulate order processing
     setTimeout(() => {
       setPaymentStep('success');
-      onPaymentSuccess(); // Trigger order placement
+      onPaymentSuccess();
     }, 2000);
   };
 
@@ -63,6 +99,11 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
     setPaymentStep('payment');
     setCustomerUpiId('');
     setTransactionId('');
+  };
+
+  const openUPIApp = () => {
+    const upiUrl = generateUPIUrl();
+    window.location.href = upiUrl;
   };
 
   return (
@@ -89,26 +130,39 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
               <div className="text-center bg-gray-50 rounded-lg p-6">
                 <h4 className="font-medium text-gray-800 mb-4">Scan QR Code to Pay</h4>
                 <div className="bg-white p-4 rounded-lg inline-block shadow-sm">
-                  <Image
-                    src={qrCodeUrl}
-                    alt="UPI QR Code"
-                    width={200}
-                    height={200}
-                    className="mx-auto"
-                    onError={(e) => {
-                      // Fallback if QR code image doesn't exist
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="hidden bg-gray-200 w-48 h-48  items-center justify-center text-gray-500 text-sm">
-                    QR Code Here
-                  </div>
+                  {qrCodeDataUrl ? (
+                    <Image
+                      src={qrCodeDataUrl}
+                      alt="UPI QR Code"
+                      width={300}
+                      height={300}
+                      className="mx-auto"
+                    />
+                  ) : (
+                    <div className="bg-gray-200 w-72 h-72 flex items-center justify-center text-gray-500">
+                      Generating QR Code...
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm text-gray-600 mt-3">
+                <p className="text-sm text-gray-600 mt-3 mb-4">
                   Open any UPI app and scan this QR code
                 </p>
+                
+                {/* Mobile-friendly UPI app buttons */}
+                <div className="space-y-2">
+                  <button
+                    onClick={openUPIApp}
+                    className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    Open in UPI App 📱
+                  </button>
+                  <button
+                    onClick={copyUPIUrl}
+                    className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+                  >
+                    Copy Payment Link
+                  </button>
+                </div>
               </div>
 
               {/* Manual Payment Details */}
@@ -170,10 +224,11 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-medium text-blue-800 mb-2">Payment Instructions</h4>
                 <ol className="text-sm text-blue-700 space-y-1">
-                  <li>1. Pay ₹{totals.totalAmount.toFixed(2)} using any UPI app</li>
-                  <li>2. Enter your UPI ID above for verification</li>
-                  <li>3. Click &quots;I have made the payment&quots; below</li>
-                  <li>4. Enter transaction ID to confirm</li>
+                  <li>1. Scan QR code or click &apos;Open in UPI App&apos;</li>
+                  <li>2. Verify amount ₹{totals.totalAmount.toFixed(2)} and complete payment</li>
+                  <li>3. Enter your UPI ID above for verification</li>
+                  <li>4. Click &apos;I have made the payment&apos; below</li>
+                  <li>5. Enter transaction ID to confirm order</li>
                 </ol>
               </div>
 
@@ -227,7 +282,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Find this in your UPI app&quots;s transaction history
+                  Find this in your UPI app&apos;s transaction history
                 </p>
               </div>
 
