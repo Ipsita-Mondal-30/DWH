@@ -224,10 +224,10 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-medium text-blue-800 mb-2">Payment Instructions</h4>
                 <ol className="text-sm text-blue-700 space-y-1">
-                  <li>1. Scan QR code or click "Open in UPI App"</li>
+                  <li>1. Scan QR code or click &apos;Open in UPI App&apos;</li>
                   <li>2. Verify amount ₹{totals.totalAmount.toFixed(2)} and complete payment</li>
                   <li>3. Enter your UPI ID above for verification</li>
-                  <li>4. Click "I have made the payment" below</li>
+                  <li>4. Click &apos;I have made the payment&apos; below</li>
                   <li>5. Enter transaction ID to confirm order</li>
                 </ol>
               </div>
@@ -282,7 +282,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Find this in your UPI app's transaction history
+                  Find this in your UPI app&apos;s transaction history
                 </p>
               </div>
 
