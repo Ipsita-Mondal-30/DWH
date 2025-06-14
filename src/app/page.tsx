@@ -45,9 +45,7 @@ export default function Home() {
           <About />
         </section>
         
-        <section className="max-w-7xl mx-auto bg-gradient-to-br from-pink-50 via-orange-50 to-red-50">
-          <SawamaniForm />
-        </section>
+       
       </div>
 
       {/* Floating Enquiry Button */}

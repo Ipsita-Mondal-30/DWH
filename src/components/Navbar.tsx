@@ -179,6 +179,13 @@ const MobileMenuSlider = ({ isOpen, onClose, session }: { isOpen: boolean; onClo
           >
             Bhaji
           </Link>
+          <Link 
+            href="/collections/sawamani" 
+            onClick={onClose}
+            className="flex items-center px-6 py-4 text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 transition-all font-semibold"
+          >
+            Sawamani
+          </Link>
           <Link
             href="/AboutUs"
             onClick={onClose}
@@ -374,7 +381,7 @@ export default function Navbar() {
   return (
     <div className="relative">
       <div className="bg-gradient-to-r from-white via-orange-50/30 to-white shadow-lg border-b border-orange-100 fixed top-0 left-0 right-0 z-40">
-        <div className="flex items-center justify-between px-4 sm:px-8 py-4 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4  mx-auto">
           
           {/* Mobile Hamburger Menu - Left Side */}
           <div className="flex items-center space-x-3">
@@ -427,6 +434,13 @@ export default function Navbar() {
               className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group cursor-pointer text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
             >
               Bhaji
+              <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
+            </Link>
+             <Link
+              href="/collections/sawamani"
+              className="text-gray-700 hover:text-orange-600 font-semibold transition-colors relative group cursor-pointer text-base py-2 px-3 rounded-lg hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100"
+            >
+              Sawamani
               <span className="absolute bottom-0 left-3 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-[calc(100%-24px)] rounded-full"></span>
             </Link>
             

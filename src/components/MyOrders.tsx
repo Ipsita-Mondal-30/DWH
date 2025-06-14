@@ -87,6 +87,11 @@ export default function MyOrders(): React.JSX.Element {
     paid: { color: 'bg-green-100 text-green-800', text: 'Paid' }
   };
 
+  // Function to calculate shipping cost based on subtotal
+  const calculateShippingCost = (subtotal: number): number => {
+    return subtotal >= 1000 ? 0 : 59;
+  };
+
   const fetchOrders = useCallback(async (): Promise<void> => {
     if (!session?.user) {
       console.log('No user found in session:', session);
@@ -511,8 +516,15 @@ export default function MyOrders(): React.JSX.Element {
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping:</span>
-                      <span>{selectedOrder.shippingCost === 0 ? 'FREE' : `₹${selectedOrder.shippingCost}`}</span>
+                      <span className={calculateShippingCost(selectedOrder.subtotal) === 0 ? 'text-green-600' : ''}>
+                        {calculateShippingCost(selectedOrder.subtotal) === 0 ? 'FREE' : `₹${calculateShippingCost(selectedOrder.subtotal)}`}
+                      </span>
                     </div>
+                    {calculateShippingCost(selectedOrder.subtotal) === 0 && (
+                      <div className="text-xs text-green-600">
+                        🎉 You saved ₹59 on shipping!
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Tax (GST):</span>
                       <span>₹{selectedOrder.tax}</span>
