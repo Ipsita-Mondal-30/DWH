@@ -1,10 +1,26 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Heart, Phone, Mail, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag } from 'lucide-react';
-import Image from 'next/image';
+import { Heart, Phone, Mail, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X, ArrowLeft, Scale, Minus, Plus } from 'lucide-react';
+import Link from 'next/link';
+import Navbar from "@/components/Navbar";
 
 // Type definitions
+interface PackingOption {
+  id: string;
+  label: string;
+  value: string;
+  weightPerBox: number; // in kg
+  isWeightBased: boolean; // true for gram/kg options, false for piece options
+}
+
+interface PackingSelection {
+  [key: string]: {
+    boxCount: number;
+    totalWeight: number;
+  };
+}
+
 interface SawamaniFormData {
   name: string;
   phoneNumber: string;
@@ -12,7 +28,7 @@ interface SawamaniFormData {
   itemType: string;
   itemVariant: string;
   date: string;
-  packing: string;
+  packingSelections: PackingSelection;
   message: string;
 }
 
@@ -23,7 +39,7 @@ interface FormErrors {
   itemType?: string;
   itemVariant?: string;
   date?: string;
-  packing?: string;
+  packingSelections?: string;
   message?: string;
 }
 
@@ -34,10 +50,21 @@ interface TouchedFields {
   itemType?: boolean;
   itemVariant?: boolean;
   date?: boolean;
-  packing?: boolean;
+  packingSelections?: boolean;
   message?: boolean;
 }
 
+interface SawamaniFormProps {
+  preSelectedProduct?: {
+    type: string;
+    variant: string;
+    price: number;
+    label?: string;
+  };
+  onOrderSuccess?: () => void;
+  isModal?: boolean;
+  onClose?: () => void;
+}
 
 type SubmitStatus = 'success' | 'validation_error' | 'server_error' | 'network_error' | null;
 type FieldName = keyof SawamaniFormData;
@@ -49,7 +76,9 @@ const ITEM_CONFIG = {
     variants: [
       { value: 'moti boondi', label: 'Moti Boondi Laddoo' },
       { value: 'barik boondi', label: 'Barik Boondi Laddoo' },
-      { value: 'motichoor', label: 'Motichoor Laddoo' }
+      { value: 'motichoor', label: 'Motichoor Laddoo' },
+      { value: 'moong', label: 'Moong Ladoo' },
+      { value: 'besan', label: 'Besan Ladoo' }
     ]
   },
   barfi: {
@@ -60,26 +89,39 @@ const ITEM_CONFIG = {
       { value: 'mawa', label: 'Mawa Barfi' },
       { value: 'dilkhushal', label: 'Dilkhushal Barfi' }
     ]
+  },
+  other: {
+    label: 'Other',
+    variants: [
+      { value: 'churma', label: 'Churma' }
+    ]
   }
 };
 
-const PACKING_OPTIONS = [
-  { value: '2 piece', label: '2 Pieces' },
-  { value: '4 piece', label: '4 Pieces' },
-  { value: 'half kg', label: 'Half Kg (500g)' },
-  { value: '1kg', label: '1 Kg' },
-  { value: '5kg', label: '5 Kg (Bulk Order)' }
+const PACKING_OPTIONS: PackingOption[] = [
+  { id: '2piece', label: '2 Pieces', value: '2 piece', weightPerBox: 0.1, isWeightBased: false },
+  { id: '4piece', label: '4 Pieces', value: '4 piece', weightPerBox: 0.2, isWeightBased: false },
+  { id: '500gram', label: '500g', value: '500 gram', weightPerBox: 0.5, isWeightBased: true },
+  { id: '1kg', label: '1 Kg', value: '1kg', weightPerBox: 1, isWeightBased: true },
+  { id: '5kg', label: '5 Kg', value: '5kg', weightPerBox: 5, isWeightBased: true }
 ];
 
-export function SawamaniForm() {
+const MAX_TOTAL_WEIGHT = 50; // kg
+
+export const SawamaniForm: React.FC<SawamaniFormProps> = ({ 
+  preSelectedProduct, 
+  onOrderSuccess, 
+  isModal = false,
+  onClose 
+}) => {
   const [formData, setFormData] = useState<SawamaniFormData>({
     name: '',
     phoneNumber: '',
     address: '',
-    itemType: '',
-    itemVariant: '',
+    itemType: preSelectedProduct?.type || '',
+    itemVariant: preSelectedProduct?.variant || '',
     date: '',
-    packing: '',
+    packingSelections: {},
     message: ''
   });
   
@@ -87,6 +129,16 @@ export function SawamaniForm() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(null);
   const [touched, setTouched] = useState<TouchedFields>({});
+
+  // Calculate total weight
+  const totalWeight = useMemo(() => {
+    return Object.values(formData.packingSelections).reduce((total, selection) => {
+      return total + selection.totalWeight;
+    }, 0);
+  }, [formData.packingSelections]);
+
+  const remainingWeight = MAX_TOTAL_WEIGHT - totalWeight;
+  const isWeightLimitReached = totalWeight >= MAX_TOTAL_WEIGHT;
 
   // Get available variants based on selected item type
   const availableVariants = useMemo(() => {
@@ -96,18 +148,51 @@ export function SawamaniForm() {
     return ITEM_CONFIG[formData.itemType as keyof typeof ITEM_CONFIG].variants;
   }, [formData.itemType]);
 
-  // Reset variant when item type changes
+  // Reset variant when item type changes (only if not pre-selected)
   React.useEffect(() => {
-    if (formData.itemType && formData.itemVariant) {
+    if (formData.itemType && formData.itemVariant && !preSelectedProduct) {
       const isValidVariant = availableVariants.some(v => v.value === formData.itemVariant);
       if (!isValidVariant) {
         setFormData(prev => ({ ...prev, itemVariant: '' }));
       }
     }
-  }, [formData.itemType, formData.itemVariant, availableVariants]);
+  }, [formData.itemType, formData.itemVariant, availableVariants, preSelectedProduct]);
+
+  // Handle packing selection changes
+  const updatePackingSelection = (packingId: string, boxCount: number) => {
+    const packingOption = PACKING_OPTIONS.find(p => p.id === packingId);
+    if (!packingOption) return;
+
+    const newTotalWeight = boxCount * packingOption.weightPerBox;
+    const otherSelectionsWeight = Object.entries(formData.packingSelections)
+      .filter(([key]) => key !== packingId)
+      .reduce((total, [, selection]) => total + selection.totalWeight, 0);
+
+    // Check if this selection would exceed the weight limit
+    if (otherSelectionsWeight + newTotalWeight > MAX_TOTAL_WEIGHT) {
+      const maxAllowedBoxes = Math.floor((MAX_TOTAL_WEIGHT - otherSelectionsWeight) / packingOption.weightPerBox);
+      boxCount = Math.max(0, maxAllowedBoxes);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      packingSelections: {
+        ...prev.packingSelections,
+        [packingId]: {
+          boxCount,
+          totalWeight: boxCount * packingOption.weightPerBox
+        }
+      }
+    }));
+
+    // Clear packing errors when user makes a selection
+    if (touched.packingSelections && errors.packingSelections) {
+      setErrors(prev => ({ ...prev, packingSelections: undefined }));
+    }
+  };
 
   // Validation rules
-  const validateField = (name: FieldName, value: string): string => {
+  const validateField = (name: FieldName, value: any): string => {
     switch (name) {
       case 'name':
         if (!value.trim()) return 'Name is required';
@@ -152,9 +237,9 @@ export function SawamaniForm() {
         if (selectedDate > maxDate) return 'Please select a date within the next 3 months';
         return '';
 
-      case 'packing':
-        if (!value.trim()) return 'Please select a packing option';
-        if (!PACKING_OPTIONS.some(p => p.value === value)) return 'Invalid packing option selected';
+      case 'packingSelections':
+        if (totalWeight === 0) return 'Please select at least one packing option';
+        if (totalWeight !== MAX_TOTAL_WEIGHT) return `Total weight must be exactly ${MAX_TOTAL_WEIGHT}kg`;
         return '';
 
       case 'message':
@@ -170,10 +255,15 @@ export function SawamaniForm() {
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
     
-    (Object.keys(formData) as FieldName[]).forEach(field => {
+    // Validate regular fields
+    (['name', 'phoneNumber', 'address', 'itemType', 'itemVariant', 'date', 'message'] as const).forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
+
+    // Validate packing selections
+    const packingError = validateField('packingSelections', formData.packingSelections);
+    if (packingError) newErrors.packingSelections = packingError;
 
     return newErrors;
   };
@@ -221,7 +311,7 @@ export function SawamaniForm() {
     
     // Mark all fields as touched
     const allTouched: TouchedFields = {};
-    (Object.keys(formData) as FieldName[]).forEach(field => {
+    (['name', 'phoneNumber', 'address', 'itemType', 'itemVariant', 'date', 'packingSelections', 'message'] as const).forEach(field => {
       allTouched[field] = true;
     });
     setTouched(allTouched);
@@ -254,7 +344,8 @@ export function SawamaniForm() {
             variant: formData.itemVariant
           },
           date: new Date(formData.date).toISOString(),
-          packing: formData.packing,
+          packingSelections: formData.packingSelections,
+          totalWeight: totalWeight,
           message: formData.message.trim() || 'No additional message'
         }),
       });
@@ -267,14 +358,21 @@ export function SawamaniForm() {
           name: '',
           phoneNumber: '',
           address: '',
-          itemType: '',
-          itemVariant: '',
+          itemType: preSelectedProduct?.type || '',
+          itemVariant: preSelectedProduct?.variant || '',
           date: '',
-          packing: '',
+          packingSelections: {},
           message: ''
         });
         setErrors({});
         setTouched({});
+        
+        // Call success callback if provided
+        if (onOrderSuccess) {
+          setTimeout(() => {
+            onOrderSuccess();
+          }, 2000);
+        }
       } else {
         setSubmitStatus('server_error');
         console.error('Submission error:', result.message);
@@ -288,7 +386,7 @@ export function SawamaniForm() {
             else if (error.includes('Phone')) serverErrors.phoneNumber = error;
             else if (error.includes('Address')) serverErrors.address = error;
             else if (error.includes('Date')) serverErrors.date = error;
-            else if (error.includes('Packing')) serverErrors.packing = error;
+            else if (error.includes('Packing')) serverErrors.packingSelections = error;
           });
           setErrors(prev => ({ ...prev, ...serverErrors }));
         }
@@ -305,7 +403,7 @@ export function SawamaniForm() {
   const getInputClasses = (fieldName: FieldName): string => {
     const baseClasses = "w-full px-4 py-3 border rounded-lg transition-all duration-200";
     const hasError = errors[fieldName] && touched[fieldName];
-    const hasValue = formData[fieldName];
+    const hasValue = fieldName === 'packingSelections' ? totalWeight > 0 : formData[fieldName];
     
     if (hasError) {
       return `${baseClasses} border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50`;
@@ -329,362 +427,491 @@ export function SawamaniForm() {
     return maxDate.toISOString().split('T')[0];
   };
 
-  return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <ShoppingBag className="text-orange-500 w-8 h-8  lg:block" />
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Sawamani Sweets
-            </h1>
-            <ShoppingBag className="text-orange-500 w-8 h-8  lg:block" />
+  const formContent = (
+    <>
+      {/* Header */}
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <ShoppingBag className="text-orange-500 w-6 h-6" />
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            {preSelectedProduct ? `Order ${preSelectedProduct.label || 'Product'}` : 'Sabka Sweets'}
+          </h2>
+          {isModal && onClose && (
+            <button
+              onClick={onClose}
+              className="ml-auto p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          )}
+        </div>
+        {preSelectedProduct && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+            <p className="text-orange-800 font-medium">Selected: {preSelectedProduct.label}</p>
+            <p className="text-orange-600 text-sm">Price: ₹{(preSelectedProduct.price / 100).toFixed(0)} per kg</p>
           </div>
-          <p className="text-gray-600 text-base md:text-lg  lg:block">Traditional Indian Sweets Made with Pure Ingredients</p>
+        )}
+      </div>
+
+      {/* Status Messages */}
+      {submitStatus === 'success' && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          <span className="text-green-700">Thank you! Your order has been placed successfully. We will contact you soon to confirm.</span>
+        </div>
+      )}
+
+      {submitStatus === 'validation_error' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700">Please fix the errors below before submitting.</span>
+        </div>
+      )}
+
+      {submitStatus === 'server_error' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700">Server error occurred. Please try again later.</span>
+        </div>
+      )}
+
+      {submitStatus === 'network_error' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700">Network error. Please check your connection and try again.</span>
+        </div>
+      )}
+
+      <div className="space-y-4 md:space-y-6">
+        {/* Name and Phone */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <User className="w-4 h-4 inline mr-1" />
+              Your Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              required
+              className={getInputClasses('name')}
+              placeholder="Enter your full name"
+            />
+            {errors.name && touched.name && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.name}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Phone className="w-4 h-4 inline mr-1" />
+              Phone Number *
+            </label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                +91
+              </span>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                required
+                className={`${getInputClasses('phoneNumber')} rounded-l-none`}
+                placeholder="9876543210"
+              />
+            </div>
+            {errors.phoneNumber && touched.phoneNumber && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.phoneNumber}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Side - Image and Info - Hidden on mobile */}
-          <div className="space-y-6 hidden lg:block">
-            <div className="relative overflow-hidden rounded-2xl shadow-xl">
-              <div className="h-96 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <Package className="w-24 h-24 mx-auto mb-4 opacity-90" />
-                  <h3 className="text-2xl font-semibold mb-2">Premium Laddoo & Barfi</h3>
-                  <p className="text-lg opacity-90">Made with traditional recipes & pure ghee</p>
-                </div>
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <MapPin className="w-4 h-4 inline mr-1" />
+            Delivery Address *
+          </label>
+          <textarea
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            required
+            rows={3}
+            className={`${getInputClasses('address')} resize-none`}
+            placeholder="Enter complete delivery address with landmarks"
+          />
+          {errors.address && touched.address && (
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.address}
+            </p>
+          )}
+        </div>
+
+        {/* Item Type and Variant */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Package className="w-4 h-4 inline mr-1" />
+              Item Type *
+            </label>
+            <select
+              name="itemType"
+              value={formData.itemType}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              required
+              disabled={!!preSelectedProduct}
+              className={`${getInputClasses('itemType')} ${preSelectedProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            >
+              <option value="">Select item type</option>
+              {Object.entries(ITEM_CONFIG).map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label}
+                </option>
+              ))}
+            </select>
+            {errors.itemType && touched.itemType && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.itemType}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Heart className="w-4 h-4 inline mr-1" />
+              Variant *
+            </label>
+            <select
+              name="itemVariant"
+              value={formData.itemVariant}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              required
+              disabled={!formData.itemType || !!preSelectedProduct}
+              className={`${getInputClasses('itemVariant')} ${preSelectedProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            >
+              <option value="">
+                {!formData.itemType ? 'Select item type first' : 'Select variant'}
+              </option>
+              {availableVariants.map((variant) => (
+                <option key={variant.value} value={variant.value}>
+                  {variant.label}
+                </option>
+              ))}
+            </select>
+            {errors.itemVariant && touched.itemVariant && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.itemVariant}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Delivery Date */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Calendar className="w-4 h-4 inline mr-1" />
+            Delivery Date *
+          </label>
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            required
+            min={getMinDate()}
+            max={getMaxDate()}
+            className={getInputClasses('date')}
+          />
+          {errors.date && touched.date && (
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.date}
+            </p>
+          )}
+        </div>
+
+        {/* Enhanced Packing Size Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            <Scale className="w-4 h-4 inline mr-1" />
+            Select Packing Sizes & Quantities *
+          </label>
+          
+          {/* Weight Summary */}
+          <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Scale className="w-5 h-5 text-orange-600" />
+                <span className="font-semibold text-orange-800">
+                  Total Weight: {totalWeight.toFixed(1)}kg / {MAX_TOTAL_WEIGHT}kg
+                </span>
               </div>
-              <div className="absolute inset-0 bg-green-500 bg-opacity-20">
-                <Image
-                  src="/dwhh.png"
-                  alt="Laddoo & Barfi"
-                  layout="fill"
-                  objectFit="cover"
-                  className="object-cover"
-                />
+              <div className="text-sm">
+                {remainingWeight > 0 ? (
+                  <span className="text-green-600 font-medium">
+                    You can add {remainingWeight.toFixed(1)}kg more
+                  </span>
+                ) : (
+                  <span className="text-red-600 font-medium">
+                    Max weight limit reached ({MAX_TOTAL_WEIGHT}kg)
+                  </span>
+                )}
               </div>
             </div>
-
-            {/* Contact Info */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Contact Us</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Phone className="w-5 h-5 text-orange-500" />
-                  <span>+91 98765 43210</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Mail className="w-5 h-5 text-orange-500" />
-                  <span>orders@sawamanisweets.com</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <MapPin className="w-5 h-5 text-orange-500" />
-                  <span>123 Sweet Lane, Raipur, Chhattisgarh</span>
-                </div>
-              </div>
-              
-              {/* Specialties */}
-              <div className="mt-6">
-                <h4 className="font-semibold text-gray-800 mb-3">Our Specialties</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <div>• Moti Boondi Laddoo</div>
-                  <div>• Besan Barfi</div>
-                  <div>• Barik Boondi Laddoo</div>
-                  <div>• Moong Dal Barfi</div>
-                  <div>• Motichoor Laddoo</div>
-                  <div>• Mawa Barfi</div>
-                  <div>• Dilkhushal Barfi</div>
-                  <div>• Custom Orders</div>
-                </div>
-              </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  totalWeight === MAX_TOTAL_WEIGHT 
+                    ? 'bg-green-500' 
+                    : totalWeight > MAX_TOTAL_WEIGHT * 0.8 
+                      ? 'bg-yellow-500' 
+                      : 'bg-orange-500'
+                }`}
+                style={{ width: `${Math.min((totalWeight / MAX_TOTAL_WEIGHT) * 100, 100)}%` }}
+              ></div>
             </div>
           </div>
 
-          {/* Right Side - Form - Full width on mobile */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 lg:col-span-1 col-span-1">
-            <div className="mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Place Your Order</h2>
-              <p className="text-gray-600 text-sm md:text-base">Fill in your details and we will prepare your fresh sweets!</p>
-            </div>
+          {/* Packing Options */}
+          <div className="space-y-4">
+            {PACKING_OPTIONS.map((option) => {
+              const selection = formData.packingSelections[option.id] || { boxCount: 0, totalWeight: 0 };
+              const isSelected = selection.boxCount > 0;
+              const maxBoxesForThisOption = Math.floor(remainingWeight / option.weightPerBox) + selection.boxCount;
+              const isDisabled = isWeightLimitReached && !isSelected;
 
+              return (
+                <div
+                  key={option.id}
+                  className={`p-4 border-2 rounded-xl transition-all duration-200 ${
+                    isSelected
+                      ? 'border-orange-400 bg-orange-50 shadow-md'
+                      : isDisabled
+                        ? 'border-gray-200 bg-gray-50 opacity-50'
+                        : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  {/* Option Info */}
+                  <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                        </div>
+                        <h4 className="font-semibold text-gray-800">{option.label}</h4>
+                        <span className="text-sm text-gray-500">
+                          ({option.weightPerBox}kg per box)
+                        </span>
+                      </div>
+                      
+                      {isSelected && (
+                        <p className="text-sm text-orange-600 font-medium">
+                          {selection.boxCount} box{selection.boxCount !== 1 ? 'es' : ''} × {option.weightPerBox}kg = {selection.totalWeight}kg
+                        </p>
+                      )}
+                    </div>
 
-            {submitStatus === 'validation_error' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <span className="text-red-700">Please fix the errors below before submitting.</span>
-              </div>
-            )}
-
-            {submitStatus === 'server_error' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <span className="text-red-700">Server error occurred. Please try again later.</span>
-              </div>
-            )}
-
-            {submitStatus === 'network_error' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <span className="text-red-700">Network error. Please check your connection and try again.</span>
-              </div>
-            )}
-
-            <div className="space-y-4 md:space-y-6">
-              {/* Name and Phone */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="w-4 h-4 inline mr-1" />
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    className={getInputClasses('name')}
-                    placeholder="Enter your full name"
-                  />
-                  {errors.name && touched.name && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Phone className="w-4 h-4 inline mr-1" />
-                    Phone Number *
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      onBlur={handleBlur}
-                      required
-                      className={`${getInputClasses('phoneNumber')} rounded-l-none`}
-                      placeholder="9876543210"
-                    />
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-3">
+                      {isSelected ? (
+                        <div className="flex items-center gap-2 bg-white rounded-lg border border-orange-300 p-1">
+                          <button
+                            type="button"
+                            onClick={() => updatePackingSelection(option.id, Math.max(0, selection.boxCount - 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-orange-100 text-orange-600 transition-colors"
+                            disabled={selection.boxCount <= 0}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          
+                          <input
+                            type="number"
+                            min="0"
+                            max={maxBoxesForThisOption}
+                            value={selection.boxCount}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 0;
+                              updatePackingSelection(option.id, Math.min(value, maxBoxesForThisOption));
+                            }}
+                            className="w-16 text-center border-0 bg-transparent font-medium text-gray-800 focus:outline-none"
+                            disabled={isDisabled}
+                          />
+                          
+                          <button
+                            type="button"
+                            onClick={() => updatePackingSelection(option.id, Math.min(maxBoxesForThisOption, selection.boxCount + 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-orange-100 text-orange-600 transition-colors"
+                            disabled={selection.boxCount >= maxBoxesForThisOption || isDisabled}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updatePackingSelection(option.id, 1)}
+                          disabled={isDisabled}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                            isDisabled
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg'
+                          }`}
+                        >
+                          Add
+                        </button>
+                      )}
+                      
+                      {isSelected && (
+                        <button
+                          type="button"
+                          onClick={() => updatePackingSelection(option.id, 0)}
+                          className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {errors.phoneNumber && touched.phoneNumber && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.phoneNumber}
-                    </p>
+
+                  {/* Max boxes info */}
+                  {maxBoxesForThisOption > 0 && !isDisabled && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      Max {maxBoxesForThisOption} box{maxBoxesForThisOption !== 1 ? 'es' : ''} available
+                    </div>
                   )}
                 </div>
-              </div>
+              );
+            })}
+          </div>
 
-              {/* Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <MapPin className="w-4 h-4 inline mr-1" />
-                  Delivery Address *
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  required
-                  rows={3}
-                  className={`${getInputClasses('address')} resize-none`}
-                  placeholder="Enter complete delivery address with landmarks"
-                />
-                {errors.address && touched.address && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.address}
-                  </p>
-                )}
-              </div>
-
-              {/* Item Type and Variant */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Package className="w-4 h-4 inline mr-1" />
-                    Item Type *
-                  </label>
-                  <select
-                    name="itemType"
-                    value={formData.itemType}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    className={getInputClasses('itemType')}
-                  >
-                    <option value="">Select item type</option>
-                    {Object.entries(ITEM_CONFIG).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.itemType && touched.itemType && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.itemType}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Heart className="w-4 h-4 inline mr-1" />
-                    Variant *
-                  </label>
-                  <select
-                    name="itemVariant"
-                    value={formData.itemVariant}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    disabled={!formData.itemType}
-                    className={getInputClasses('itemVariant')}
-                  >
-                    <option value="">
-                      {!formData.itemType ? 'Select item type first' : 'Select variant'}
-                    </option>
-                    {availableVariants.map((variant) => (
-                      <option key={variant.value} value={variant.value}>
-                        {variant.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.itemVariant && touched.itemVariant && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.itemVariant}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Date and Packing */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    Delivery Date *
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    min={getMinDate()}
-                    max={getMaxDate()}
-                    className={getInputClasses('date')}
-                  />
-                  {errors.date && touched.date && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.date}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Package className="w-4 h-4 inline mr-1" />
-                    Packing Size *
-                  </label>
-                  <select
-                    name="packing"
-                    value={formData.packing}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    className={getInputClasses('packing')}
-                  >
-                    <option value="">Select packing</option>
-                    {PACKING_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.packing && touched.packing && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.packing}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <MessageSquare className="w-4 h-4 inline mr-1" />
-                  Special Instructions (Optional)
-                </label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  rows={3}
-                  className={`${getInputClasses('message')} resize-none`}
-                  placeholder="Any special requests, preferred delivery time, or additional notes..."
-                />
-                {errors.message && touched.message && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.message}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                  {formData.message.length}/1000 characters
-                </p>
-              </div>
-                          {/* Status Messages */}
-            {submitStatus === 'success' && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-green-700">Thank you! Your order has been placed successfully. We will contact you soon to confirm.</span>
-              </div>
-            )}
-
-              {/* Submit Button */}
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 md:py-4 px-6 rounded-lg font-semibold text-base md:text-lg hover:from-orange-600 hover:to-amber-600 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Place Order
-                  </>
-                )}
-              </button>
+          {/* Validation Message */}
+          {errors.packingSelections && touched.packingSelections && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {errors.packingSelections}
+              </p>
             </div>
+          )}
 
-            <p className="text-xs text-gray-500 text-center mt-4">
-              🍯 Fresh sweets prepared on order • 📞 We will call to confirm your order • 🚚 Free delivery within city
+          {/* Weight requirement info */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700 flex items-center gap-2">
+              <Scale className="w-4 h-4" />
+              <span>
+                <strong>Note:</strong> Total weight must be exactly {MAX_TOTAL_WEIGHT}kg to place an order.
+                {totalWeight < MAX_TOTAL_WEIGHT && (
+                  <span className="ml-1">You need to add {(MAX_TOTAL_WEIGHT - totalWeight).toFixed(1)}kg more.</span>
+                )}
+              </span>
             </p>
+          </div>
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <MessageSquare className="w-4 h-4 inline mr-1" />
+            Additional Message (Optional)
+          </label>
+          <textarea
+            name="message"
+            value={formData.message}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            rows={3}
+            className={`${getInputClasses('message')} resize-none`}
+            placeholder="Any special instructions or preferences..."
+          />
+          {errors.message && touched.message && (
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.message}
+            </p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting || totalWeight !== MAX_TOTAL_WEIGHT}
+          className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
+            isSubmitting || totalWeight !== MAX_TOTAL_WEIGHT
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+          }`}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Placing Order...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5" />
+              Place Order ({totalWeight}kg)
+            </>
+          )}
+        </button>
+
+        {/* Submit button helper text */}
+        {totalWeight !== MAX_TOTAL_WEIGHT && (
+          <p className="text-center text-sm text-gray-500 -mt-2">
+            {totalWeight === 0 
+              ? 'Please select packing options to continue'
+              : `Add ${(MAX_TOTAL_WEIGHT - totalWeight).toFixed(1)}kg more to place order`
+            }
+          </p>
+        )}
+      </div>
+    </>
+  );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            {formContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+     
+      <div className="pt-20 pb-16">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-orange-100">
+            {formContent}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
+};
 export default SawamaniForm;

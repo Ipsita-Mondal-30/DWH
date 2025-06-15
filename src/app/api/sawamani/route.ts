@@ -75,17 +75,22 @@ export async function GET(request: NextRequest) {
 }
 
 // POST request - Create new Sawamani order
+// POST request - Create new Sawamani order
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
     const body = await request.json();
+    
+    // Add this logging to see what data is being received
+    console.log('Received body:', JSON.stringify(body, null, 2));
 
     // Validate required fields
-    const requiredFields = ['name', 'phoneNumber', 'address', 'item', 'date', 'packing'];
+    const requiredFields = ['name', 'phoneNumber', 'address', 'item', 'date', 'packingSelections'];
     const missingFields = requiredFields.filter(field => !body[field]);
 
     if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
       return NextResponse.json(
         {
           success: false,
@@ -98,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     // Validate item structure
     if (!body.item.type || !body.item.variant) {
+      console.log('Invalid item structure:', body.item);
       return NextResponse.json(
         {
           success: false,
@@ -117,9 +123,12 @@ export async function POST(request: NextRequest) {
         variant: body.item.variant,
       },
       date: new Date(body.date),
-      packing: body.packing,
+      packingSelections: body.packingSelections,
+      totalWeight: body.totalWeight,
+      message: body.message,
     });
 
+    console.log('About to save order:', newOrder);
     const savedOrder = await newOrder.save();
 
     return NextResponse.json(
@@ -133,10 +142,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('POST /api/sawamani error:', error);
+    console.error('Error details:', error);
 
     // Handle validation errors
     if (error instanceof mongoose.Error.ValidationError) {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.log('Validation errors:', validationErrors);
       return NextResponse.json(
         {
           success: false,

@@ -1,21 +1,28 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-// Define the interface for TypeScript
+// Update the interface
 export interface ISawamani extends Document {
   name: string;
   phoneNumber: string;
   address: string;
   item: {
-    type: 'laddoo' | 'barfi';
-    variant: 'moti boondi' | 'barik boondi' | 'motichoor' | 'besan' | 'moong' | 'mawa' | 'dilkhushal';
+    type: 'laddoo' | 'barfi' | 'other';
+    variant: 'moti boondi' | 'barik boondi' | 'motichoor' | 'besan' | 'moong' | 'mawa' | 'dilkhushal' | 'churma';
   };
   date: Date;
-  packing: '1kg' | 'half kg' | '4 piece' | '2 piece' | '5kg';
+  packingSelections: {
+    [key: string]: {
+      boxCount: number;
+      totalWeight: number;
+    };
+  };
+  totalWeight: number;
+  message: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Define the schema
+// Update the schema
 const SawamaniSchema: Schema<ISawamani> = new Schema(
   {
     name: {
@@ -39,28 +46,13 @@ const SawamaniSchema: Schema<ISawamani> = new Schema(
     item: {
       type: {
         type: String,
-        enum: ['laddoo', 'barfi'],
+        enum: ['laddoo', 'barfi', 'other'],
         required: [true, 'Item type is required'],
       },
       variant: {
         type: String,
-        enum: ['moti boondi', 'barik boondi', 'motichoor', 'besan', 'moong', 'mawa', 'dilkhushal'],
+        enum: ['moti boondi', 'barik boondi', 'motichoor', 'besan', 'moong', 'mawa', 'dilkhushal', 'churma'],
         required: [true, 'Item variant is required'],
-        validate: {
-          validator: function(this: ISawamani, variant: string) {
-            const laddooVariants = ['moti boondi', 'barik boondi', 'motichoor'];
-            const barfiVariants = ['besan', 'moong', 'mawa', 'dilkhushal'];
-            
-            if (this.item.type === 'laddoo') {
-              return laddooVariants.includes(variant);
-            }
-            if (this.item.type === 'barfi') {
-              return barfiVariants.includes(variant);
-            }
-            return false;
-          },
-          message: 'Invalid variant for the selected item type',
-        },
       },
     },
     date: {
@@ -73,17 +65,26 @@ const SawamaniSchema: Schema<ISawamani> = new Schema(
         message: 'Date cannot be in the past',
       },
     },
-    packing: {
+    packingSelections: {
+      type: Schema.Types.Mixed,
+      required: [true, 'Packing selections are required'],
+    },
+    totalWeight: {
+      type: Number,
+      required: [true, 'Total weight is required'],
+      min: [0, 'Total weight must be positive'],
+    },
+    message: {
       type: String,
-      enum: ['1kg', 'half kg', '4 piece', '2 piece', '5kg'],
-      required: [true, 'Packing is required'],
+      trim: true,
+      maxlength: [1000, 'Message cannot exceed 1000 characters'],
+      default: '',
     },
   },
   {
     timestamps: true,
   }
 );
-
 // Create indexes for better performance
 SawamaniSchema.index({ phoneNumber: 1 });
 SawamaniSchema.index({ date: 1 });
