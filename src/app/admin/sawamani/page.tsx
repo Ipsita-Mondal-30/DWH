@@ -7,14 +7,16 @@ import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock } from 'luci
 interface SawamaniOrder {
   _id: string;
   name: string;
-  phoneNumber: string;
+  phoneNumber: number;
   address: string;
   item: {
     type: string;
     variant: string;
   };
   date: string;
-  packing: string;
+  packing?: string; // Made optional since it might be undefined
+  packingSelections?: { [key: string]: { boxCount: number; totalWeight: number } }; // Add this field
+  totalWeight?: number; // Add this field
   createdAt: string;
 }
 
@@ -48,6 +50,32 @@ export default function SawamaniAdminPage(): React.JSX.Element {
   // Get unique item types for filter dropdown
   const [itemTypes, setItemTypes] = useState<string[]>([]);
 
+  // Helper function to format packing selections into readable string
+  const formatPackingSelections = (packingSelections?: { [key: string]: { boxCount: number; totalWeight: number } }, totalWeight?: number): string => {
+    if (!packingSelections || Object.keys(packingSelections).length === 0) {
+      return 'Not specified';
+    }
+
+    const PACKING_OPTIONS = [
+      { id: '2piece', label: '2 Pieces', weightPerBox: 0.1 },
+      { id: '4piece', label: '4 Pieces', weightPerBox: 0.2 },
+      { id: '500gram', label: '500g', weightPerBox: 0.5 },
+      { id: '1kg', label: '1 Kg', weightPerBox: 1 },
+      { id: '5kg', label: '5 Kg', weightPerBox: 5 }
+    ];
+
+    const packingStrings = Object.entries(packingSelections)
+      .filter(([_, selection]) => selection.boxCount > 0)
+      .map(([packingId, selection]) => {
+        const option = PACKING_OPTIONS.find(p => p.id === packingId);
+        const label = option?.label || packingId;
+        return `${selection.boxCount}x ${label}`;
+      });
+
+    const result = packingStrings.join(', ');
+    return totalWeight ? `${result} (${totalWeight}kg total)` : result;
+  };
+
   const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
@@ -56,7 +84,8 @@ export default function SawamaniAdminPage(): React.JSX.Element {
         limit: '10'
       });
 
-      if (phoneFilter) params.set('phoneNumber', phoneFilter);
+      // Fix: Use 'phone' instead of 'phoneNumber' for consistency with backend
+      if (phoneFilter) params.set('phone', phoneFilter);
       if (itemTypeFilter) params.set('itemType', itemTypeFilter);
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
@@ -105,7 +134,8 @@ export default function SawamaniAdminPage(): React.JSX.Element {
   };
 
   const viewOrderDetails = (order: SawamaniOrder): void => {
-    alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\nPacking: ${order.packing}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
+    const packingDisplay = order.packing || formatPackingSelections(order.packingSelections, order.totalWeight);
+    alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\nPacking: ${packingDisplay}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
   };
 
   const clearFilters = (): void => {
@@ -308,9 +338,9 @@ export default function SawamaniAdminPage(): React.JSX.Element {
                       <div className="text-sm text-gray-900 font-medium">{order.item.type}</div>
                       <div className="text-sm text-gray-500">{order.item.variant}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {order.packing}
+                        {order.packing || formatPackingSelections(order.packingSelections, order.totalWeight)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

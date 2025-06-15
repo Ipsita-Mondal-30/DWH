@@ -330,25 +330,35 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
     setSubmitStatus(null);
 
     try {
-      const response = await fetch('/api/sawamani', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          phoneNumber: formData.phoneNumber.trim(),
-          address: formData.address.trim(),
-          item: {
-            type: formData.itemType,
-            variant: formData.itemVariant
-          },
-          date: new Date(formData.date).toISOString(),
-          packingSelections: formData.packingSelections,
-          totalWeight: totalWeight,
-          message: formData.message.trim() || 'No additional message'
-        }),
-      });
+      // Replace the fetch call in handleSubmit function with this:
+
+const response = await fetch('/api/sawamani', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: formData.name.trim(),
+    phoneNumber: formData.phoneNumber.trim(),
+    address: formData.address.trim(),
+    item: {
+      type: formData.itemType,
+      variant: formData.itemVariant
+    },
+    date: new Date(formData.date).toISOString(),
+    packingSelections: formData.packingSelections,
+    totalWeight: totalWeight,
+    // Convert packingSelections to readable string format
+    packing: Object.entries(formData.packingSelections)
+      .filter(([, selection]) => selection.boxCount > 0)
+      .map(([packingId, selection]) => {
+        const option = PACKING_OPTIONS.find(p => p.id === packingId);
+        return `${selection.boxCount} ${option?.label || packingId}`;
+      })
+      .join(', '),
+    message: formData.message.trim() || 'No additional message'
+  }),
+});
 
       const result = await response.json();
 

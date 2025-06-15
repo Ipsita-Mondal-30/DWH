@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const filter: Record<string, unknown> = {};
     
     if (phoneNumber) {
-      filter.phoneNumber = phoneNumber;
+      filter.phoneNumber = { $regex: phoneNumber, $options: 'i' };
     }
     
     if (itemType) {
