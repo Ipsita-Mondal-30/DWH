@@ -55,30 +55,30 @@ export function EnquiryForm() {
     price: '',
     message: ''
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(null);
   const [touched, setTouched] = useState<TouchedFields>({});
 
   // Fetch products with pricing display names
-  const { 
-    data: productsData, 
-    isLoading: productsLoading, 
-    isError: hasProductsError 
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    isError: hasProductsError
   } = useProductsWithDisplayNames();
 
 
-  
+
   // Combine API products with fallback, removing duplicates
   const availableProducts = useMemo<string[]>(() => {
     let products: string[] = [];
-    
+
     // Add products from API if available (with pricing display names)
     if (productsData && Array.isArray(productsData)) {
       products = productsData.map(product => product.displayName);
     }
-    
+
     // Add fallback products that aren't already in the list
 
 
@@ -92,7 +92,7 @@ export function EnquiryForm() {
     return products;
   }, [productsData]);
 
-  
+
   // Validation rules (same as before)
   const validateField = (name: FieldName, value: string): string => {
     switch (name) {
@@ -140,12 +140,12 @@ export function EnquiryForm() {
   // Validate all fields
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
-    
+
     (Object.keys(formData) as FieldName[]).forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
-    
+
     // Special validation for "Other" product selection
     if (formData.product === 'Other (Please specify in message)' && !formData.message.trim()) {
       newErrors.message = 'Please specify the product details in the message when selecting "Other"';
@@ -157,7 +157,7 @@ export function EnquiryForm() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     const fieldName = name as FieldName;
-    
+
     // Update form data
     setFormData(prev => ({
       ...prev,
@@ -177,7 +177,7 @@ export function EnquiryForm() {
   const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     const fieldName = name as FieldName;
-    
+
     // Mark field as touched
     setTouched(prev => ({
       ...prev,
@@ -194,7 +194,7 @@ export function EnquiryForm() {
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.preventDefault();
-    
+
     // Mark all fields as touched
     const allTouched: TouchedFields = {};
     (Object.keys(formData) as FieldName[]).forEach(field => {
@@ -250,7 +250,7 @@ export function EnquiryForm() {
       } else {
         setSubmitStatus('server_error');
         console.error('Submission error:', result.message);
-        
+
         // Handle server validation errors
         if (result.errors && Array.isArray(result.errors)) {
           const serverErrors: FormErrors = {};
@@ -275,7 +275,7 @@ export function EnquiryForm() {
     const baseClasses = "w-full px-4 py-3 border rounded-lg transition-all duration-200";
     const hasError = errors[fieldName] && touched[fieldName];
     const hasValue = formData[fieldName];
-    
+
     if (hasError) {
       return `${baseClasses} border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50`;
     } else if (hasValue && touched[fieldName]) {
@@ -328,15 +328,14 @@ export function EnquiryForm() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-600">
                   <Phone className="w-5 h-5 text-pink-500" />
-                  <span>+91 98765 43210</span>
+                  <span> 9034033999</span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Mail className="w-5 h-5 text-pink-500" />
-                  <span>orders@sweetdelights.com</span>
-                </div>
+                
                 <div className="flex items-center gap-3 text-gray-600">
                   <MapPin className="w-5 h-5 text-pink-500" />
-                  <span>123 Sweet Street, Raipur, Chhattisgarh</span>
+                  <span>Delhi Wala Halwai
+                    Nagori Gate
+                    Hisar, Haryana 125001</span>
                 </div>
               </div>
             </div>
@@ -348,7 +347,7 @@ export function EnquiryForm() {
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Enquiry</h2>
               <p className="text-gray-600">
                 Tell us about your sweet requirements and we&#39;ll get back to you!
-              </p>  
+              </p>
             </div>
 
             {/* Status Messages */}
@@ -606,8 +605,8 @@ export function EnquiryForm() {
               </button>
             </div>
             <p className="text-xs text-gray-500 text-center mt-4">
-  We&#39;ll get back to you within 24 hours with a customized quote!
-</p>
+              We&#39;ll get back to you within 24 hours with a customized quote!
+            </p>
           </div>
         </div>
       </div>
