@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Heart, Phone, Mail, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X, ArrowLeft, Scale, Minus, Plus } from 'lucide-react';
-import Link from 'next/link';
-import Navbar from "@/components/Navbar";
+import { Heart, Phone, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X,  Scale,  } from 'lucide-react';
 
 // Type definitions
 interface PackingOption {
@@ -140,12 +138,12 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
   });
 
   // Calculate total weight from manual inputs
-  const totalWeight = useMemo(() => {
-    return Object.entries(weightInputs).reduce((total, [key, value]) => {
-      const weight = parseFloat(value) || 0;
-      return total + weight;
-    }, 0);
-  }, [weightInputs]);
+const totalWeight = useMemo(() => {
+  return Object.entries(weightInputs).reduce((total, [, value]) => {
+    const weight = parseFloat(value) || 0;
+    return total + weight;
+  }, 0);
+}, [weightInputs]);
 
   const remainingWeight = MAX_TOTAL_WEIGHT - totalWeight;
   const isWeightLimitReached = totalWeight >= MAX_TOTAL_WEIGHT;
@@ -218,43 +216,47 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
   };
 
   // Validation rules
-  const validateField = (name: FieldName, value: any): string => {
+  const validateField = (name: FieldName, value: unknown): string => {
+    if (typeof value !== 'string' && name !== 'packingSelections') {
+      return 'Invalid input type';
+    }
+  
     switch (name) {
       case 'name':
-        if (!value.trim()) return 'Name is required';
-        if (value.trim().length < 2) return 'Name must be at least 2 characters';
-        if (value.trim().length > 100) return 'Name must be less than 100 characters';
-        if (!/^[a-zA-Z\s.'-]+$/.test(value.trim())) return 'Name can only contain letters, spaces, dots, hyphens and apostrophes';
+        if (typeof value === 'string' && !value.trim()) return 'Name is required';
+        if (typeof value === 'string' && value.length < 2) return 'Name must be at least 2 characters';
+        if ((value as string).length > 100) return 'Name must be less than 100 characters';
+        if (!/^[a-zA-Z\s.'-]+$/.test(value as string)) return 'Name can only contain letters, spaces, dots, hyphens and apostrophes';
         return '';
-
+  
       case 'phoneNumber':
-        if (!value.trim()) return 'Phone number is required';
+        if (!(value as string).trim()) return 'Phone number is required';
         const phoneRegex = /^[6-9]\d{9}$/;
-        if (!phoneRegex.test(value.trim())) return 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9';
+        if (!phoneRegex.test(value as string)) return 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9';
         return '';
-
+  
       case 'address':
-        if (!value.trim()) return 'Address is required';
-        if (value.trim().length < 10) return 'Please provide a complete address (minimum 10 characters)';
-        if (value.trim().length > 500) return 'Address must be less than 500 characters';
+        if (typeof value === 'string' && !value.trim()) return 'Address is required';
+        if (typeof value === 'string' && value.length < 10) return 'Please provide a complete address (minimum 10 characters)';
+        if (typeof value === 'string' && value.length > 500) return 'Address must be less than 500 characters';
         return '';
-
+  
       case 'itemType':
-        if (!value.trim()) return 'Please select an item type';
-        if (!Object.keys(ITEM_CONFIG).includes(value)) return 'Invalid item type selected';
+        if (!(value as string).trim()) return 'Please select an item type';
+        if (!Object.keys(ITEM_CONFIG).includes(value as string)) return 'Invalid item type selected';
         return '';
-
+  
       case 'itemVariant':
-        if (!value.trim()) return 'Please select a variant';
+        if (!(value as string).trim()) return 'Please select a variant';
         if (formData.itemType) {
           const validVariants = ITEM_CONFIG[formData.itemType as keyof typeof ITEM_CONFIG]?.variants || [];
           if (!validVariants.some(v => v.value === value)) return 'Invalid variant for selected item type';
         }
         return '';
-
+  
       case 'date':
-        if (!value.trim()) return 'Delivery date is required';
-        const selectedDate = new Date(value);
+        if (!(value as string).trim()) return 'Delivery date is required';
+        const selectedDate = new Date(value as string);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (selectedDate < today) return 'Delivery date cannot be in the past';
@@ -262,20 +264,21 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
         maxDate.setMonth(maxDate.getMonth() + 3);
         if (selectedDate > maxDate) return 'Please select a date within the next 3 months';
         return '';
-
+  
       case 'packingSelections':
         if (totalWeight === 0) return 'Please enter weight for at least one packing option';
         if (totalWeight > MAX_TOTAL_WEIGHT) return `Total weight cannot exceed ${MAX_TOTAL_WEIGHT}kg`;
         return '';
-
+  
       case 'message':
-        if (value.trim() && value.trim().length > 1000) return 'Message must be less than 1000 characters';
+        if (typeof value === 'string' && value.trim().length > 1000) return 'Message must be less than 1000 characters';
         return '';
-
+  
       default:
         return '';
     }
   };
+  
 
   // Validate all fields
   const validateForm = (): FormErrors => {
@@ -874,10 +877,10 @@ packingBreakdown: Object.entries(weightInputs)
                     Enter the total weight you want for each packing type. For example:
                   </p>
                   <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                    <li>• 2 Pieces: Enter 3kg (you'll get pieces totaling ~3kg)</li>
-                    <li>• 1 Kg: Enter 10kg (you'll get 10 × 1kg packs)</li>
-                    <li>• Maximum total order: {MAX_TOTAL_WEIGHT}kg</li>
-                  </ul>
+  <li>• 2 Pieces: Enter 3kg (you&#39;ll get pieces totaling ~3kg)</li>
+  <li>• 1 Kg: Enter 10kg (you&#39;ll get 10 × 1kg packs)</li>
+  <li>• Maximum total order: {MAX_TOTAL_WEIGHT}kg</li>
+</ul>
                 </div>
               </div>
             </div>

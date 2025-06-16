@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useCallback } from 'react';
 import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
@@ -30,10 +30,11 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
   const transactionNote = 'Order Payment from Website '; // Optional: Add transaction note
   
   // Generate UPI payment URL
-  const generateUPIUrl = () => {
-    const upiUrl = `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${totals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-    return upiUrl;
-  };
+
+  const generateUPIUrl = useCallback(() => {
+    return `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${totals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+  }, [businessUpiId, businessName, totals.totalAmount, transactionNote]);
+  
 
   // Generate QR Code
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
     };
 
     generateQRCode();
-  }, [totals.totalAmount]);
+  }, [generateUPIUrl]);
 
   const copyUpiId = () => {
     navigator.clipboard.writeText(businessUpiId);

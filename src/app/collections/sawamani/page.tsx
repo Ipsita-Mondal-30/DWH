@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ShoppingBag, Star, Heart, Package } from 'lucide-react';
+import { X,  Star, Package } from 'lucide-react';
 import Image from 'next/image';
 import { SawamaniForm } from '@/components/SawamaniForm'; 
 import Navbar from "@/components/Navbar";

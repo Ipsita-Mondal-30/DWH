@@ -130,7 +130,7 @@ export default function MyOrders(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter, session?.user]);
+  }, [currentPage, statusFilter, session]);
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {

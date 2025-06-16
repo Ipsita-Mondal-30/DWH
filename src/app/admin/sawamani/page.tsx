@@ -77,7 +77,7 @@ export default function SawamaniAdminPage(): React.JSX.Element {
       ];
   
       const packingStrings = Object.entries(order.packingSelections)
-        .filter(([_, selection]) => selection.totalWeight > 0)
+        .filter(([, selection]) => selection.totalWeight > 0)
         .map(([packingId, selection]) => {
           const option = PACKING_OPTIONS.find(p => p.id === packingId);
           const label = option?.label || packingId;
