@@ -14,9 +14,10 @@ interface SawamaniOrder {
     variant: string;
   };
   date: string;
-  packing?: string; // Made optional since it might be undefined
-  packingSelections?: { [key: string]: { boxCount: number; totalWeight: number } }; // Add this field
-  totalWeight?: number; // Add this field
+  packing?: string;
+  packingSelections?: { [key: string]: { boxCount: number; totalWeight: number } };
+  packingBreakdown?: { [key: string]: string };
+  totalWeight?: number;
   createdAt: string;
 }
 
@@ -50,32 +51,45 @@ export default function SawamaniAdminPage(): React.JSX.Element {
   // Get unique item types for filter dropdown
   const [itemTypes, setItemTypes] = useState<string[]>([]);
 
-  // Helper function to format packing selections into readable string
-  const formatPackingSelections = (packingSelections?: { [key: string]: { boxCount: number; totalWeight: number } }, totalWeight?: number): string => {
-    if (!packingSelections || Object.keys(packingSelections).length === 0) {
-      return 'Not specified';
+  // Helper function to format packing selections to show WEIGHT only (not box count)
+  const formatPackingDisplay = (order: SawamaniOrder): string => {
+    // Use new packingBreakdown if available
+    if (order.packingBreakdown && Object.keys(order.packingBreakdown).length > 0) {
+      const breakdown = Object.entries(order.packingBreakdown)
+        .map(([packingType, weight]) => `${packingType}: ${weight}`)
+        .join(', ');
+      return `${breakdown} | Total: ${order.totalWeight || 0}kg`;
     }
-
-    const PACKING_OPTIONS = [
-      { id: '2piece', label: '2 Pieces', weightPerBox: 0.1 },
-      { id: '4piece', label: '4 Pieces', weightPerBox: 0.2 },
-      { id: '500gram', label: '500g', weightPerBox: 0.5 },
-      { id: '1kg', label: '1 Kg', weightPerBox: 1 },
-      { id: '5kg', label: '5 Kg', weightPerBox: 5 }
-    ];
-
-    const packingStrings = Object.entries(packingSelections)
-      .filter(([_, selection]) => selection.boxCount > 0)
-      .map(([packingId, selection]) => {
-        const option = PACKING_OPTIONS.find(p => p.id === packingId);
-        const label = option?.label || packingId;
-        return `${selection.boxCount}x ${label}`;
-      });
-
-    const result = packingStrings.join(', ');
-    return totalWeight ? `${result} (${totalWeight}kg total)` : result;
+    
+    // Fallback to old format
+    if (order.packing) {
+      return order.packing;
+    }
+    
+    // Legacy format
+    if (order.packingSelections && Object.keys(order.packingSelections).length > 0) {
+      const PACKING_OPTIONS = [
+        { id: '2piece', label: '2 Pieces' },
+        { id: '4piece', label: '4 Pieces' },
+        { id: '500gram', label: '500g' },
+        { id: '1kg', label: '1 Kg' },
+        { id: '5kg', label: '5 Kg' }
+      ];
+  
+      const packingStrings = Object.entries(order.packingSelections)
+        .filter(([_, selection]) => selection.totalWeight > 0)
+        .map(([packingId, selection]) => {
+          const option = PACKING_OPTIONS.find(p => p.id === packingId);
+          const label = option?.label || packingId;
+          return `${selection.totalWeight}kg (${label})`;
+        });
+  
+      const result = packingStrings.join(', ');
+      return order.totalWeight ? `${result} | Total: ${order.totalWeight}kg` : result;
+    }
+    
+    return 'Not specified';
   };
-
   const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
@@ -84,8 +98,8 @@ export default function SawamaniAdminPage(): React.JSX.Element {
         limit: '10'
       });
 
-      // Fix: Use 'phone' instead of 'phoneNumber' for consistency with backend
-      if (phoneFilter) params.set('phone', phoneFilter);
+      // Fix: Use 'phoneNumber' to match the actual field name in the database
+      if (phoneFilter) params.set('phoneNumber', phoneFilter);
       if (itemTypeFilter) params.set('itemType', itemTypeFilter);
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
@@ -134,8 +148,17 @@ export default function SawamaniAdminPage(): React.JSX.Element {
   };
 
   const viewOrderDetails = (order: SawamaniOrder): void => {
-    const packingDisplay = order.packing || formatPackingSelections(order.packingSelections, order.totalWeight);
-    alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\nPacking: ${packingDisplay}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
+    let packingDisplay = formatPackingDisplay(order);
+    
+    // Enhanced display for packingBreakdown
+    if (order.packingBreakdown && Object.keys(order.packingBreakdown).length > 0) {
+      const detailedBreakdown = Object.entries(order.packingBreakdown)
+        .map(([packingType, weight]) => `  • ${packingType}: ${weight}`)
+        .join('\n');
+      packingDisplay = `Packing Breakdown:\n${detailedBreakdown}\nTotal Weight: ${order.totalWeight || 0}kg`;
+    }
+    
+    alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\n\n${packingDisplay}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
   };
 
   const clearFilters = (): void => {
@@ -305,7 +328,7 @@ export default function SawamaniAdminPage(): React.JSX.Element {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -338,9 +361,10 @@ export default function SawamaniAdminPage(): React.JSX.Element {
                       <div className="text-sm text-gray-900 font-medium">{order.item.type}</div>
                       <div className="text-sm text-gray-500">{order.item.variant}</div>
                     </td>
+
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {order.packing || formatPackingSelections(order.packingSelections, order.totalWeight)}
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {order.packing || formatPackingDisplay(order)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

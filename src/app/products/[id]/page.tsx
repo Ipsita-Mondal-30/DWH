@@ -527,7 +527,7 @@ export default function ProductPage() {
                     }}
                     className="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition-colors"
                   >
-                    View Cart
+                    
                   </button>
                 </div>
               </div>

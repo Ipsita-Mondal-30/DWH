@@ -372,14 +372,22 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
           date: new Date(formData.date).toISOString(),
           packingSelections: formData.packingSelections,
           totalWeight: totalWeight,
-          // Convert weight inputs to readable string format
-          packing: Object.entries(weightInputs)
-            .filter(([, weight]) => parseFloat(weight) > 0)
-            .map(([packingId, weight]) => {
-              const option = PACKING_OPTIONS.find(p => p.id === packingId);
-              return `${weight}kg ${option?.label || packingId}`;
-            })
-            .join(', '),
+         // Convert weight inputs to readable string format
+packing: Object.entries(weightInputs)
+.filter(([, weight]) => parseFloat(weight) > 0)
+.map(([packingId, weight]) => {
+  const option = PACKING_OPTIONS.find(p => p.id === packingId);
+  return `${weight}kg ${option?.label || packingId}`;
+})
+.join(', '),
+// Add detailed packing breakdown
+packingBreakdown: Object.entries(weightInputs)
+.filter(([, weight]) => parseFloat(weight) > 0)
+.reduce((acc, [packingId, weight]) => {
+  const option = PACKING_OPTIONS.find(p => p.id === packingId);
+  acc[option?.label || packingId] = `${weight} kg`;
+  return acc;
+}, {} as { [key: string]: string }),
           message: formData.message.trim() || 'No additional message'
         }),
       });
@@ -412,7 +420,7 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
         if (onOrderSuccess) {
           setTimeout(() => {
             onOrderSuccess();
-          }, 2000);
+          }, 8000);
         }
       } else {
         setSubmitStatus('server_error');
@@ -496,16 +504,35 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
 
       {/* Status Messages */}
       {submitStatus === 'success' && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-green-500" />
-          <span className="text-green-700">Thank you! Your order has been placed successfully. We will contact you soon to confirm.</span>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl max-w-md w-full mx-4 p-8 text-center shadow-2xl">
+      <div className="mb-4">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">🎉 Thank you for placing your order!</h3>
+      </div>
+      <div className="space-y-3 text-gray-600">
+        <p className="flex items-center justify-center gap-2">
+          <Phone className="w-4 h-4" />
+          📞 We will contact you soon.
+        </p>
+        <p className="text-sm">
+          For any issue, contact: <a href="tel:9034033999" className="font-semibold text-orange-600 hover:text-orange-700">9034033999</a>
+        </p>
+      </div>
+      <button
+        onClick={() => setSubmitStatus(null)}
+        className="mt-6 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
 
       {submitStatus === 'validation_error' && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-red-700">Please fix the errors below before submitting.</span>
+          <span className="text-red-700">Please enter the details below before submitting.</span>
         </div>
       )}
 
