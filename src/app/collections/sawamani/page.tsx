@@ -12,6 +12,7 @@ interface Product {
   variant: string;
   label: string;
   price: number;
+  mainPrice: number;
   image: string;
   description?: string;
   rating?: number;
@@ -24,6 +25,7 @@ const PRODUCTS: Product[] = [
     variant: 'mawa', 
     label: 'Mawa Barfi', 
     price: 38000, 
+    mainPrice: 1900000,
     image: '/mawa-barfi.jpeg',
     description: 'Rich and creamy barfi made with pure mawa and cardamom',
     rating: 4.8
@@ -32,34 +34,38 @@ const PRODUCTS: Product[] = [
     type: 'peda', 
     variant: 'mawa', 
     label: 'Mawa Peda', 
-    price: 24000, 
+    price: 38000, 
+    mainPrice: 1900000,
     image: '/besan-ladoo.jpg',
     description: 'Traditional rich and creamy peda ladoo with roasted nuts',
     rating: 4.4
-  },
-  { 
-    type: 'barfi', 
-    variant: 'moong', 
-    label: 'Moong Barfi', 
-    price: 35000, 
-    image: '/moong-dal-barfi.jpg',
-    description: 'Nutritious and delicious barfi made from yellow moong dal',
-    rating: 4.7
   },
   { 
     type: 'laddoo', 
     variant: 'moong', 
     label: 'Moong Ladoo', 
     price: 35000, 
+    mainPrice: 1750000,
     image: '/moong-ladoo.jpg',
     description: 'Traditional ladoo prepared with roasted moong dal and ghee',
     rating: 4.6
   },
   { 
     type: 'barfi', 
+    variant: 'moong', 
+    label: 'Moong Barfi', 
+    price: 35000, 
+    mainPrice: 1750000,
+    image: '/moong-dal-barfi.jpg',
+    description: 'Nutritious and delicious barfi made from yellow moong dal',
+    rating: 4.7
+  },
+  { 
+    type: 'barfi', 
     variant: 'dilkhushal', 
     label: 'Dilkhushal Barfi', 
     price: 32000, 
+    mainPrice: 1600000,
     image: '/dilkushar-barfi.jpg',
     description: 'Special festive barfi with mixed nuts and aromatic spices',
     rating: 4.9
@@ -69,6 +75,7 @@ const PRODUCTS: Product[] = [
     variant: 'motichoor', 
     label: 'Motichoor Ladoo', 
     price: 32000, 
+    mainPrice: 1600000,
     image: '/motichoor-ladoo.jpg',
     description: 'Fine textured ladoo made with tiny boondi pearls',
     rating: 4.8
@@ -77,7 +84,8 @@ const PRODUCTS: Product[] = [
     type: 'other', 
     variant: 'churma', 
     label: 'Churma', 
-    price: 32000, 
+    price: 24000, 
+    mainPrice: 1200000,
     image: '/churma.jpeg',
     description: 'Traditional Rajasthani sweet made with wheat flour and jaggery',
     rating: 4.5
@@ -86,7 +94,8 @@ const PRODUCTS: Product[] = [
     type: 'laddoo', 
     variant: 'moti boondi', 
     label: 'Moti Boondi Ladoo', 
-    price: 24000, 
+    price: 300000, 
+    mainPrice: 1500000,
     image: '/boondi-ladoo.jpg',
     description: 'Classic ladoo made with large boondi pearls and dry fruits',
     rating: 4.7
@@ -95,7 +104,8 @@ const PRODUCTS: Product[] = [
     type: 'laddoo', 
     variant: 'barik boondi', 
     label: 'Barik Boondi Ladoo', 
-    price: 24000, 
+    price: 30000, 
+    mainPrice: 1500000,
     image: '/barik-boondi.jpg',
     description: 'Soft and melt-in-mouth ladoo with fine boondi texture',
     rating: 4.6
@@ -104,7 +114,8 @@ const PRODUCTS: Product[] = [
     type: 'barfi', 
     variant: 'besan', 
     label: 'Besan Barfi', 
-    price: 24000, 
+    price: 30000, 
+    mainPrice: 1500000,
     image: '/besan-barfi.jpg',
     description: 'Aromatic gram flour barfi with pure ghee and cardamom',
     rating: 4.5
@@ -113,7 +124,8 @@ const PRODUCTS: Product[] = [
     type: 'laddoo', 
     variant: 'besan', 
     label: 'Besan Ladoo', 
-    price: 24000, 
+    price: 30000, 
+    mainPrice: 1500000,
     image: '/besan-ladoo.jpg',
     description: 'Traditional gram flour ladoo with roasted nuts',
     rating: 4.4
@@ -125,8 +137,12 @@ const ProductCard: React.FC<{ product: Product; onSelect: (product: Product) => 
   product, 
   onSelect 
 }) => {
-  const formatPrice = (price: number): string => {
-    return `₹${(price / 100).toFixed(0)}`;
+  const formatMainPrice = (price: number): string => {
+    return `₹${(price / 100).toLocaleString('en-IN')}`;
+  };
+
+  const formatPerKgPrice = (price: number): string => {
+    return `₹${(price / 100).toFixed(0)} per kg`;
   };
 
   return (
@@ -142,7 +158,7 @@ const ProductCard: React.FC<{ product: Product; onSelect: (product: Product) => 
           fill
           className="object-cover hover:scale-110 transition-transform duration-500"
         />
-        {product.price >= 17500 && (
+        {product.price >= 35000 && (
           <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
             Premium
           </div>
@@ -170,9 +186,13 @@ const ProductCard: React.FC<{ product: Product; onSelect: (product: Product) => 
 
         {/* Price Display */}
         <div className="mb-6 text-center">
-          <div className="text-2xl font-bold text-orange-600">
-            {formatPrice(product.price)}
-            <span className="text-sm text-gray-500 font-normal">/kg</span>
+          {/* Main Price - Large and Bold */}
+          <div className="text-3xl font-bold text-orange-600 mb-1">
+            {formatMainPrice(product.mainPrice)}
+          </div>
+          {/* Per Kg Price - Smaller and Subtle */}
+          <div className="text-sm text-gray-500 font-normal">
+            {formatPerKgPrice(product.price)}
           </div>
         </div>
 
@@ -243,6 +263,14 @@ const SawamaniFormWrapper: React.FC<{ product: Product; onClose: () => void }> =
   product, 
   onClose 
 }) => {
+  const formatMainPrice = (price: number): string => {
+    return `₹${(price / 100).toLocaleString('en-IN')}`;
+  };
+
+  const formatPerKgPrice = (price: number): string => {
+    return `₹${(price / 100).toFixed(0)}/kg`;
+  };
+
   return (
     <div className="space-y-4">
       {/* Product Summary */}
@@ -254,7 +282,10 @@ const SawamaniFormWrapper: React.FC<{ product: Product; onClose: () => void }> =
           <div>
             <h3 className="font-semibold text-gray-800">{product.label}</h3>
             <p className="text-gray-600 text-sm">{product.description}</p>
-            <p className="text-orange-600 font-bold text-lg">₹{(product.price / 100).toFixed(0)}/kg</p>
+            <div className="mt-1">
+              <p className="text-orange-600 font-bold text-lg">{formatMainPrice(product.mainPrice)}</p>
+              <p className="text-gray-500 text-sm">{formatPerKgPrice(product.price)}</p>
+            </div>
           </div>
         </div>
       </div>

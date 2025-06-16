@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import Carousel from "../components/Carousel";
 import LatestProduct from "@/components/LatestSweet";
 import PopularProduct from "@/components/PopularProduct";
-import SawamaniForm from "@/components/SawamaniForm";
 import InteractiveMap from '@/components/InteractiveMap';
 import LatestNamkeen from "@/components/LatestNamkeen";
 import FloatingEnquiryButton from "@/components/FloatingEnquiryButton";

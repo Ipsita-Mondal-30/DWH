@@ -7,7 +7,7 @@ import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock } from 'luci
 interface SawamaniOrder {
   _id: string;
   name: string;
-  phoneNumber: number;
+  phoneNumber: string;
   address: string;
   item: {
     type: string;

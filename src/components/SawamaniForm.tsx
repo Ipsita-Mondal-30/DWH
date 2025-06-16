@@ -103,7 +103,7 @@ const PACKING_OPTIONS: PackingOption[] = [
   { id: '4piece', label: '4 Pieces', value: '4 piece', weightPerBox: 0.2, isWeightBased: false },
   { id: '500gram', label: '500g', value: '500 gram', weightPerBox: 0.5, isWeightBased: true },
   { id: '1kg', label: '1 Kg', value: '1kg', weightPerBox: 1, isWeightBased: true },
-  { id: '5kg', label: '5 Kg', value: '5kg', weightPerBox: 5, isWeightBased: true }
+  { id: '5kg', label: '5 Kg (Bulk)', value: '5kg', weightPerBox: 5, isWeightBased: true }
 ];
 
 const MAX_TOTAL_WEIGHT = 50; // kg
@@ -130,15 +130,47 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(null);
   const [touched, setTouched] = useState<TouchedFields>({});
 
-  // Calculate total weight
+  // State for manual weight inputs
+  const [weightInputs, setWeightInputs] = useState<{ [key: string]: string }>({
+    '2piece': '',
+    '4piece': '',
+    '500gram': '',
+    '1kg': '',
+    '5kg': ''
+  });
+
+  // Calculate total weight from manual inputs
   const totalWeight = useMemo(() => {
-    return Object.values(formData.packingSelections).reduce((total, selection) => {
-      return total + selection.totalWeight;
+    return Object.entries(weightInputs).reduce((total, [key, value]) => {
+      const weight = parseFloat(value) || 0;
+      return total + weight;
     }, 0);
-  }, [formData.packingSelections]);
+  }, [weightInputs]);
 
   const remainingWeight = MAX_TOTAL_WEIGHT - totalWeight;
   const isWeightLimitReached = totalWeight >= MAX_TOTAL_WEIGHT;
+
+  // Update packingSelections based on weight inputs (to maintain compatibility with existing logic)
+  React.useEffect(() => {
+    const newPackingSelections: PackingSelection = {};
+    
+    Object.entries(weightInputs).forEach(([packingId, weightStr]) => {
+      const weight = parseFloat(weightStr) || 0;
+      if (weight > 0) {
+        const packingOption = PACKING_OPTIONS.find(p => p.id === packingId);
+        if (packingOption) {
+          // Calculate equivalent boxes for compatibility
+          const boxCount = Math.ceil(weight / packingOption.weightPerBox);
+          newPackingSelections[packingId] = {
+            boxCount,
+            totalWeight: weight
+          };
+        }
+      }
+    });
+    
+    setFormData(prev => ({ ...prev, packingSelections: newPackingSelections }));
+  }, [weightInputs]);
 
   // Get available variants based on selected item type
   const availableVariants = useMemo(() => {
@@ -158,36 +190,30 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
     }
   }, [formData.itemType, formData.itemVariant, availableVariants, preSelectedProduct]);
 
-  // Handle packing selection changes
-  const updatePackingSelection = (packingId: string, boxCount: number) => {
-    const packingOption = PACKING_OPTIONS.find(p => p.id === packingId);
-    if (!packingOption) return;
-
-    const newTotalWeight = boxCount * packingOption.weightPerBox;
-    const otherSelectionsWeight = Object.entries(formData.packingSelections)
-      .filter(([key]) => key !== packingId)
-      .reduce((total, [, selection]) => total + selection.totalWeight, 0);
-
-    // Check if this selection would exceed the weight limit
-    if (otherSelectionsWeight + newTotalWeight > MAX_TOTAL_WEIGHT) {
-      const maxAllowedBoxes = Math.floor((MAX_TOTAL_WEIGHT - otherSelectionsWeight) / packingOption.weightPerBox);
-      boxCount = Math.max(0, maxAllowedBoxes);
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      packingSelections: {
-        ...prev.packingSelections,
-        [packingId]: {
-          boxCount,
-          totalWeight: boxCount * packingOption.weightPerBox
-        }
+  // Handle weight input changes
+  const handleWeightInputChange = (packingId: string, value: string) => {
+    // Allow only numbers and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      const numValue = parseFloat(value) || 0;
+      const otherWeights = Object.entries(weightInputs)
+        .filter(([key]) => key !== packingId)
+        .reduce((sum, [, val]) => sum + (parseFloat(val) || 0), 0);
+      
+      // Check if this would exceed the weight limit
+      if (otherWeights + numValue > MAX_TOTAL_WEIGHT) {
+        const maxAllowed = MAX_TOTAL_WEIGHT - otherWeights;
+        value = maxAllowed.toString();
       }
-    }));
+      
+      setWeightInputs(prev => ({
+        ...prev,
+        [packingId]: value
+      }));
 
-    // Clear packing errors when user makes a selection
-    if (touched.packingSelections && errors.packingSelections) {
-      setErrors(prev => ({ ...prev, packingSelections: undefined }));
+      // Clear packing errors when user makes a selection
+      if (touched.packingSelections && errors.packingSelections) {
+        setErrors(prev => ({ ...prev, packingSelections: undefined }));
+      }
     }
   };
 
@@ -238,8 +264,8 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
         return '';
 
       case 'packingSelections':
-        if (totalWeight === 0) return 'Please select at least one packing option';
-        if (totalWeight !== MAX_TOTAL_WEIGHT) return `Total weight must be exactly ${MAX_TOTAL_WEIGHT}kg`;
+        if (totalWeight === 0) return 'Please enter weight for at least one packing option';
+        if (totalWeight > MAX_TOTAL_WEIGHT) return `Total weight cannot exceed ${MAX_TOTAL_WEIGHT}kg`;
         return '';
 
       case 'message':
@@ -330,35 +356,33 @@ export const SawamaniForm: React.FC<SawamaniFormProps> = ({
     setSubmitStatus(null);
 
     try {
-      // Replace the fetch call in handleSubmit function with this:
-
-const response = await fetch('/api/sawamani', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    name: formData.name.trim(),
-    phoneNumber: formData.phoneNumber.trim(),
-    address: formData.address.trim(),
-    item: {
-      type: formData.itemType,
-      variant: formData.itemVariant
-    },
-    date: new Date(formData.date).toISOString(),
-    packingSelections: formData.packingSelections,
-    totalWeight: totalWeight,
-    // Convert packingSelections to readable string format
-    packing: Object.entries(formData.packingSelections)
-      .filter(([, selection]) => selection.boxCount > 0)
-      .map(([packingId, selection]) => {
-        const option = PACKING_OPTIONS.find(p => p.id === packingId);
-        return `${selection.boxCount} ${option?.label || packingId}`;
-      })
-      .join(', '),
-    message: formData.message.trim() || 'No additional message'
-  }),
-});
+      const response = await fetch('/api/sawamani', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
+          address: formData.address.trim(),
+          item: {
+            type: formData.itemType,
+            variant: formData.itemVariant
+          },
+          date: new Date(formData.date).toISOString(),
+          packingSelections: formData.packingSelections,
+          totalWeight: totalWeight,
+          // Convert weight inputs to readable string format
+          packing: Object.entries(weightInputs)
+            .filter(([, weight]) => parseFloat(weight) > 0)
+            .map(([packingId, weight]) => {
+              const option = PACKING_OPTIONS.find(p => p.id === packingId);
+              return `${weight}kg ${option?.label || packingId}`;
+            })
+            .join(', '),
+          message: formData.message.trim() || 'No additional message'
+        }),
+      });
 
       const result = await response.json();
 
@@ -373,6 +397,13 @@ const response = await fetch('/api/sawamani', {
           date: '',
           packingSelections: {},
           message: ''
+        });
+        setWeightInputs({
+          '2piece': '',
+          '4piece': '',
+          '500gram': '',
+          '1kg': '',
+          '5kg': ''
         });
         setErrors({});
         setTouched({});
@@ -657,15 +688,15 @@ const response = await fetch('/api/sawamani', {
           )}
         </div>
 
-        {/* Enhanced Packing Size Section */}
+        {/* Enhanced Packing Section with Manual Weight Inputs */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-4">
             <Scale className="w-4 h-4 inline mr-1" />
-            Select Packing Sizes & Quantities *
+            Enter Weight for Each Packing Type *
           </label>
           
           {/* Weight Summary */}
-          <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl">
+          <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Scale className="w-5 h-5 text-orange-600" />
@@ -676,11 +707,15 @@ const response = await fetch('/api/sawamani', {
               <div className="text-sm">
                 {remainingWeight > 0 ? (
                   <span className="text-green-600 font-medium">
-                    You can add {remainingWeight.toFixed(1)}kg more
+                    {remainingWeight.toFixed(1)}kg remaining
+                  </span>
+                ) : remainingWeight === 0 ? (
+                  <span className="text-green-600 font-medium">
+                    Perfect! Ready to order
                   </span>
                 ) : (
                   <span className="text-red-600 font-medium">
-                    Max weight limit reached ({MAX_TOTAL_WEIGHT}kg)
+                    Exceeds limit by {Math.abs(remainingWeight).toFixed(1)}kg
                   </span>
                 )}
               </div>
@@ -690,160 +725,153 @@ const response = await fetch('/api/sawamani', {
             <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  totalWeight === MAX_TOTAL_WEIGHT 
-                    ? 'bg-green-500' 
-                    : totalWeight > MAX_TOTAL_WEIGHT * 0.8 
-                      ? 'bg-yellow-500' 
-                      : 'bg-orange-500'
+                  totalWeight > MAX_TOTAL_WEIGHT 
+                    ? 'bg-red-500' 
+                    : totalWeight === MAX_TOTAL_WEIGHT 
+                      ? 'bg-green-500' 
+                      : totalWeight > MAX_TOTAL_WEIGHT * 0.8 
+                        ? 'bg-yellow-500' 
+                        : 'bg-orange-500'
                 }`}
                 style={{ width: `${Math.min((totalWeight / MAX_TOTAL_WEIGHT) * 100, 100)}%` }}
               ></div>
             </div>
           </div>
 
-          {/* Packing Options */}
-          <div className="space-y-4">
-            {PACKING_OPTIONS.map((option) => {
-              const selection = formData.packingSelections[option.id] || { boxCount: 0, totalWeight: 0 };
-              const isSelected = selection.boxCount > 0;
-              const maxBoxesForThisOption = Math.floor(remainingWeight / option.weightPerBox) + selection.boxCount;
-              const isDisabled = isWeightLimitReached && !isSelected;
+          {/* Packing Options with Manual Weight Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
+            {PACKING_OPTIONS.map((option) => {
+              const currentWeight = parseFloat(weightInputs[option.id]) || 0;
+              const hasValue = currentWeight > 0;
+              const maxWeightForThis = remainingWeight + currentWeight;
+              
               return (
-                <div
-                  key={option.id}
+                <div 
+                  key={option.id} 
                   className={`p-4 border-2 rounded-xl transition-all duration-200 ${
-                    isSelected
-                      ? 'border-orange-400 bg-orange-50 shadow-md'
-                      : isDisabled
-                        ? 'border-gray-200 bg-gray-50 opacity-50'
-                        : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'
+                    hasValue 
+                      ? 'border-orange-300 bg-orange-50' 
+                      : 'border-gray-200 bg-gray-50 hover:border-orange-200'
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  {/* Option Info */}
-                  <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                          isSelected ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                        </div>
-                        <h4 className="font-semibold text-gray-800">{option.label}</h4>
-                        <span className="text-sm text-gray-500">
-                          ({option.weightPerBox}kg per box)
-                        </span>
-                      </div>
-                      
-                      {isSelected && (
-                        <p className="text-sm text-orange-600 font-medium">
-                          {selection.boxCount} box{selection.boxCount !== 1 ? 'es' : ''} × {option.weightPerBox}kg = {selection.totalWeight}kg
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-3">
-                      {isSelected ? (
-                        <div className="flex items-center gap-2 bg-white rounded-lg border border-orange-300 p-1">
-                          <button
-                            type="button"
-                            onClick={() => updatePackingSelection(option.id, Math.max(0, selection.boxCount - 1))}
-                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-orange-100 text-orange-600 transition-colors"
-                            disabled={selection.boxCount <= 0}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          
-                          <input
-                            type="number"
-                            min="0"
-                            max={maxBoxesForThisOption}
-                            value={selection.boxCount}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0;
-                              updatePackingSelection(option.id, Math.min(value, maxBoxesForThisOption));
-                            }}
-                            className="w-16 text-center border-0 bg-transparent font-medium text-gray-800 focus:outline-none"
-                            disabled={isDisabled}
-                          />
-                          
-                          <button
-                            type="button"
-                            onClick={() => updatePackingSelection(option.id, Math.min(maxBoxesForThisOption, selection.boxCount + 1))}
-                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-orange-100 text-orange-600 transition-colors"
-                            disabled={selection.boxCount >= maxBoxesForThisOption || isDisabled}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => updatePackingSelection(option.id, 1)}
-                          disabled={isDisabled}
-                          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                            isDisabled
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg'
-                          }`}
-                        >
-                          Add
-                        </button>
-                      )}
-                      
-                      {isSelected && (
-                        <button
-                          type="button"
-                          onClick={() => updatePackingSelection(option.id, 0)}
-                          className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          Remove
-                        </button>
-                      )}
+                  {/* Packing Type Label */}
+                  <div className="text-center mb-3">
+                    <div className={`inline-flex items-center px-3 py-2 rounded-lg font-medium ${
+                      hasValue 
+                        ? 'bg-orange-500 text-white' 
+                        : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      <Package className="w-4 h-4 mr-2" />
+                      {option.label}
                     </div>
                   </div>
-
-                  {/* Max boxes info */}
-                  {maxBoxesForThisOption > 0 && !isDisabled && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      Max {maxBoxesForThisOption} box{maxBoxesForThisOption !== 1 ? 'es' : ''} available
+                  
+                  {/* Weight Input */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-600 text-center">
+                      Enter Weight (kg)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={weightInputs[option.id]}
+                        onChange={(e) => handleWeightInputChange(option.id, e.target.value)}
+                        onFocus={() => {
+                          if (touched.packingSelections && errors.packingSelections) {
+                            setErrors(prev => ({ ...prev, packingSelections: undefined }));
+                          }
+                        }}
+                        disabled={isWeightLimitReached && !hasValue}
+                        className={`w-full px-3 py-2 text-center border rounded-lg transition-all duration-200 ${
+                          hasValue
+                            ? 'border-orange-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white'
+                            : isWeightLimitReached
+                              ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                              : 'border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                        }`}
+                        placeholder={isWeightLimitReached && !hasValue ? "Limit reached" : "0"}
+                      />
+                      {hasValue && (
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          <span className="text-xs text-orange-600 font-medium">kg</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                    
+                    {/* Individual Weight Limit Warning */}
+                    {currentWeight > maxWeightForThis && maxWeightForThis >= 0 && (
+                      <p className="text-xs text-red-600 text-center">
+                        Max {maxWeightForThis.toFixed(1)}kg available
+                      </p>
+                    )}
+                    
+                    {/* Equivalent Info for reference */}
+                    {hasValue && option.isWeightBased && (
+                      <div className="text-xs text-gray-500 text-center">
+                        ≈ {Math.ceil(currentWeight / option.weightPerBox)} units
+                      </div>
+                    )}
+                    {hasValue && !option.isWeightBased && (
+                      <div className="text-xs text-gray-500 text-center">
+                        ≈ {Math.ceil(currentWeight / option.weightPerBox)} pieces
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Validation Message */}
+          {/* Weight Limit Exceeded Warning */}
+          {totalWeight > MAX_TOTAL_WEIGHT && (
+            <div className="mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-semibold">Order cannot exceed {MAX_TOTAL_WEIGHT} kg total.</span>
+              </div>
+              <p className="text-sm text-red-600 mt-1">
+                Please reduce the weight in one or more categories to proceed.
+              </p>
+            </div>
+          )}
+
+          {/* Helpful Tips */}
+          {totalWeight === 0 && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-start gap-2">
+                <Package className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-800">How to order:</h4>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Enter the total weight you want for each packing type. For example:
+                  </p>
+                  <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                    <li>• 2 Pieces: Enter 3kg (you'll get pieces totaling ~3kg)</li>
+                    <li>• 1 Kg: Enter 10kg (you'll get 10 × 1kg packs)</li>
+                    <li>• Maximum total order: {MAX_TOTAL_WEIGHT}kg</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Packing Selection Error */}
           {errors.packingSelections && touched.packingSelections && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600 flex items-center gap-2">
+              <p className="text-sm text-red-600 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
                 {errors.packingSelections}
               </p>
             </div>
           )}
-
-          {/* Weight requirement info */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700 flex items-center gap-2">
-              <Scale className="w-4 h-4" />
-              <span>
-                <strong>Note:</strong> Total weight must be exactly {MAX_TOTAL_WEIGHT}kg to place an order.
-                {totalWeight < MAX_TOTAL_WEIGHT && (
-                  <span className="ml-1">You need to add {(MAX_TOTAL_WEIGHT - totalWeight).toFixed(1)}kg more.</span>
-                )}
-              </span>
-            </p>
-          </div>
         </div>
 
         {/* Message */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <MessageSquare className="w-4 h-4 inline mr-1" />
-            Additional Message (Optional)
+            Additional Message
           </label>
           <textarea
             name="message"
@@ -852,7 +880,7 @@ const response = await fetch('/api/sawamani', {
             onBlur={handleBlur}
             rows={3}
             className={`${getInputClasses('message')} resize-none`}
-            placeholder="Any special instructions or preferences..."
+            placeholder="Any special instructions or requests..."
           />
           {errors.message && touched.message && (
             <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -863,46 +891,72 @@ const response = await fetch('/api/sawamani', {
         </div>
 
         {/* Submit Button */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting || totalWeight !== MAX_TOTAL_WEIGHT}
-          className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
-            isSubmitting || totalWeight !== MAX_TOTAL_WEIGHT
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-          }`}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Placing Order...
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              Place Order ({totalWeight}kg)
-            </>
+        <div className="pt-4">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || totalWeight === 0 || totalWeight > MAX_TOTAL_WEIGHT}
+            className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
+              isSubmitting || totalWeight === 0 || totalWeight > MAX_TOTAL_WEIGHT
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing Order...
+              </>
+            ) : totalWeight === 0 ? (
+              <>
+                <Package className="w-5 h-5" />
+                Enter Weight to Continue
+              </>
+            ) : totalWeight > MAX_TOTAL_WEIGHT ? (
+              <>
+                <AlertCircle className="w-5 h-5" />
+                Exceeds Weight Limit
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                Place Order ({totalWeight.toFixed(1)}kg)
+              </>
+            )}
+          </button>
+          
+          {/* Order Summary */}
+          {totalWeight > 0 && totalWeight <= MAX_TOTAL_WEIGHT && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <h4 className="font-semibold text-green-800 mb-2">Order Summary:</h4>
+              <div className="text-sm text-green-700 space-y-1">
+                {Object.entries(weightInputs)
+                  .filter(([, weight]) => parseFloat(weight) > 0)
+                  .map(([packingId, weight]) => {
+                    const option = PACKING_OPTIONS.find(p => p.id === packingId);
+                    return (
+                      <div key={packingId} className="flex justify-between">
+                        <span>{option?.label}:</span>
+                        <span className="font-medium">{weight}kg</span>
+                      </div>
+                    );
+                  })}
+                <div className="border-t border-green-300 pt-2 mt-2 flex justify-between font-semibold">
+                  <span>Total Weight:</span>
+                  <span>{totalWeight.toFixed(1)}kg</span>
+                </div>
+              </div>
+            </div>
           )}
-        </button>
-
-        {/* Submit button helper text */}
-        {totalWeight !== MAX_TOTAL_WEIGHT && (
-          <p className="text-center text-sm text-gray-500 -mt-2">
-            {totalWeight === 0 
-              ? 'Please select packing options to continue'
-              : `Add ${(MAX_TOTAL_WEIGHT - totalWeight).toFixed(1)}kg more to place order`
-            }
-          </p>
-        )}
+        </div>
       </div>
     </>
   );
 
+  // Return the form based on whether it's a modal or standalone
   if (isModal) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             {formContent}
           </div>
@@ -914,9 +968,9 @@ const response = await fetch('/api/sawamani', {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
      
-      <div className="pt-20 pb-16">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-orange-100">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg">
+          <div className="p-6 md:p-8">
             {formContent}
           </div>
         </div>
@@ -924,4 +978,3 @@ const response = await fetch('/api/sawamani', {
     </div>
   );
 };
-export default SawamaniForm;
