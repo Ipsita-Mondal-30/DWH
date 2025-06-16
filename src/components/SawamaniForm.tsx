@@ -631,67 +631,7 @@ packingBreakdown: Object.entries(weightInputs)
           )}
         </div>
 
-        {/* Item Type and Variant */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Package className="w-4 h-4 inline mr-1" />
-              Item Type *
-            </label>
-            <select
-              name="itemType"
-              value={formData.itemType}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              required
-              disabled={!!preSelectedProduct}
-              className={`${getInputClasses('itemType')} ${preSelectedProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            >
-              <option value="">Select item type</option>
-              {Object.entries(ITEM_CONFIG).map(([key, config]) => (
-                <option key={key} value={key}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-            {errors.itemType && touched.itemType && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.itemType}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Heart className="w-4 h-4 inline mr-1" />
-              Variant *
-            </label>
-            <select
-              name="itemVariant"
-              value={formData.itemVariant}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              required
-              disabled={!formData.itemType || !!preSelectedProduct}
-              className={`${getInputClasses('itemVariant')} ${preSelectedProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            >
-              <option value="">
-                {!formData.itemType ? 'Select item type first' : 'Select variant'}
-              </option>
-              {availableVariants.map((variant) => (
-                <option key={variant.value} value={variant.value}>
-                  {variant.label}
-                </option>
-              ))}
-            </select>
-            {errors.itemVariant && touched.itemVariant && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.itemVariant}
-              </p>
-            )}
-          </div>
-        </div>
+       
 
         {/* Delivery Date */}
         <div>
@@ -837,16 +777,8 @@ packingBreakdown: Object.entries(weightInputs)
                     )}
                     
                     {/* Equivalent Info for reference */}
-                    {hasValue && option.isWeightBased && (
-                      <div className="text-xs text-gray-500 text-center">
-                        ≈ {Math.ceil(currentWeight / option.weightPerBox)} units
-                      </div>
-                    )}
-                    {hasValue && !option.isWeightBased && (
-                      <div className="text-xs text-gray-500 text-center">
-                        ≈ {Math.ceil(currentWeight / option.weightPerBox)} pieces
-                      </div>
-                    )}
+                    {hasValue && option.isWeightBased}
+                    {hasValue && !option.isWeightBased }
                   </div>
                 </div>
               );
