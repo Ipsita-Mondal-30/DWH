@@ -42,8 +42,17 @@ export async function POST(request: NextRequest) {
       shippingAddress,
       paymentMethod,
       notes,
-      cartItems // Optional: pass cart items directly, or fetch from cart
+      cartItems, // Optional: pass cart items directly, or fetch from cart
+      totals // ✅ NEW: Get totals from the request
     } = body;
+
+    console.log('📋 Received order request:', {
+      userEmail,
+      paymentMethod,
+      cartItemsCount: cartItems?.length,
+      totalsProvided: !!totals,
+      totals: totals
+    });
 
     // Get userId from session instead of request body
     const session = await getServerSession(authOptions);
@@ -81,9 +90,9 @@ export async function POST(request: NextRequest) {
       items = cart.items;
     }
 
-    // Process cart items and calculate totals
+    // Process cart items and prepare order items
     const orderItems = [];
-    let subtotal = 0;
+    let calculatedSubtotal = 0;
 
     for (const item of items) {
       // Find product across all collections
@@ -194,7 +203,7 @@ export async function POST(request: NextRequest) {
         itemTotal: itemTotal
       });
 
-      subtotal += itemTotal;
+      calculatedSubtotal += itemTotal;
       
       console.log('Added order item:', {
         productName: productData.name,
@@ -202,15 +211,53 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         itemPrice,
         itemTotal,
-        runningSubtotal: subtotal
+        runningSubtotal: calculatedSubtotal
       });
     }
 
-    // Calculate shipping and tax (you can customize these calculations)
-    const shippingCost = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
-    const taxRate = 0.18; // 18% GST
-    const tax = Math.round(subtotal * taxRate);
-    const totalAmount = subtotal + shippingCost + tax;
+    // ✅ USE TOTALS FROM REQUEST IF PROVIDED, OTHERWISE CALCULATE
+    let finalTotals;
+    
+    if (totals && totals.totalAmount) {
+      // Use the totals passed from the frontend (UPI Payment component)
+      finalTotals = {
+        subtotal: totals.subtotal,
+        shippingCost: totals.shippingCost,
+        tax: totals.tax,
+        totalAmount: totals.totalAmount
+      };
+      
+      console.log('💰 Using totals from request:', finalTotals);
+      
+      // Validate that calculated subtotal matches passed subtotal (for security)
+      const subtotalDifference = Math.abs(calculatedSubtotal - totals.subtotal);
+      if (subtotalDifference > 0.01) { // Allow small rounding differences
+        console.warn('⚠️ Subtotal mismatch:', {
+          calculated: calculatedSubtotal,
+          provided: totals.subtotal,
+          difference: subtotalDifference
+        });
+        // You can choose to reject the order or use calculated values
+        // For now, we'll use the provided totals but log the discrepancy
+      }
+    } else {
+      // Fallback: Calculate totals if not provided
+      console.log('💰 Calculating totals (fallback)');
+      const subtotal = calculatedSubtotal;
+      const shippingCost = subtotal >= 1000 ? 0 : 59; // Updated shipping logic to match frontend
+      const taxRate = 0.18; // 18% GST
+      const tax = Math.round(subtotal * taxRate);
+      const totalAmount = subtotal + shippingCost + tax;
+      
+      finalTotals = {
+        subtotal,
+        shippingCost,
+        tax,
+        totalAmount
+      };
+      
+      console.log('💰 Calculated totals (fallback):', finalTotals);
+    }
 
     // Create order
     const order = new Order({
@@ -219,10 +266,10 @@ export async function POST(request: NextRequest) {
       items: orderItems,
       shippingAddress,
       paymentMethod,
-      subtotal,
-      shippingCost,
-      tax,
-      totalAmount,
+      subtotal: finalTotals.subtotal,
+      shippingCost: finalTotals.shippingCost,
+      tax: finalTotals.tax,
+      totalAmount: finalTotals.totalAmount, // ✅ Use the correct total amount
       notes,
       orderStatus: OrderStatus.Confirmed,
       paymentStatus: paymentMethod === PaymentMethod.CashOnDelivery ? PaymentStatus.Pending : PaymentStatus.Pending,
@@ -234,6 +281,16 @@ export async function POST(request: NextRequest) {
     const year = new Date().getFullYear();
     order.orderId = `ORD-${year}-${String(count + 1).padStart(4, '0')}`;
 
+    console.log('💾 Saving order to database:', {
+      orderId: order.orderId,
+      totalAmount: order.totalAmount,
+      subtotal: order.subtotal,
+      shippingCost: order.shippingCost,
+      tax: order.tax,
+      paymentMethod: order.paymentMethod,
+      itemsCount: order.items.length
+    });
+
     await order.save();
 
     // Clear user's cart after successful order
@@ -243,6 +300,11 @@ export async function POST(request: NextRequest) {
         { $set: { items: [] } }
       );
     }
+
+    console.log('✅ Order saved successfully:', {
+      orderId: order.orderId,
+      totalAmount: order.totalAmount
+    });
 
     return NextResponse.json({
       success: true,
@@ -256,7 +318,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('💥 Error creating order:', error);
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }

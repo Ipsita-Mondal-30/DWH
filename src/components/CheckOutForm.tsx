@@ -5,15 +5,24 @@ import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
 
+// Remove these duplicate interfaces from CheckoutForm.tsx:
+// export interface ShippingAddress { ... }
+// interface UPIPaymentData { ... }
+// interface OrderResult { ... }
+
+// And replace them with imports from shared types:
+// import { ShippingAddress, UPIPaymentData, OrderResult } from '@/types/checkout';
+
+// Or if you prefer to keep them inline, just make sure they match exactly:
 export interface ShippingAddress {
   fullName: string;
   phone: string;
   addressLine1: string;
-  addressLine2?: string;
+  addressLine2?: string; // Optional
   city: string;
   state: string;
   pincode: string;
-  landmark?: string;
+  landmark?: string; // Optional
 }
 
 interface UPIPaymentData {
@@ -27,6 +36,30 @@ interface UPIPaymentData {
   };
 }
 
+interface OrderResult {
+  _id: string;
+  orderId: string; 
+  userEmail: string;
+  shippingAddress: ShippingAddress;
+  paymentMethod: 'cash_on_delivery' | 'upi';
+  items: {
+    productId: string;
+    productName: string;
+    quantity: number;
+    selectedPricing: {
+      quantity: number;
+      unit: string;
+      price: number;
+    } | null;
+    itemTotal: number;
+  }[];
+  createdAt?: string;
+  totalAmount: number;
+  updatedAt?: string;
+  estimatedDelivery?: string;
+  orderStatus: string;
+}
+
 interface CheckoutFormProps {
   cartItems: CartItem[];
   totals: {
@@ -38,8 +71,11 @@ interface CheckoutFormProps {
   userEmail: string;
   userName: string;
   onBack: () => void;
-  onPaymentMethodSelect: (method: 'cod' | 'upi', data?: UPIPaymentData) => void;
+  // Make sure this signature matches exactly
+  onPaymentMethodSelect: (method: 'upi' | 'cod', data?: UPIPaymentData | undefined) => void;
 }
+
+// Rest of your CheckoutForm component remains the same...
 
 interface OrderResult {
   _id: string;
@@ -449,16 +485,6 @@ export default function CheckoutForm({
                 placeholder="Nearby landmark (Optional)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </div>
-
-            {/* Debug Info - Remove in production */}
-            <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">
-              <p><strong>Debug Info:</strong></p>
-              <p>Form Valid: {isFormValid ? 'Yes' : 'No'}</p>
-              <p>Payment Method: {paymentMethod || 'None'}</p>
-              <p>Email: {formData.email || 'Empty'}</p>
-              <p>Phone: {formData.phone || 'Empty'}</p>
-              <p>Address: {formData.addressLine1 || 'Empty'}</p>
             </div>
           </div>
         </div>

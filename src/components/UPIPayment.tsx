@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
@@ -63,20 +63,17 @@ export default function UPIPayment({
   const businessName = 'Delhi Wala Halwai'; // Replace with your business name
   const transactionNote = 'Order Payment from Website '; // Optional: Add transaction note
   
-  // Recalculate totals with correct shipping logic (same as CheckoutForm)
-  const calculatedTotals = useMemo(() => {
-    const subtotal = totals.subtotal;
-    const shippingCost = subtotal >= 1000 ? 0 : 59;
-    const tax = totals.tax;
-    const totalAmount = subtotal + shippingCost + tax;
-    
-    return {
-      subtotal,
-      shippingCost,
-      tax,
-      totalAmount
-    };
-  }, [totals.subtotal, totals.tax]);
+  // ✅ USE THE TOTALS PASSED FROM CHECKOUT FORM - DON'T RECALCULATE
+  const calculatedTotals = totals;
+
+  // Debug logging to verify totals are correct
+  useEffect(() => {
+    console.log('💰 UPI Payment Totals:', {
+      passedTotals: totals,
+      usingTotals: calculatedTotals,
+      userWillPay: calculatedTotals.totalAmount
+    });
+  }, [totals, calculatedTotals]);
 
   // Generate UPI payment URL
   const generateUPIUrl = useCallback(() => {
@@ -151,6 +148,8 @@ export default function UPIPayment({
           selectedPricing: item.selectedPricing,
           product: item.product
         })),
+        // ✅ INCLUDE THE CORRECT TOTALS FROM CHECKOUT FORM
+        totals: calculatedTotals,
         // Store UPI payment details in notes field
         notes: `UPI Payment - Transaction ID: ${transactionId}, Customer UPI ID: ${customerUpiId}, Amount: ₹${calculatedTotals.totalAmount.toFixed(2)}, Payment Date: ${new Date().toISOString()}`
       };
@@ -161,6 +160,7 @@ export default function UPIPayment({
         shippingAddress: orderData.shippingAddress,
         paymentMethod: orderData.paymentMethod,
         cartItemsCount: orderData.cartItems.length,
+        totalsBeingSent: orderData.totals,
         cartItems: orderData.cartItems.map(item => ({
           productId: item.productId,
           productName: item.product?.name,
