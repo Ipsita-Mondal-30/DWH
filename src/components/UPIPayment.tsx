@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect,useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
 import QRCode from 'qrcode';
+import axios from 'axios';
 
 interface UPIPaymentProps {
   cartItems: CartItem[];
@@ -14,26 +15,73 @@ interface UPIPaymentProps {
     tax: number;
     totalAmount: number;
   };
+  userEmail: string;
+  shippingAddress: {
+    fullName: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    pincode: string;
+    landmark?: string;
+  };
   onBack: () => void;
   onPaymentSuccess: () => void;
 }
 
-export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess }: UPIPaymentProps) {
+export default function UPIPayment({ 
+  cartItems, 
+  totals, 
+  userEmail, 
+  shippingAddress, 
+  onBack, 
+  onPaymentSuccess 
+}: UPIPaymentProps) {
   const [paymentStep, setPaymentStep] = useState<'payment' | 'confirmation' | 'processing' | 'success'>('payment');
   const [customerUpiId, setCustomerUpiId] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+
+  // Debug props on component mount
+  useEffect(() => {
+    console.log('🔍 UPI Payment Component Props:', {
+      userEmail,
+      shippingAddress,
+      cartItemsCount: cartItems?.length,
+      totals,
+      cartItems: cartItems?.map(item => ({
+        productId: item.product?._id,
+        productName: item.product?.name,
+        quantity: item.quantity
+      }))
+    });
+  }, [userEmail, shippingAddress, cartItems, totals]);
 
   // ⚠️ CHANGE THESE VALUES TO YOUR BUSINESS DETAILS
   const businessUpiId = 'q305666833@ybl'; // Replace with your actual UPI ID
   const businessName = 'Delhi Wala Halwai'; // Replace with your business name
   const transactionNote = 'Order Payment from Website '; // Optional: Add transaction note
   
-  // Generate UPI payment URL
+  // Recalculate totals with correct shipping logic (same as CheckoutForm)
+  const calculatedTotals = useMemo(() => {
+    const subtotal = totals.subtotal;
+    const shippingCost = subtotal >= 1000 ? 0 : 59;
+    const tax = totals.tax;
+    const totalAmount = subtotal + shippingCost + tax;
+    
+    return {
+      subtotal,
+      shippingCost,
+      tax,
+      totalAmount
+    };
+  }, [totals.subtotal, totals.tax]);
 
+  // Generate UPI payment URL
   const generateUPIUrl = useCallback(() => {
-    return `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${totals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-  }, [businessUpiId, businessName, totals.totalAmount, transactionNote]);
+    return `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${calculatedTotals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+  }, [businessUpiId, businessName, calculatedTotals.totalAmount, transactionNote]);
   
 
   // Generate QR Code
@@ -64,7 +112,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
   };
 
   const copyAmount = () => {
-    navigator.clipboard.writeText(totals.totalAmount.toFixed(2));
+    navigator.clipboard.writeText(calculatedTotals.totalAmount.toFixed(2));
     alert('Amount copied to clipboard!');
   };
 
@@ -82,18 +130,111 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
     setPaymentStep('confirmation');
   };
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (!transactionId.trim()) {
       alert('Please enter the transaction ID');
       return;
     }
     setPaymentStep('processing');
 
-    // Simulate order processing
-    setTimeout(() => {
-      setPaymentStep('success');
-      onPaymentSuccess();
-    }, 2000);
+    try {
+      console.log('🚀 Starting UPI order placement...');
+      
+      // Prepare order data with detailed logging
+      const orderData = {
+        userEmail: userEmail,
+        shippingAddress: shippingAddress,
+        paymentMethod: 'upi',
+        cartItems: cartItems.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          selectedPricing: item.selectedPricing,
+          product: item.product
+        })),
+        // Store UPI payment details in notes field
+        notes: `UPI Payment - Transaction ID: ${transactionId}, Customer UPI ID: ${customerUpiId}, Amount: ₹${calculatedTotals.totalAmount.toFixed(2)}, Payment Date: ${new Date().toISOString()}`
+      };
+
+      console.log('📦 Order Data Being Sent:', {
+        userEmail: orderData.userEmail,
+        shippingAddressExists: !!orderData.shippingAddress,
+        shippingAddress: orderData.shippingAddress,
+        paymentMethod: orderData.paymentMethod,
+        cartItemsCount: orderData.cartItems.length,
+        cartItems: orderData.cartItems.map(item => ({
+          productId: item.productId,
+          productName: item.product?.name,
+          quantity: item.quantity
+        })),
+        notesLength: orderData.notes.length,
+        notes: orderData.notes
+      });
+
+      console.log('🌐 Making API request to /api/orders...');
+      
+      const response = await axios.post('/api/orders', orderData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000, // 30 second timeout
+      });
+
+      console.log('✅ API Response Status:', response.status);
+      console.log('📄 API Response Data:', response.data);
+
+      if (response.status === 200 || response.status === 201) {
+        if (response.data.success) {
+          console.log('🎉 Order placed successfully!', {
+            orderId: response.data.order?.orderId,
+            totalAmount: response.data.order?.totalAmount
+          });
+          
+          setPaymentStep('success');
+          // Store order result for display
+          localStorage.setItem('lastOrderResult', JSON.stringify(response.data.order));
+          onPaymentSuccess();
+        } else {
+          console.error('❌ Order API returned success: false', response.data);
+          alert('Failed to place order: ' + (response.data.error || 'API returned success: false'));
+          setPaymentStep('confirmation');
+        }
+      } else {
+        console.error('❌ Unexpected response status:', response.status);
+        alert('Failed to place order: Unexpected response status ' + response.status);
+        setPaymentStep('confirmation');
+      }
+
+    } catch (error) {
+      console.error('💥 Error placing UPI order:', error);
+      
+      if (axios.isAxiosError(error)) {
+        console.error('🔍 Axios Error Details:', {
+          message: error.message,
+          code: error.code,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+          requestData: error.config?.data
+        });
+        
+        if (error.response?.data?.error) {
+          alert('Failed to place order: ' + error.response.data.error);
+        } else if (error.response?.status === 401) {
+          alert('Authentication failed. Please sign in again.');
+        } else if (error.response?.status === 400) {
+          alert('Invalid order data. Please check your details and try again.');
+        } else if (error.code === 'ECONNABORTED') {
+          alert('Request timed out. Please check your connection and try again.');
+        } else {
+          alert('Failed to place order: ' + (error.message || 'Network error'));
+        }
+      } else {
+        console.error('🔍 Non-Axios Error:', error);
+        alert('Failed to place order: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      }
+      
+      setPaymentStep('confirmation'); // Go back to confirmation step
+    }
   };
 
   const resetPayment = () => {
@@ -195,7 +336,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                         Copy
                       </button>
                     </div>
-                    <p className="font-mono text-xl font-bold text-green-600">₹{totals.totalAmount.toFixed(2)}</p>
+                    <p className="font-mono text-xl font-bold text-green-600">₹{calculatedTotals.totalAmount.toFixed(2)}</p>
                   </div>
 
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -226,7 +367,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                 <h4 className="font-medium text-blue-800 mb-2">Payment Instructions</h4>
                 <ol className="text-sm text-blue-700 space-y-1">
                   <li>1. Scan QR code or click &apos;Open in UPI App&apos;</li>
-                  <li>2. Verify amount ₹{totals.totalAmount.toFixed(2)} and complete payment</li>
+                  <li>2. Verify amount ₹{calculatedTotals.totalAmount.toFixed(2)} and complete payment</li>
                   <li>3. Enter your UPI ID above for verification</li>
                   <li>4. Click &apos;I have made the payment&apos; below</li>
                   <li>5. Enter transaction ID to confirm order</li>
@@ -258,7 +399,7 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount Paid:</span>
-                    <span className="font-semibold">₹{totals.totalAmount.toFixed(2)}</span>
+                    <span className="font-semibold">₹{calculatedTotals.totalAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Your UPI ID:</span>
@@ -378,22 +519,32 @@ export default function UPIPayment({ cartItems, totals, onBack, onPaymentSuccess
           <div className="space-y-3 text-sm border-t pt-4">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>₹{totals.subtotal.toFixed(2)}</span>
+              <span>₹{calculatedTotals.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span className={totals.shippingCost === 0 ? 'text-green-600' : ''}>
-                {totals.shippingCost === 0 ? 'FREE' : `₹${totals.shippingCost}`}
+              <span className={calculatedTotals.shippingCost === 0 ? 'text-green-600' : ''}>
+                {calculatedTotals.shippingCost === 0 ? 'FREE' : `₹${calculatedTotals.shippingCost}`}
               </span>
             </div>
+            {calculatedTotals.subtotal >= 1000 && calculatedTotals.shippingCost === 0 && (
+              <div className="text-xs text-green-600">
+                🎉 You saved ₹59 on shipping!
+              </div>
+            )}
+            {calculatedTotals.subtotal < 1000 && (
+              <div className="text-xs text-blue-600">
+                Order below ₹1000, shipping charges apply
+              </div>
+            )}
             <div className="flex justify-between">
               <span>Tax (GST 18%)</span>
-              <span>₹{totals.tax.toFixed(2)}</span>
+              <span>₹{calculatedTotals.tax.toFixed(2)}</span>
             </div>
             <div className="border-t pt-3">
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>₹{totals.totalAmount.toFixed(2)}</span>
+                <span>₹{calculatedTotals.totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import CartSummary from '@/components/CartSummary';
 import CheckoutForm from '@/components/CheckOutForm';
-import UPIPayment from '@/components/UPIPayment';
+// import UPIPayment from '@/components/UPIPayment';
 
 export interface ShippingAddress {
   fullName: string;
@@ -57,9 +57,9 @@ export default function CheckoutPage() {
     // COD handling is done in CheckoutForm component
   };
 
-  const handleBackToForm = () => {
-    setStep('form');
-  };
+  // const handleBackToForm = () => {
+  //   setStep('form');
+  // };
 
   if (status === 'loading') {
     return (
@@ -116,14 +116,14 @@ export default function CheckoutPage() {
           />
         )}
         
-        {step === 'upi' && (
+        {/* {step === 'upi' && (
           <UPIPayment 
             cartItems={cartItems}
             totals={totals}
             onBack={handleBackToForm}
             onPaymentSuccess={() => router.push('/my-orders')}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

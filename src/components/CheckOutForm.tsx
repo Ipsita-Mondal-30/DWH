@@ -1,10 +1,31 @@
 'use client';
 
-import { useState,  useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
-import { ShippingAddress } from './CheckoutPage';
 import Image from 'next/image';
+
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmark?: string;
+}
+
+interface UPIPaymentData {
+  userEmail: string;
+  shippingAddress: ShippingAddress;
+  totals: {
+    subtotal: number;
+    shippingCost: number;
+    tax: number;
+    totalAmount: number;
+  };
+}
 
 interface CheckoutFormProps {
   cartItems: CartItem[];
@@ -17,7 +38,31 @@ interface CheckoutFormProps {
   userEmail: string;
   userName: string;
   onBack: () => void;
-  onPaymentMethodSelect: (method: 'cod' | 'upi') => void;
+  onPaymentMethodSelect: (method: 'cod' | 'upi', data?: UPIPaymentData) => void;
+}
+
+interface OrderResult {
+  _id: string;
+  orderId: string; 
+  userEmail: string;
+  shippingAddress: ShippingAddress;
+  paymentMethod: 'cash_on_delivery' | 'upi';
+  items: {
+    productId: string;
+    productName: string;
+    quantity: number;
+    selectedPricing: {
+      quantity: number;
+      unit: string;
+      price: number;
+    } | null;
+    itemTotal: number;
+  }[];
+  createdAt?: string;
+  totalAmount: number;
+  updatedAt?: string;
+  estimatedDelivery?: string;
+  orderStatus: string;
 }
 
 export default function CheckoutForm({ 
@@ -39,39 +84,11 @@ export default function CheckoutForm({
     pincode: '',
     landmark: ''
   });
-  interface OrderResult {
-    _id: string;
-    orderId: string; 
-    userEmail: string;
-    shippingAddress: {
-      fullName: string;
-      phone: string;
-      addressLine1: string;
-      addressLine2?: string;
-      city: string;
-      state: string;
-      pincode: string;
-      landmark?: string;
-    };
-    paymentMethod: 'cash_on_delivery' | 'upi';
-    cartItems: {
-      productId: string;
-      quantity: number;
-      selectedPricing: number; 
-      product: number;
-    }[];
-    createdAt?: string;
-    totalAmount: number;
-    updatedAt?: string;
-    estimatedDelivery?: string;
-  }
-  
 
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | ''>('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Calculate totals with shipping logic
@@ -105,50 +122,125 @@ export default function CheckoutForm({
     }
   };
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    // Required field validation
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
+    if (!formData.city.trim()) newErrors.city = 'City is required';
+    if (!formData.state.trim()) newErrors.state = 'State is required';
+    if (!formData.pincode.trim()) newErrors.pincode = 'Pincode is required';
+
+    // Email validation
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Phone validation
+    if (formData.phone && !/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Pincode validation
+    if (formData.pincode && !/^\d{6}$/.test(formData.pincode)) {
+      newErrors.pincode = 'Please enter a valid 6-digit pincode';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handlePaymentMethodChange = (method: 'cod' | 'upi') => {
+    console.log('🎯 Payment method selected:', method);
+    console.log('📋 Current form data:', formData);
+    
     setPaymentMethod(method);
+    
     if (method === 'upi') {
-      // Only call the parent handler if method is UPI
-      onPaymentMethodSelect('upi');
+      // Validate form before proceeding to UPI
+      if (!validateForm()) {
+        console.log('❌ Form validation failed');
+        alert('Please fill in all required fields correctly before proceeding to UPI payment');
+        setPaymentMethod(''); // Reset payment method
+        return;
+      }
+      
+      console.log('✅ Form validation passed, preparing UPI data');
+      
+      // Prepare shipping address without email
+      const shippingAddress: ShippingAddress = {
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        addressLine1: formData.addressLine1.trim(),
+        addressLine2: formData.addressLine2?.trim() || '',
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        pincode: formData.pincode.trim(),
+        landmark: formData.landmark?.trim() || ''
+      };
+      
+      console.log('📦 Prepared shipping address:', shippingAddress);
+      
+      const upiData: UPIPaymentData = {
+        userEmail: formData.email.trim(),
+        shippingAddress,
+        totals: calculatedTotals
+      };
+      
+      console.log('🚀 Final UPI data being sent to parent:', upiData);
+      
+      // Pass the form data to parent component for UPI payment
+      onPaymentMethodSelect('upi', upiData);
+    } else {
+      // For COD, just pass the method without data
+      onPaymentMethodSelect('cod');
     }
   };
 
-
   const isFormValid = useMemo(() => {
-    // Check required fields without calling validateForm (to prevent infinite loop)
     const requiredFields = ['fullName', 'email', 'phone', 'addressLine1', 'city', 'state', 'pincode'];
     const hasAllRequiredFields = requiredFields.every(field => 
-      formData[field as keyof typeof formData].trim() !== ''
+      formData[field as keyof typeof formData]?.trim() ?? '' !== ''
     );
     
-    return hasAllRequiredFields && paymentMethod;
-  }, [formData, paymentMethod]);
+    // Check for validation errors
+    const hasNoErrors = Object.keys(errors).length === 0;
+    
+    return hasAllRequiredFields && hasNoErrors && paymentMethod;
+  }, [formData, errors, paymentMethod]);
 
   const placeOrder = async () => {
-    if (!isFormValid || !paymentMethod) return;
+    if (!validateForm() || !paymentMethod) return;
 
     setIsPlacingOrder(true);
 
     try {
+      // Prepare shipping address without email
+      const shippingAddress: ShippingAddress = {
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        addressLine1: formData.addressLine1.trim(),
+        addressLine2: formData.addressLine2?.trim() || '',
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        pincode: formData.pincode.trim(),
+        landmark: formData.landmark?.trim() || ''
+      };
+
       const orderData = {
-        userEmail: formData.email,
-        shippingAddress: {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          addressLine1: formData.addressLine1,
-          addressLine2: formData.addressLine2,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-          landmark: formData.landmark
-        },
+        userEmail: formData.email.trim(),
+        shippingAddress: shippingAddress,
         paymentMethod: paymentMethod === 'cod' ? 'cash_on_delivery' : 'upi',
         cartItems: cartItems.map(item => ({
           productId: item.product._id,
           quantity: item.quantity,
           selectedPricing: item.selectedPricing,
           product: item.product // Include product details for the order
-        }))
+        })),
+        notes: '' // Add notes field if needed
       };
 
       const response = await fetch('/api/orders', {
@@ -165,12 +257,11 @@ export default function CheckoutForm({
         setOrderResult(result.order);
         setShowSuccessModal(true);
       } else {
-        console.log('line 169 running');
+        console.error('Order placement failed:', result);
         alert('Failed to place order: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
-
-      console.error('Error placing order: line 174', error);
+      console.error('Error placing order:', error);
       alert('Failed to place order. Please try again.');
     } finally {
       setIsPlacingOrder(false);
@@ -359,6 +450,16 @@ export default function CheckoutForm({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+
+            {/* Debug Info - Remove in production */}
+            <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">
+              <p><strong>Debug Info:</strong></p>
+              <p>Form Valid: {isFormValid ? 'Yes' : 'No'}</p>
+              <p>Payment Method: {paymentMethod || 'None'}</p>
+              <p>Email: {formData.email || 'Empty'}</p>
+              <p>Phone: {formData.phone || 'Empty'}</p>
+              <p>Address: {formData.addressLine1 || 'Empty'}</p>
+            </div>
           </div>
         </div>
 
@@ -510,7 +611,7 @@ export default function CheckoutForm({
             
             {paymentMethod === 'upi' && (
               <p className="text-sm text-blue-600 mt-2 text-center">
-                Click to proceed to UPI payment →
+                UPI payment selected - proceeding to payment page...
               </p>
             )}
 
