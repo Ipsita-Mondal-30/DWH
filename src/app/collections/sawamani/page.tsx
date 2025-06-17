@@ -97,7 +97,7 @@ const PRODUCTS: Product[] = [
     label: 'Moti Boondi Ladoo', 
     price: 300000, 
     mainPrice: 1500000,
-    image: '/boondi-ladoo.jpg',
+    image: '/moti-boondi-ladoo.jpg',
     description: 'Classic ladoo made with large boondi pearls and dry fruits',
     rating: 4.7
   },
