@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Heart, Phone, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X,  Scale,  } from 'lucide-react';
-
+import Link from 'next/link';
 // Type definitions
 interface PackingOption {
   id: string;
@@ -67,7 +67,6 @@ interface SawamaniFormProps {
 type SubmitStatus = 'success' | 'validation_error' | 'server_error' | 'network_error' | null;
 type FieldName = keyof SawamaniFormData;
 
-// Product configuration
 const ITEM_CONFIG = {
   laddoo: {
     label: 'Laddoo',
@@ -86,6 +85,14 @@ const ITEM_CONFIG = {
       { value: 'moong', label: 'Moong Dal Barfi' },
       { value: 'mawa', label: 'Mawa Barfi' },
       { value: 'dilkhushal', label: 'Dilkhushal Barfi' }
+    ]
+  },
+  peda: {
+    label: 'Peda',
+    variants: [
+      { value: 'plain', label: 'Plain Peda' },
+      { value: 'kesar', label: 'Kesar Peda' },
+      { value: 'chocolate', label: 'Chocolate Peda' }
     ]
   },
   other: {
@@ -284,19 +291,18 @@ const totalWeight = useMemo(() => {
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
     
-    // Validate regular fields
-    (['name', 'phoneNumber', 'address', 'itemType', 'itemVariant', 'date', 'message'] as const).forEach(field => {
+    // Validate regular fields (excluding itemType and itemVariant since they're not in UI)
+    (['name', 'phoneNumber', 'address', 'date', 'message'] as const).forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
-
+  
     // Validate packing selections
     const packingError = validateField('packingSelections', formData.packingSelections);
     if (packingError) newErrors.packingSelections = packingError;
-
+  
     return newErrors;
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     const fieldName = name as FieldName;
@@ -339,12 +345,12 @@ const totalWeight = useMemo(() => {
     e.preventDefault();
     
     // Mark all fields as touched
-    const allTouched: TouchedFields = {};
-    (['name', 'phoneNumber', 'address', 'itemType', 'itemVariant', 'date', 'packingSelections', 'message'] as const).forEach(field => {
-      allTouched[field] = true;
-    });
-    setTouched(allTouched);
-
+   // Mark all fields as touched (excluding itemType and itemVariant since they're not in UI)
+const allTouched: TouchedFields = {};
+(['name', 'phoneNumber', 'address', 'date', 'packingSelections', 'message'] as const).forEach(field => {
+  allTouched[field] = true;
+});
+setTouched(allTouched);
     // Validate form
     const formErrors = validateForm();
     setErrors(formErrors);
@@ -419,12 +425,17 @@ packingBreakdown: Object.entries(weightInputs)
         setErrors({});
         setTouched({});
         
-        // Call success callback if provided
-        if (onOrderSuccess) {
-          setTimeout(() => {
-            onOrderSuccess();
-          }, 8000);
-        }
+       // Store user phone for order history access
+       if (typeof window !== 'undefined') {
+        localStorage.setItem('userPhone', formData.phoneNumber.trim());
+      }
+      
+      // Call success callback if provided
+      if (onOrderSuccess) {
+        setTimeout(() => {
+          onOrderSuccess();
+        }, 8000);
+      }
       } else {
         setSubmitStatus('server_error');
         console.error('Submission error:', result.message);
@@ -514,6 +525,8 @@ packingBreakdown: Object.entries(weightInputs)
         <h3 className="text-2xl font-bold text-gray-800 mb-2">🎉 Thank you for placing your order!</h3>
       </div>
       <div className="space-y-3 text-gray-600">
+    
+
         <p className="flex items-center justify-center gap-2">
           <Phone className="w-4 h-4" />
           📞 We will contact you soon.
@@ -618,7 +631,7 @@ packingBreakdown: Object.entries(weightInputs)
             value={formData.address}
             onChange={handleInputChange}
             onBlur={handleBlur}
-            required
+          
             rows={3}
             className={`${getInputClasses('address')} resize-none`}
             placeholder="Enter complete delivery address with landmarks"
