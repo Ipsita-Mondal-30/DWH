@@ -310,7 +310,7 @@ export default function SawamaniCollectionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Fetch products from LatestSweet source
-  const { data: latestSweetProducts = [], isLoading, error } = useProducts();
+  const { data: latestSweetProducts = [], isLoading} = useProducts();
 
   // Function to create a normalized name for matching
   const normalizeProductName = (name: string): string => {

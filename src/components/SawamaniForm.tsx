@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Heart, Phone, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X,  Scale,  } from 'lucide-react';
-import Link from 'next/link';
+import {  Phone, MapPin, Send, User, Package, Calendar, MessageSquare, CheckCircle, AlertCircle, Loader2, ShoppingBag, X,  Scale,  } from 'lucide-react';
+
 // Type definitions
 interface PackingOption {
   id: string;
