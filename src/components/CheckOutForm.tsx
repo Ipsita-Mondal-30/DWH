@@ -51,7 +51,11 @@ interface OrderResult {
     productId: string;
     productName: string;
     quantity: number;
-    selectedPricing: any; 
+    selectedPricing: {
+      quantity: number;
+      unit: string;
+      price: number;
+    } | null;
     itemTotal: number;
   }[];
   createdAt?: string;

@@ -116,14 +116,14 @@ export default function CheckoutPage() {
           />
         )}
         
-        {step === 'upi' && (
+        {/* {step === 'upi' && (
           <UPIPayment 
             cartItems={cartItems}
             totals={totals}
             onBack={handleBackToForm}
             onPaymentSuccess={() => router.push('/my-orders')}
           />
-        )}
+        )} */}
       </div>
     </div>
   );
