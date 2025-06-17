@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X,  Star, Package } from 'lucide-react';
 import Image from 'next/image';
 import { SawamaniForm } from '@/components/SawamaniForm'; 
 import Navbar from "@/components/Navbar";
+import { useProducts } from "../../../hooks/useProducts"; // Import the same hook
 
 // Product interface
 interface Product {
@@ -96,7 +97,7 @@ const PRODUCTS: Product[] = [
     label: 'Moti Boondi Ladoo', 
     price: 300000, 
     mainPrice: 1500000,
-    image: '/boondi-ladoo.jpg',
+    image: '/moti-boondi-ladoo.jpg',
     description: 'Classic ladoo made with large boondi pearls and dry fruits',
     rating: 4.7
   },
@@ -106,7 +107,7 @@ const PRODUCTS: Product[] = [
     label: 'Barik Boondi Ladoo', 
     price: 30000, 
     mainPrice: 1500000,
-    image: '/barik-boondi.jpg',
+    image: '/baarik-boondi.png',
     description: 'Soft and melt-in-mouth ladoo with fine boondi texture',
     rating: 4.6
   },
@@ -307,6 +308,39 @@ const SawamaniFormWrapper: React.FC<{ product: Product; onClose: () => void }> =
 export default function SawamaniCollectionPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Fetch products from LatestSweet source
+  const { data: latestSweetProducts = [], isLoading} = useProducts();
+
+  // Function to create a normalized name for matching
+  const normalizeProductName = (name: string): string => {
+    return name.toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  };
+
+  // Memoized products with updated images from LatestSweet
+  const productsWithUpdatedImages = useMemo(() => {
+    return PRODUCTS.map(sawamaniProduct => {
+      // Find matching product in LatestSweet by name
+      const matchingLatestProduct = latestSweetProducts.find((latestProduct: { name: string; image?: string }) => {
+        const sawamaniNormalized = normalizeProductName(sawamaniProduct.label);
+        const latestNormalized = normalizeProductName(latestProduct.name);
+        return sawamaniNormalized === latestNormalized;
+      });
+
+      // If match found, use the image from LatestSweet
+      if (matchingLatestProduct && matchingLatestProduct.image) {
+        return {
+          ...sawamaniProduct,
+          image: matchingLatestProduct.image
+        };
+      }
+
+      // Otherwise keep the original image
+      return sawamaniProduct;
+    });
+  }, [latestSweetProducts]);
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
@@ -317,6 +351,21 @@ export default function SawamaniCollectionPage() {
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white mt-16 py-12">
+        <Navbar />
+        <div className="flex justify-center items-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white mt-16 py-12">
@@ -335,14 +384,14 @@ export default function SawamaniCollectionPage() {
           {/* Products Count */}
           <div className="mb-6">
             <p className="text-gray-600">
-              Showing <span className="font-semibold">{PRODUCTS.length}</span> products
+              Showing <span className="font-semibold">{productsWithUpdatedImages.length}</span> products
             </p>
           </div>
 
           {/* Products Grid */}
           <div className="flex justify-center">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-8xl">
-              {PRODUCTS.map((product, index) => (
+              {productsWithUpdatedImages.map((product, index) => (
                 <ProductCard
                   key={`${product.type}-${product.variant}-${index}`}
                   product={product}
