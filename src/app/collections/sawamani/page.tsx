@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X,  Star, Package } from 'lucide-react';
 import Image from 'next/image';
 import { SawamaniForm } from '@/components/SawamaniForm'; 
@@ -20,7 +20,7 @@ interface Product {
 }
 
 // Static product list
-const STATIC_PRODUCTS: Product[] = [
+const PRODUCTS: Product[] = [
   { 
     type: 'barfi', 
     variant: 'mawa', 
@@ -107,7 +107,7 @@ const STATIC_PRODUCTS: Product[] = [
     label: 'Barik Boondi Ladoo', 
     price: 30000, 
     mainPrice: 1500000,
-    image: '/barik-boondi.jpg',
+    image: '/baarik-boondi.png',
     description: 'Soft and melt-in-mouth ladoo with fine boondi texture',
     rating: 4.6
   },
@@ -308,63 +308,39 @@ const SawamaniFormWrapper: React.FC<{ product: Product; onClose: () => void }> =
 export default function SawamaniCollectionPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>(STATIC_PRODUCTS);
   
-  // Get dynamic products from LatestSweet component
-  const { data: latestSweetItems = [], isLoading } = useProducts();
+  // Fetch products from LatestSweet source
+  const { data: latestSweetProducts = [], isLoading, error } = useProducts();
 
-  // Function to find matching product by name similarity
-  const findMatchingLatestSweetImage = (sawamaniProduct: Product) => {
-    if (!latestSweetItems.length) return null;
-
-    // Create variations of the sawamani product name for matching
-    const sawamaniName = sawamaniProduct.label.toLowerCase();
-    const sawamaniWords = sawamaniName.split(' ');
-    
-    // Find matching product from LatestSweet
-    const matchingProduct = latestSweetItems.find((latestItem: any) => {
-      const latestName = latestItem.name.toLowerCase();
-      
-      // Direct name match
-      if (latestName === sawamaniName) return true;
-      
-      // Check if all words from sawamani product exist in latest product name
-      const latestWords = latestName.split(' ');
-      const allWordsMatch: boolean = sawamaniWords.every((word: string) => 
-        latestWords.some((latestWord: string) => 
-          latestWord.includes(word) || word.includes(latestWord)
-        )
-      );
-      
-      if (allWordsMatch) return true;
-      
-      // Check for common sweet type matches
-      if (sawamaniName.includes('besan barfi') && latestName.includes('besan barfi')) {
-        return sawamaniWords.some(word => latestWords.includes(word));
-      }
-      if (sawamaniName.includes('ladoo') && latestName.includes('ladoo')) {
-        return sawamaniWords.some(word => latestWords.includes(word));
-      }
-      if (sawamaniName.includes('peda') && latestName.includes('peda')) {
-        return sawamaniWords.some(word => latestWords.includes(word));
-      }
-      
-      return false;
-    });
-
-    return matchingProduct?.image || null;
+  // Function to create a normalized name for matching
+  const normalizeProductName = (name: string): string => {
+    return name.toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/[^a-z0-9]/g, '');
   };
 
-  // Update products with matching images from LatestSweet
-  useEffect(() => {
-    if (latestSweetItems.length > 0) {
-      const updatedProducts = STATIC_PRODUCTS.map(product => {
-        const matchingImage = findMatchingLatestSweetImage(product);
-        return matchingImage ? { ...product, image: matchingImage } : product;
+  // Memoized products with updated images from LatestSweet
+  const productsWithUpdatedImages = useMemo(() => {
+    return PRODUCTS.map(sawamaniProduct => {
+      // Find matching product in LatestSweet by name
+      const matchingLatestProduct = latestSweetProducts.find((latestProduct: { name: string; image?: string }) => {
+        const sawamaniNormalized = normalizeProductName(sawamaniProduct.label);
+        const latestNormalized = normalizeProductName(latestProduct.name);
+        return sawamaniNormalized === latestNormalized;
       });
-      setProducts(updatedProducts);
-    }
-  }, [latestSweetItems]);
+
+      // If match found, use the image from LatestSweet
+      if (matchingLatestProduct && matchingLatestProduct.image) {
+        return {
+          ...sawamaniProduct,
+          image: matchingLatestProduct.image
+        };
+      }
+
+      // Otherwise keep the original image
+      return sawamaniProduct;
+    });
+  }, [latestSweetProducts]);
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
@@ -376,10 +352,10 @@ export default function SawamaniCollectionPage() {
     setSelectedProduct(null);
   };
 
-  // Show loading state while fetching latest sweet items
+  // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white mt-16 py-12">
         <Navbar />
         <div className="flex justify-center items-center py-16">
           <div className="text-center">
@@ -408,14 +384,14 @@ export default function SawamaniCollectionPage() {
           {/* Products Count */}
           <div className="mb-6">
             <p className="text-gray-600">
-              Showing <span className="font-semibold">{products.length}</span> products
+              Showing <span className="font-semibold">{productsWithUpdatedImages.length}</span> products
             </p>
           </div>
 
           {/* Products Grid */}
           <div className="flex justify-center">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-8xl">
-              {products.map((product, index) => (
+              {productsWithUpdatedImages.map((product, index) => (
                 <ProductCard
                   key={`${product.type}-${product.variant}-${index}`}
                   product={product}
