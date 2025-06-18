@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Optional filters
+    const name = searchParams.get('name');
     const phoneNumber = searchParams.get('phoneNumber');
     const itemType = searchParams.get('itemType');
     const startDate = searchParams.get('startDate');
@@ -21,6 +22,10 @@ export async function GET(request: NextRequest) {
 
     // ✅ Replaced `any` with safe dynamic type
     const filter: Record<string, unknown> = {};
+    
+    if (name) {
+      filter.name = { $regex: name, $options: 'i' };
+    }
     
     if (phoneNumber) {
       filter.phoneNumber = { $regex: phoneNumber, $options: 'i' };
@@ -74,7 +79,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST request - Create new Sawamani order
 // POST request - Create new Sawamani order
 export async function POST(request: NextRequest) {
   try {
