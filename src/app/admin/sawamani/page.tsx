@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock, Search } from 'lucide-react';
 
 // Type definitions
 interface SawamaniOrder {
@@ -35,6 +35,14 @@ interface OrdersResponse {
   pagination: Pagination;
 }
 
+interface FilterState {
+  name: string;
+  phoneNumber: string;
+  itemType: string;
+  startDate: string;
+  endDate: string;
+}
+
 export default function SawamaniAdminPage(): React.JSX.Element {
   const [orders, setOrders] = useState<SawamaniOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,11 +50,22 @@ export default function SawamaniAdminPage(): React.JSX.Element {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalOrders, setTotalOrders] = useState<number>(0);
   
-  // Filter states
-  const [phoneFilter, setPhoneFilter] = useState<string>('');
-  const [itemTypeFilter, setItemTypeFilter] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  // Separate filter states for UI and API
+  const [filterInputs, setFilterInputs] = useState<FilterState>({
+    name: '',
+    phoneNumber: '',
+    itemType: '',
+    startDate: '',
+    endDate: ''
+  });
+  
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    name: '',
+    phoneNumber: '',
+    itemType: '',
+    startDate: '',
+    endDate: ''
+  });
 
   // Get unique item types for filter dropdown
   const [itemTypes, setItemTypes] = useState<string[]>([]);
@@ -90,6 +109,7 @@ export default function SawamaniAdminPage(): React.JSX.Element {
     
     return 'Not specified';
   };
+
   const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
@@ -98,11 +118,12 @@ export default function SawamaniAdminPage(): React.JSX.Element {
         limit: '10'
       });
 
-      // Fix: Use 'phoneNumber' to match the actual field name in the database
-      if (phoneFilter) params.set('phoneNumber', phoneFilter);
-      if (itemTypeFilter) params.set('itemType', itemTypeFilter);
-      if (startDate) params.set('startDate', startDate);
-      if (endDate) params.set('endDate', endDate);
+      // Only add non-empty filter values to params
+      if (appliedFilters.name.trim()) params.set('name', appliedFilters.name.trim());
+      if (appliedFilters.phoneNumber.trim()) params.set('phoneNumber', appliedFilters.phoneNumber.trim());
+      if (appliedFilters.itemType) params.set('itemType', appliedFilters.itemType);
+      if (appliedFilters.startDate) params.set('startDate', appliedFilters.startDate);
+      if (appliedFilters.endDate) params.set('endDate', appliedFilters.endDate);
 
       const response = await fetch(`/api/sawamani?${params}`);
       const data: OrdersResponse = await response.json();
@@ -123,11 +144,19 @@ export default function SawamaniAdminPage(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, phoneFilter, itemTypeFilter, startDate, endDate]);
+  }, [currentPage, appliedFilters]);
 
+  // Only fetch when page or applied filters change
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  // Reset to page 1 when filters are applied
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [appliedFilters]);
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -161,17 +190,41 @@ export default function SawamaniAdminPage(): React.JSX.Element {
     alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\n\n${packingDisplay}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
   };
 
-  const clearFilters = (): void => {
-    setPhoneFilter('');
-    setItemTypeFilter('');
-    setStartDate('');
-    setEndDate('');
-    setCurrentPage(1);
+  const handleFilterInputChange = (field: keyof FilterState, value: string): void => {
+    setFilterInputs(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const applyFilters = (): void => {
+    setAppliedFilters({ ...filterInputs });
     setCurrentPage(1);
-    fetchOrders();
+  };
+
+  const clearFilters = (): void => {
+    const emptyFilters = {
+      name: '',
+      phoneNumber: '',
+      itemType: '',
+      startDate: '',
+      endDate: ''
+    };
+    setFilterInputs(emptyFilters);
+    setAppliedFilters(emptyFilters);
+    setCurrentPage(1);
+  };
+
+  // Check if there are any pending filter changes
+  const hasFilterChanges = useMemo(() => {
+    return JSON.stringify(filterInputs) !== JSON.stringify(appliedFilters);
+  }, [filterInputs, appliedFilters]);
+
+  // Handle Enter key press to apply filters
+  const handleKeyPress = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Enter') {
+      applyFilters();
+    }
   };
 
   if (loading && orders.length === 0) {
@@ -250,25 +303,49 @@ export default function SawamaniAdminPage(): React.JSX.Element {
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-gray-500" />
             <span className="text-lg font-medium text-gray-700">Filters</span>
+            {hasFilterChanges && (
+              <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                Changes pending
+              </span>
+            )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={filterInputs.name}
+                  onChange={(e) => handleFilterInputChange('name', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Search by name..."
+                  className="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="text"
-                value={phoneFilter}
-                onChange={(e) => setPhoneFilter(e.target.value)}
-                placeholder="Search by phone..."
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              />
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={filterInputs.phoneNumber}
+                  onChange={(e) => handleFilterInputChange('phoneNumber', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Search by phone..."
+                  className="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
               <select
-                value={itemTypeFilter}
-                onChange={(e) => setItemTypeFilter(e.target.value)}
+                value={filterInputs.itemType}
+                onChange={(e) => handleFilterInputChange('itemType', e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               >
                 <option value="">All Types</option>
@@ -282,8 +359,8 @@ export default function SawamaniAdminPage(): React.JSX.Element {
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
               <input
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                value={filterInputs.startDate}
+                onChange={(e) => handleFilterInputChange('startDate', e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               />
             </div>
@@ -292,8 +369,8 @@ export default function SawamaniAdminPage(): React.JSX.Element {
               <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
               <input
                 type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                value={filterInputs.endDate}
+                onChange={(e) => handleFilterInputChange('endDate', e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               />
             </div>
@@ -302,7 +379,12 @@ export default function SawamaniAdminPage(): React.JSX.Element {
           <div className="flex gap-2">
             <button
               onClick={applyFilters}
-              className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 text-sm font-medium"
+              disabled={!hasFilterChanges}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                hasFilterChanges
+                  ? 'bg-pink-600 text-white hover:bg-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
               Apply Filters
             </button>
@@ -310,15 +392,26 @@ export default function SawamaniAdminPage(): React.JSX.Element {
               onClick={clearFilters}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium"
             >
-              Clear Filters
+              Clear All
             </button>
+            <div className="flex items-center text-xs text-gray-500 ml-2">
+              <span>Press Enter to apply filters quickly</span>
+            </div>
           </div>
         </div>
 
         {/* Orders Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Orders ({totalOrders})</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Orders ({totalOrders})</h2>
+              {Object.values(appliedFilters).some(value => value.trim() !== '') && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Filter className="w-4 h-4" />
+                  <span>Filters applied</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto">
