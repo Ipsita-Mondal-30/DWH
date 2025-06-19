@@ -8,6 +8,7 @@ import AddNamkeen from "@/components/AddNamkeen";
 import AdminLogin from "@/components/AdminLoginForm";
 import { Package, Edit, Trash2, Plus, IndianRupee, Box, Cookie, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 // Updated interfaces to match the new pricing structure
 interface Pricing {
@@ -411,7 +412,8 @@ export default function AdminPanel() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+      <Navbar />
+      <div className="max-w-7xl mx-auto mt-24">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>

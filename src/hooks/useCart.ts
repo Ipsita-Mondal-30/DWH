@@ -94,14 +94,29 @@ const removeFromCart = async (productId: string) => {
   return response.json();
 };
 
-// Custom hook - exact copy of working simplified version
+// ✅ NEW: Clear cart API function
+const clearCart = async () => {
+  const response = await fetch('/api/cart/clear', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to clear cart');
+  }
+  
+  return response.json();
+};
+
+// Custom hook - updated with clear cart functionality
 export const useCart = () => {
   const { status } = useSession();
   const queryClient = useQueryClient();
 
   // Always enabled except when explicitly unauthenticated
   const shouldFetch = status !== 'unauthenticated';
-  // console.log('Session :', session);
 
   // Fetch cart items
   const {
@@ -142,20 +157,34 @@ export const useCart = () => {
     },
   });
 
-  // Calculate totals
+  // ✅ NEW: Clear cart mutation
+  const clearCartMutation = useMutation({
+    mutationFn: clearCart,
+    onSuccess: () => {
+      // Immediately update the cache to show empty cart
+      queryClient.setQueryData(['cart'], { items: [] });
+      // Also invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+  });
+
+  // Calculate totals with updated shipping logic
   const calculateTotals = () => {
     const items = cartData?.items || [];
     
     if (items.length === 0) {
-      return { subtotal: 0, shippingCost: 50, tax: 0, totalAmount: 50 };
+      return { subtotal: 0, shippingCost: 59, tax: 0, totalAmount: 59 };
     }
     
     const subtotal = items.reduce((total: number, item: CartItem) => {
-      return total + (item.product.price * item.quantity);
+      // Use selectedPricing price if available, otherwise fallback to product price
+      const itemPrice = item.selectedPricing?.price || item.product.price || 0;
+      return total + (itemPrice * item.quantity);
     }, 0);
     
-    const shippingCost = subtotal > 500 ? 0 : 50;
-    const tax = Math.round(subtotal * 0.18);
+    // Updated shipping logic to match your checkout components
+    const shippingCost = subtotal >= 1000 ? 0 : 59;
+    const tax = Math.round(subtotal * 0.18); // 18% GST
     const totalAmount = subtotal + shippingCost + tax;
     
     return { subtotal, shippingCost, tax, totalAmount };
@@ -174,11 +203,16 @@ export const useCart = () => {
     addToCart: addToCartMutation.mutate,
     updateCart: updateCartMutation.mutate,
     removeFromCart: removeFromCartMutation.mutate,
+    clearCart: clearCartMutation.mutate, // ✅ NEW: Clear cart action
     refetch,
     
     // Mutation states
     isAddingToCart: addToCartMutation.isPending,
     isUpdatingCart: updateCartMutation.isPending,
     isRemovingFromCart: removeFromCartMutation.isPending,
+    isClearingCart: clearCartMutation.isPending, // ✅ NEW: Clear cart loading state
+    
+    // Additional utility
+    totalItems: cartData?.items?.reduce((total: number, item: CartItem) => total + item.quantity, 0) || 0,
   };
 };

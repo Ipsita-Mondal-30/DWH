@@ -4,16 +4,8 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CartItem } from '@/hooks/useCart';
 import Image from 'next/image';
+import axios from 'axios';
 
-// Remove these duplicate interfaces from CheckoutForm.tsx:
-// export interface ShippingAddress { ... }
-// interface UPIPaymentData { ... }
-// interface OrderResult { ... }
-
-// And replace them with imports from shared types:
-// import { ShippingAddress, UPIPaymentData, OrderResult } from '@/types/checkout';
-
-// Or if you prefer to keep them inline, just make sure they match exactly:
 export interface ShippingAddress {
   fullName: string;
   phone: string;
@@ -73,32 +65,6 @@ interface CheckoutFormProps {
   onBack: () => void;
   // Make sure this signature matches exactly
   onPaymentMethodSelect: (method: 'upi' | 'cod', data?: UPIPaymentData | undefined) => void;
-}
-
-// Rest of your CheckoutForm component remains the same...
-
-interface OrderResult {
-  _id: string;
-  orderId: string; 
-  userEmail: string;
-  shippingAddress: ShippingAddress;
-  paymentMethod: 'cash_on_delivery' | 'upi';
-  items: {
-    productId: string;
-    productName: string;
-    quantity: number;
-    selectedPricing: {
-      quantity: number;
-      unit: string;
-      price: number;
-    } | null;
-    itemTotal: number;
-  }[];
-  createdAt?: string;
-  totalAmount: number;
-  updatedAt?: string;
-  estimatedDelivery?: string;
-  orderStatus: string;
 }
 
 export default function CheckoutForm({ 
@@ -189,6 +155,28 @@ export default function CheckoutForm({
     return Object.keys(newErrors).length === 0;
   };
 
+  // ✅ CLEAR CART FUNCTION
+  const clearCart = async () => {
+    try {
+      console.log('🗑️ Clearing cart after successful COD order...');
+      const response = await axios.post('/api/cart/clear', {}, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10 second timeout
+      });
+
+      if (response.status === 200 && response.data.success) {
+        console.log('✅ Cart cleared successfully after COD order');
+      } else {
+        console.warn('⚠️ Cart clearing returned unexpected response:', response.data);
+      }
+    } catch (error) {
+      console.error('❌ Error clearing cart after COD order:', error);
+      // Don't fail the success flow if cart clearing fails
+    }
+  };
+
   const handlePaymentMethodChange = (method: 'cod' | 'upi') => {
     console.log('🎯 Payment method selected:', method);
     console.log('📋 Current form data:', formData);
@@ -276,8 +264,17 @@ export default function CheckoutForm({
           selectedPricing: item.selectedPricing,
           product: item.product // Include product details for the order
         })),
+        totals: calculatedTotals, // ✅ Include totals for consistent calculation
         notes: '' // Add notes field if needed
       };
+
+      console.log('📦 COD Order Data Being Sent:', {
+        userEmail: orderData.userEmail,
+        shippingAddress: orderData.shippingAddress,
+        paymentMethod: orderData.paymentMethod,
+        cartItemsCount: orderData.cartItems.length,
+        totals: orderData.totals
+      });
 
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -290,14 +287,22 @@ export default function CheckoutForm({
       const result = await response.json();
 
       if (response.ok && result.success) {
+        console.log('🎉 COD Order placed successfully!', {
+          orderId: result.order?.orderId,
+          totalAmount: result.order?.totalAmount
+        });
+
+        // ✅ CLEAR CART AFTER SUCCESSFUL COD ORDER
+        await clearCart();
+
         setOrderResult(result.order);
         setShowSuccessModal(true);
       } else {
-        console.error('Order placement failed:', result);
+        console.error('COD Order placement failed:', result);
         alert('Failed to place order: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error placing order:', error);
+      console.error('Error placing COD order:', error);
       alert('Failed to place order. Please try again.');
     } finally {
       setIsPlacingOrder(false);
@@ -667,8 +672,12 @@ export default function CheckoutForm({
                 Order Placed Successfully!
               </h3>
               
+              <p className="text-gray-600 mb-2">
+                Your order has been confirmed and your cart has been cleared.
+              </p>
+
               <p className="text-gray-600 mb-4">
-                Your order has been confirmed and will be delivered soon.
+                Your order will be delivered soon.
               </p>
               
               {orderResult && (

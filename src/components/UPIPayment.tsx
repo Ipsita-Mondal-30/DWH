@@ -61,7 +61,7 @@ export default function UPIPayment({
   // ⚠️ CHANGE THESE VALUES TO YOUR BUSINESS DETAILS
   const businessUpiId = 'q305666833@ybl'; // Replace with your actual UPI ID
   const businessName = 'Delhi Wala Halwai'; // Replace with your business name
-  const transactionNote = 'Order Payment from Website '; // Optional: Add transaction note
+  const transactionNote = 'Order Payment from Website'; // Optional: Add transaction note
   
   // ✅ USE THE TOTALS PASSED FROM CHECKOUT FORM - DON'T RECALCULATE
   const calculatedTotals = totals;
@@ -80,7 +80,6 @@ export default function UPIPayment({
     return `upi://pay?pa=${businessUpiId}&pn=${encodeURIComponent(businessName)}&am=${calculatedTotals.totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
   }, [businessUpiId, businessName, calculatedTotals.totalAmount, transactionNote]);
   
-
   // Generate QR Code
   useEffect(() => {
     const generateQRCode = async () => {
@@ -103,6 +102,29 @@ export default function UPIPayment({
     generateQRCode();
   }, [generateUPIUrl]);
 
+  // ✅ CLEAR CART FUNCTION
+  const clearCart = async () => {
+    try {
+      console.log('🗑️ Clearing cart after successful order...');
+      const response = await axios.post('/api/cart/clear', {}, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10 second timeout
+      });
+
+      if (response.status === 200 && response.data.success) {
+        console.log('✅ Cart cleared successfully');
+      } else {
+        console.warn('⚠️ Cart clearing returned unexpected response:', response.data);
+      }
+    } catch (error) {
+      console.error('❌ Error clearing cart:', error);
+      // Don't fail the success flow if cart clearing fails
+    }
+  };
+
+  // Copy functions
   const copyUpiId = () => {
     navigator.clipboard.writeText(businessUpiId);
     alert('UPI ID copied to clipboard!');
@@ -189,9 +211,14 @@ export default function UPIPayment({
             totalAmount: response.data.order?.totalAmount
           });
           
+          // ✅ CLEAR CART AFTER SUCCESSFUL ORDER
+          await clearCart();
+          
           setPaymentStep('success');
           // Store order result for display
           localStorage.setItem('lastOrderResult', JSON.stringify(response.data.order));
+          
+          // ✅ TRIGGER CART REFRESH IN PARENT COMPONENT
           onPaymentSuccess();
         } else {
           console.error('❌ Order API returned success: false', response.data);
@@ -453,7 +480,7 @@ export default function UPIPayment({
               <p className="text-gray-600">Please wait while we confirm your payment...</p>
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
-                  Do not close this page. We are verifying your transaction.
+                  Do not close this page. We are verifying your transaction and clearing your cart.
                 </p>
               </div>
             </div>
@@ -468,13 +495,22 @@ export default function UPIPayment({
               </div>
               <h4 className="text-lg font-semibold text-gray-800 mb-2">Order Placed Successfully!</h4>
               <p className="text-gray-600 mb-2">Transaction ID: {transactionId}</p>
-              <p className="text-gray-600 mb-6">Your order is being processed and will be delivered soon.</p>
-              <button
-                onClick={() => window.location.href = '/my-orders'}
-                className="bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                View My Orders
-              </button>
+              <p className="text-gray-600 mb-2">Your cart has been cleared and order is being processed.</p>
+              <p className="text-gray-600 mb-6">Your order will be delivered soon.</p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => window.location.href = '/my-orders'}
+                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  View My Orders
+                </button>
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Continue Shopping
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -561,6 +597,33 @@ export default function UPIPayment({
               <h4 className="font-medium text-blue-800 mb-2">Need Help?</h4>
               <p className="text-xs text-blue-700">
                 If you face any issues with payment, please contact our support team.
+              </p>
+            </div>
+          )}
+
+          {paymentStep === 'confirmation' && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-medium text-yellow-800 mb-2">⏳ Waiting for Confirmation</h4>
+              <p className="text-xs text-yellow-700">
+                Please enter your transaction ID above to complete your order.
+              </p>
+            </div>
+          )}
+
+          {paymentStep === 'processing' && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-800 mb-2">🔄 Processing Order</h4>
+              <p className="text-xs text-blue-700">
+                Your payment is being verified and order is being created.
+              </p>
+            </div>
+          )}
+
+          {paymentStep === 'success' && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-medium text-green-800 mb-2">✅ Order Confirmed</h4>
+              <p className="text-xs text-green-700">
+                Your shopping cart has been cleared and your order is confirmed.
               </p>
             </div>
           )}

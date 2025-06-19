@@ -117,11 +117,6 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             </button>
           </div>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              Demo credentials: admin / admin
-            </p>
-          </div>
         </form>
       </div>
     </div>

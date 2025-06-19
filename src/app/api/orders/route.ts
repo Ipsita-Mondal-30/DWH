@@ -32,6 +32,7 @@ async function findProductById(productId: string) {
 }
 
 // POST: Create a new order (Checkout)
+// POST: Create a new order (Checkout) - IMPROVED VERSION
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -76,8 +77,11 @@ export async function POST(request: NextRequest) {
 
     // Get cart items (either from request body or fetch from cart)
     let items;
+    let shouldClearCart = false; // Flag to determine if we should clear cart
+    
     if (cartItems && cartItems.length > 0) {
       items = cartItems;
+      shouldClearCart = true; // Clear cart when using passed cart items
     } else {
       // Fetch from user's cart
       const cart = await Cart.findOne({ userId }).populate('items.productId');
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
         );
       }
       items = cart.items;
+      shouldClearCart = true; // Clear cart when using cart from database
     }
 
     // Process cart items and prepare order items
@@ -293,12 +298,20 @@ export async function POST(request: NextRequest) {
 
     await order.save();
 
-    // Clear user's cart after successful order
-    if (!cartItems) {
-      await Cart.findOneAndUpdate(
-        { userId },
-        { $set: { items: [] } }
-      );
+    // ✅ IMPROVED: Clear user's cart after successful order - ALWAYS CLEAR
+    if (shouldClearCart) {
+      try {
+        console.log('🗑️ Clearing cart for user:', userId);
+        const clearResult = await Cart.findOneAndUpdate(
+          { userId },
+          { $set: { items: [] } },
+          { new: true, upsert: true } // Create cart if it doesn't exist
+        );
+        console.log('✅ Cart cleared successfully:', clearResult ? 'Cart found and cleared' : 'Cart not found but will be empty');
+      } catch (cartError) {
+        console.error('⚠️ Error clearing cart (non-critical):', cartError);
+        // Don't fail the order if cart clearing fails
+      }
     }
 
     console.log('✅ Order saved successfully:', {
