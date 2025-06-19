@@ -37,7 +37,7 @@ const PRODUCTS: Product[] = [
     label: 'Mawa Peda', 
     price: 38000, 
     mainPrice: 1900000,
-    image: '/besan-ladoo.jpg',
+    image: '/mawa-peda.jpeg',
     description: 'Traditional rich and creamy peda ladoo with roasted nuts',
     rating: 4.4
   },
