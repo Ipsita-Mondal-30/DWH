@@ -7,6 +7,7 @@ import { useCart } from '../../../app/context/CartContext';
 import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from "@/components/Navbar";
+import { toast } from 'sonner';
 
 interface Pricing {
   quantity: number;
@@ -86,16 +87,27 @@ export default function SavouriesCollection() {
     const selected = selectedPricing[item._id];
     if (!selected) return;
 
+  
     try {
       console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
       // Pass the selected pricing to the cart
       await addToCart(item._id, 1, selected);
       console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${item.name} (${selected.quantity}${getUnitDisplay(selected.unit)}) added to cart!`,
+        {
+          description: `₹${selected.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
+
 
   const getUnitDisplay = (unit: string) => {
     const unitMap = {

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useCart } from "../../context/CartContext";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-
+import { toast } from 'sonner';
 interface Box {
   _id: string;
   name: string;
@@ -42,18 +42,29 @@ export default function BhajiCollection() {
     event.stopPropagation();
 
     if (!box._id) return;
+    
 
     try {
-      console.log('Adding bhaji box to cart:', { boxId: box._id });
+      console.log('Adding to cart:', { boxId: box._id }); // Debug log
+      // Pass the selected pricing to the cart
       await addToCart(box._id, 1, {
         quantity: 1,
         unit: 'piece' as const,
         price: box.price
       });
-      console.log('Successfully added bhaji box to cart');
+      console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${box.name} (1 piece) added to cart!`,
+        {
+          description: `₹${box.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
-      console.error("Error adding bhaji box to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
 

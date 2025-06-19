@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react';
 import { useCart } from '../app/context/CartContext';
 import { useProducts } from "../hooks/useProducts"; // Assuming this is the correct path
 import SignInPopup from './SigninPopup';
+import { toast } from 'sonner';
 
 interface Pricing {
   quantity: number;
@@ -69,28 +70,40 @@ export default function LatestSweet() {
     event.stopPropagation();
     setDropdownOpen(prev => ({ ...prev, [productId]: !prev[productId] }));
   };
+  
 
   const handleAddToCart = async (item: Product) => {
     if (!item._id) return;
 
     const selected = selectedPricing[item._id];
 
+    // Check if user is authenticated
     if (!session) {
+      console.log("User is not logged in - showing popup");
       setShowSignInPopup(true);
       return;
     }
-
+    
     try {
-      if (selected) {
-        await addToCart(item._id, 1, selected);
-      } else {
-        await addToCart(item._id, 1);
-      }
+      console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
+      // Pass the selected pricing to the cart
+      await addToCart(item._id, 1, selected);
+      console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${item.name} (${selected.quantity}${getUnitDisplay(selected.unit)}) added to cart!`,
+        {
+          description: `₹${selected.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
+  
 
   const handleSignIn = () => {
     signIn('google', { callbackUrl: window.location.href });
@@ -125,7 +138,7 @@ export default function LatestSweet() {
     <div className="py-12 bg-gradient-to-br from-orange-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">Latest Products</h2>
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">Latest Sweets</h2>
           <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
         </div>
 

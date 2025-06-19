@@ -7,6 +7,7 @@ import type { IProduct } from "../models/Product";
 import { useCart } from "../app/context/CartContext";
 import Image from "next/image";
 import { ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 import SignInPopup from './SigninPopup'; // Import the popup component
 
 interface Pricing {
@@ -122,20 +123,25 @@ export default function PopularProduct() {
     }
     
     try {
-      console.log('Adding popular item to cart:', { itemId: item._id, selected }); // Debug log
-      if (selected) {
-        // Item has pricing options - pass the selected pricing
-        await addToCart(item._id, 1, selected);
-      } else {
-        // Item doesn't have pricing options - use regular add to cart
-        await addToCart(item._id, 1);
-      }
-      console.log('Successfully added popular item to cart'); // Debug log
+      console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
+      // Pass the selected pricing to the cart
+      await addToCart(item._id, 1, selected);
+      console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${item.name} (${selected.quantity}${getUnitDisplay(selected.unit)}) added to cart!`,
+        {
+          description: `₹${selected.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
+
 
   const handleSignIn = () => {
     // Trigger Google sign-in using NextAuth

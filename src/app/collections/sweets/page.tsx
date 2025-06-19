@@ -7,6 +7,7 @@ import { useCart } from '../../../app/context/CartContext';
 import Image from "next/image";
 import { ChevronDown } from 'lucide-react';
 import Navbar from "@/components/Navbar";
+import { toast } from 'sonner';
 
 interface Pricing {
   quantity: number;
@@ -80,22 +81,28 @@ export default function SweetsCollection() {
     if (!item._id) return;
 
     const selected = selectedPricing[item._id];
+  
     
     try {
       console.log('Adding to cart:', { itemId: item._id, selected }); // Debug log
-      if (selected) {
-        // Product has pricing options - pass the selected pricing
-        await addToCart(item._id, 1, selected);
-      } else {
-        // Product doesn't have pricing options - use regular add to cart
-        await addToCart(item._id, 1);
-      }
+      // Pass the selected pricing to the cart
+      await addToCart(item._id, 1, selected);
       console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${item.name} (${selected.quantity}${getUnitDisplay(selected.unit)}) added to cart!`,
+        {
+          description: `₹${selected.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
+
 
   const handleCardClick = (item: IProduct, index: number) => {
     // Only navigate if no dropdown is open for this item

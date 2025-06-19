@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useCart } from '../app/context/CartContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SignInPopup from './SigninPopup';
-
+import { toast } from 'sonner';
 interface Box {
   _id: string;
   name: string;
@@ -48,15 +48,26 @@ export default function BhajiCarousel() {
     }
 
     try {
+      console.log('Adding to cart:', { boxId: box._id }); // Debug log
+      // Pass the selected pricing to the cart
       await addToCart(box._id, 1, {
         quantity: 1,
-        unit: 'piece',
+        unit: 'piece' as const,
         price: box.price
       });
-      console.log('Successfully added bhaji box to cart');
+      console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${box.name} (1 piece) added to cart!`,
+        {
+          description: `₹${box.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
 
