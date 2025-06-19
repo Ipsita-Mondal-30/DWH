@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { SawamaniForm } from '@/components/SawamaniForm'; 
 import Navbar from "@/components/Navbar";
 import { useProducts } from "../../../hooks/useProducts"; // Import the same hook
-import { toast } from 'sonner';
 
 // Product interface
 interface Product {
