@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from '../app/context/CartContext';
 import { ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 import SignInPopup from './SigninPopup'; // Import the popup component
 
 interface Pricing {
@@ -49,6 +50,7 @@ export default function LatestNamkeen() {
         setSelectedPricing(defaultPricing);
       } catch (error) {
         console.error("Error fetching namkeens:", error);
+        toast.error("Failed to load namkeens. Please refresh the page.");
       }
     };
 
@@ -93,9 +95,18 @@ export default function LatestNamkeen() {
       // Pass the selected pricing to the cart
       await addToCart(item._id, 1, selected);
       console.log('Successfully added to cart'); // Debug log
+      
+      // Show success toast
+      toast.success(
+        `${item.name} (${selected.quantity}${getUnitDisplay(selected.unit)}) added to cart!`,
+        {
+          description: `₹${selected.price}`,
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert('Failed to add item to cart. Please try again.');
+      toast.error("Failed to add item to cart. Please try again.");
     }
   };
 

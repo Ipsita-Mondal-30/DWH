@@ -5,8 +5,8 @@ import { connectDB } from '@/lib/db';
 import { Cart } from '@/models/Cart';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-export async function POST(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_request: NextRequest) {
   try {
     await connectDB();
     
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🗑️ Clearing cart for user:', userId);
+    console.log('🗑️ Clearing cart for user:', String(userId));
 
     // Clear the user's cart
     const result = await Cart.findOneAndUpdate(
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       { new: true, upsert: true } // Create cart if it doesn't exist
     );
 
-    console.log('✅ Cart cleared successfully for user:', userId);
+    console.log('✅ Cart cleared successfully for user:', String(userId));
 
     return NextResponse.json({
       success: true,
@@ -48,6 +48,6 @@ export async function POST(request: NextRequest) {
 }
 
 // Alternative DELETE method
-export async function DELETE(request: NextRequest) {
-  return POST(request); // Reuse the same logic
+export async function DELETE(_request: NextRequest) {
+  return POST(_request); // Reuse the same logic
 }
