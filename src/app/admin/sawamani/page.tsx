@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock, Search } from 'lucide-react';
-
+import { Eye, Calendar, User, Package, Filter, Phone, MapPin, Clock, Search, Lock, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 // Type definitions
 interface SawamaniOrder {
   _id: string;
@@ -43,13 +44,20 @@ interface FilterState {
   endDate: string;
 }
 
+
+
+
 export default function SawamaniAdminPage(): React.JSX.Element {
+  const router = useRouter();
   const [orders, setOrders] = useState<SawamaniOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalOrders, setTotalOrders] = useState<number>(0);
-  
+   const [drawerOpen, setDrawerOpen] = useState(false);
+
+     
+
   // Separate filter states for UI and API
   const [filterInputs, setFilterInputs] = useState<FilterState>({
     name: '',
@@ -189,6 +197,10 @@ export default function SawamaniAdminPage(): React.JSX.Element {
     
     alert(`Order Details:\n\nCustomer: ${order.name}\nPhone: ${order.phoneNumber}\nAddress: ${order.address}\n\nItem Type: ${order.item.type}\nVariant: ${order.item.variant}\n\n${packingDisplay}\n\nOrder Date: ${formatOrderDate(order.date)}\nCreated: ${formatDate(order.createdAt)}`);
   };
+  const [, setIsAuthenticated] = useState(false);
+    const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
 
   const handleFilterInputChange = (field: keyof FilterState, value: string): void => {
     setFilterInputs(prev => ({
@@ -220,6 +232,10 @@ export default function SawamaniAdminPage(): React.JSX.Element {
     return JSON.stringify(filterInputs) !== JSON.stringify(appliedFilters);
   }, [filterInputs, appliedFilters]);
 
+  const handleAdmin = () => {
+    // Redirect to admin page
+    router.push('/admin');
+  };
   // Handle Enter key press to apply filters
   const handleKeyPress = (e: React.KeyboardEvent): void => {
     if (e.key === 'Enter') {
@@ -240,11 +256,91 @@ export default function SawamaniAdminPage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+      <Navbar />
+      <div className="max-w-7xl mx-auto mt-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Sawamani Orders Management</h1>
           <p className="text-gray-600">Manage customer orders for Sawamani products</p>
+        </div>
+
+
+        {/* Mobile Floating Button */}
+        <div className="md:">
+
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          {/* Drawer */}
+          <div
+            className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+              drawerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex justify-end p-4">
+              <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 p-4">
+
+
+              <button
+                onClick={() => {
+                  handleAdmin();
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Admin Page
+              </button>
+
+
+
+              <button
+                onClick={() => {
+                  router.push("/admin/enquiries");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Enquiries
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/sawamani");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Sawamani Orders
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/orders");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                All Orders
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setDrawerOpen(false);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}

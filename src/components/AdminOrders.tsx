@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Calendar, User, Package, Filter,  DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Calendar, User, Package, Filter,  DollarSign, Clock, CheckCircle, Lock, Plus } from 'lucide-react';
 import Image from 'next/image';
-
+import { useRouter } from 'next/navigation';
 // Type definitions (same as user component but with admin fields)
 interface OrderItem {
   productId: string;
@@ -77,6 +77,7 @@ type OrderStatus = 'all' | 'confirmed' | 'delivered' | 'cancelled';
 type PaymentStatusType = 'pending' | 'paid';
 
 export default function AdminOrders(): React.JSX.Element {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<Partial<OrderStats>>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -202,6 +203,15 @@ export default function AdminOrders(): React.JSX.Element {
     setShowModal(false);
     setSelectedOrder(null);
   };
+      const [, setIsAuthenticated] = useState(false);
+        const handleLogout = () => {
+        setIsAuthenticated(false);
+      };
+        const handleAdmin = () => {
+      // Redirect to admin page
+      router.push('/admin');
+    };
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (loading) {
     return (
@@ -221,6 +231,83 @@ export default function AdminOrders(): React.JSX.Element {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Orders Management</h1>
           <p className="text-gray-600">Manage customer orders and track sales</p>
+        </div>
+
+                  <div className="md:">
+
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          {/* Drawer */}
+          <div
+            className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+              drawerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex justify-end p-4">
+              <button onClick={() => setDrawerOpen(false)} className="text-gray-600 hover:text-black text-2xl">
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 p-4">
+
+
+              <button
+                onClick={() => {
+                  handleAdmin();
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Admin Page
+              </button>
+
+
+
+              <button
+                onClick={() => {
+                  router.push("/admin/enquiries");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Enquiries
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/sawamani");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                Sawamani Orders
+              </button>
+              <button
+                onClick={() => {
+                  router.push("/admin/orders");
+                  setDrawerOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                All Orders
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setDrawerOpen(false);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
