@@ -1,28 +1,12 @@
-# Delhi Wala Halwai 
-This is the official web app for **Delhi Wala Halwai**, a premium sweets and snacks brand.
-Basic layout for wht the website will look like 
-── layout.tsx # Main layout with Navbar & Footer and sign in and signout 
-├── page.tsx # Homepage
-├── menu/ # Menu of all sweets
-├── cart/ # Shopping cart
-├── checkout/ # Checkout page
-├── product/[id]/ # Individual product view
-├── dashboard/ # Admin panel
-│ ├── layout.tsx
-│ ├── products/new/ # New product upload page
-│ ├── products/[id]/ # Edit product
-│ └── orders/ # Orders dashboard
+Delhi Wala Halwai 🍬
+A modern web presence for Delhi Wala Halwai, a beloved Indian sweets and snacks brand, built to bring their traditional flavors into the digital world.
 
+📌 Project Overview
+Delhi Wala Halwai is a traditional sweets and snacks business based in Delhi, known for its authenticity and variety. This project was commissioned to digitize their business, allowing them to:
 
-**These are the models wht i think we will be needing**
-models/
-├── user.model.ts
-├── product.model.ts
-├── order.model.ts
-├── category.model.ts
-
- # MongoDB connection (to be added)
-==> This is not neccesary middleware.ts # Auth protection (to be added) 
-
-
---
+Showcase their sweets, namkeen, and festive boxes online.
+Build brand credibility and visibility.
+Enable customers to browse collections easily on all devices.
+🌐 Live Demo
+________________________________________________________________________________________________________________________________________________________________________________________
+🔗 Visit Website
